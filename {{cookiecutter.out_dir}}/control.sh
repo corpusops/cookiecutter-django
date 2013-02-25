@@ -21,6 +21,7 @@ if  [[ -n $SHELL_DEBUG ]];then set -x;fi
 
 shopt -s extglob
 
+VENV=../venv
 APP={{cookiecutter.app_type}}
 APP_USER=${APP_USER:-${APP}}
 APP_CONTAINER=${APP_CONTAINER:-${APP}}
@@ -64,7 +65,7 @@ _shell() {
     local NVMRC=${NVMRC:-.nvmrc}
     local NVM_PATH=${NVM_PATH:-..}
     local NVM_PATHS=${NVMS_PATH:-${NVM_PATH}}
-    local VENV_NAME=${VENV_NAME:-venv}
+    local VENV_NAME=${VENV_NAME:-$VENV}
     local VENV_PATHS=${VENV_PATHS:-./$VENV_NAME ../$VENV_NAME}
     local DOCKER_SHELL=${DOCKER_SHELL-}
     local run_mode_args=""
@@ -286,7 +287,7 @@ do_yamldump() {
 # {{cookiecutter.app_type.upper()}} specific
 #  python: enter python interpreter
 do_python() {
-    do_usershell ../venv/bin/python $@
+    do_usershell $VENV/bin/python $@
 }
 
 #  manage [$args]: run manage.py commands
@@ -307,7 +308,7 @@ do_test() {
     stop_containers
     set -- vv do_shell \
         "chown {{cookiecutter.app_type}} ../.tox
-        && gosu {{cookiecutter.app_type}} ../venv/bin/tox -c ../tox.ini -e $bargs"
+        && gosu {{cookiecutter.app_type}} $VENV/bin/tox -c ../tox.ini -e $bargs"
     "$@"
 }
 
