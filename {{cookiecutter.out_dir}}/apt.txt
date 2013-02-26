@@ -26,5 +26,6 @@ binutils
 libproj-dev
 gdal-bin
 gettext
-postgresql-server-dev-all
 tzdata
+{% if 'post' in cookiecutter.db_mode %}postgresql-server-dev-all
+postgresql-client{% endif %}
