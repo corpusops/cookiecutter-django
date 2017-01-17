@@ -33,11 +33,31 @@ vv cookiecutter --no-input -o "$out" -f "$u" \
 # to finish template loop
 # sync the gen in a second folder for intermediate regenerations
 dvv rsync -aA \
-    --include "local/*deploy*" \
+    $(if [[ -n $DEBUG ]];then echo "-v";fi )\
+    --include local/regen.sh \
     --exclude "local/*" --exclude lib \
     $( if [ -e ${out2}/.git ];then echo "--exclude .git";fi; ) \
     "$out/" "${out2}/"
+
+( cd "$out2" && git add -f local/regen.sh || /bin/true)
 dvv cp -f "$out/local/regen.sh" "$out2/local"
+
+add_submodules() {
+    cd "$out"
+    while read submodl;do
+        submodu="$(echo $submodl|awk '{print $2}')"
+        submodp="$(echo $submodl|awk '{print $1}')"
+        cd "$out2"
+        if [ ! -e "$submodp" ];then
+            git submodule add -f "$submodu" "$submodp"
+        fi
+        cd "$out"
+    done < <(\
+        git submodule foreach -q 'echo $path `git config --get remote.origin.url`'
+    )
+    cd "$W"
+}
+( add_submodules )
 if [[ -z ${NO_RM-} ]];then dvv rm -rf "${out}";fi
 echo "Your project is generated in: $out2" >&2
 echo "Please note that you can generate with the local/regen.sh file" >&2
