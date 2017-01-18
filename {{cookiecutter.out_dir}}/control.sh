@@ -62,10 +62,10 @@ _shell() {
     local NO_VIRTUALENV=${NO_VIRTUALENV-}
     local NO_NVM=${NO_VIRTUALENV-}
     local NVMRC=${NVMRC:-.nvmrc}
-    local NVM_PATH=${VENV_PATH:-..}
+    local NVM_PATH=${NVM_PATH:-..}
     local NVM_PATHS=${NVMS_PATH:-${NVM_PATH}}
-    local VENV_PATH=${VENV_PATH:-../venv}
-    local VENV_PATHS=${VENV_PATHS:-${VENV_PATH}}
+    local VENV_NAME=${VENV_NAME:-venv}
+    local VENV_PATHS=${VENV_PATHS:-./$VENV_NAME ../$VENV_NAME}
     local DOCKER_SHELL=${DOCKER_SHELL-}
     local run_mode_args=""
     local pre="DOCKER_SHELL=\"$DOCKER_SHELL\";touch \$HOME/.control_bash_rc;
