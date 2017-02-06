@@ -118,7 +118,7 @@ set +x
 while read f;do
     if ( egrep -q "local/{{cookiecutter.app_type}}" "$f" );then
         echo "rewrite: $f"
-        vv echo sed -i -r \
+        vv sed -i -r \
         -e "s|{{cookiecutter.deploy_project_dir}}/||g" \
         -e "s|local/{{cookiecutter.app_type}}/||g" \
         "$f"
