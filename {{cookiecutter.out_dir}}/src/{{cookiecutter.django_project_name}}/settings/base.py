@@ -1,6 +1,15 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
+
+import copy
+import os
+from datetime import timedelta
+from importlib import import_module
+
+import django
+import six
+from django.utils.log import DEFAULT_LOGGING
+
+
 """
 Django settings for {{cookiecutter.django_project_name}} project.
 
@@ -12,15 +21,6 @@ https://docs.djangoproject.com/en/{{cookiecutter.django_ver_1}}/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/{{cookiecutter.django_ver_1}}/ref/settings/
 """
-
-import os
-import copy
-from datetime import timedelta
-from importlib import import_module
-
-import six
-import django
-from django.utils.log import DEFAULT_LOGGING
 
 
 def as_col(value, separators=None, final_type=None, **kw):

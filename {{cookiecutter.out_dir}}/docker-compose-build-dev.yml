@@ -1,10 +1,7 @@
 version: '3.7'
 x-images:
   {{cookiecutter.app_type}}: &{{cookiecutter.app_type}}
-    build:
-      context: "."
-      args:
-        PY_VER: "${DJANGO_PY_VER:-{{cookiecutter.py_ver}}}"
+    build: {context: ".", args: {BUILD_DEV: "y"}}
 services:
   {%- if not cookiecutter.remove_cron %}
   cron: {<<: [ *{{cookiecutter.app_type}} ]}

@@ -162,14 +162,21 @@ build_images: &build_images
   script:
   - &build_step1 |-
     for i in $DOCKER_BUILT_SERVICES;do
-      ( echo "$D_COMPOSE -f docker-compose-build.yml build $i" >&2 )&
-      ( $D_COMPOSE -f docker-compose-build.yml build $i \
+      ( echo "$D_COMPOSE -f docker-compose-prod.yml -f docker-compose-build.yml build $i" >&2 )&
+      (       $D_COMPOSE -f docker-compose-prod.yml -f docker-compose-build.yml build $i \
+        || ( echo "BUILD ERROR: $i" >> /docker_images_errors ) )&
+    done;wait;
+    for i in $DOCKER_BUILT_SERVICES;do
+      ( echo "$D_COMPOSE -f docker-compose-build.yml -f docker-compose-build-dev.yml build $i" >&2 )&
+      (       $D_COMPOSE -f docker-compose-build.yml -f docker-compose-build-dev.yml build $i \
         || ( echo "BUILD ERROR: $i" >> /docker_images_errors ) )&
     done;wait;
     if [ -e /docker_images_errors ];then cat /docker_images_errors;exit 1;fi
   - &build_step2 sh -c "set -ex
     && docker inspect \"\${CURRENT_DOCKER_IMAGE}\" >/dev/null
     && docker save
+       \$(docker history -q \"\${CURRENT_DOCKER_IMAGE}-dev\" | tr '\n' ' ' | tr -d '<missing>')
+       \"\${CURRENT_DOCKER_IMAGE}-dev\"
        \$(docker history -q \"\${CURRENT_DOCKER_IMAGE}\" | tr '\n' ' ' | tr -d '<missing>')
        \"\${CURRENT_DOCKER_IMAGE}\"
        | gzip > \"\${IMAGES_TARBALL}-pending\"
@@ -178,7 +185,7 @@ build_images: &build_images
 .tests_tpl: &tests_tpl
   tags: ["{{cookiecutter.runner_tag}}"]
   stage: tests
-  variables: {PRELOAD_IMAGES: ""}
+  variables: &test_vars_tpl {PRELOAD_IMAGES: "", CI: "true"}
   script:
   - &launch_test_stack |-
     sh -c 'for i in $DOCKER_BUILT_SERVICES;
@@ -208,9 +215,13 @@ build_images: &build_images
   # redo the docker login, without the /bin/true, failing if the registry is down
   - &release_step1 sh /docker_login
   # quoting & subshelling to work around gitlab variable substitutions
-  - &release_step2 sh -c "docker tag \"\$(eval echo \$TO_RELEASE_DOCKER_IMAGE)\"
+  - &release_step2 sh -c "docker tag \"\$(eval echo \$TO_RELEASE_DOCKER_IMAGE)-dev\"
+    \"\$(eval echo \$RELEASED_DOCKER_IMAGE)-dev\"
+    && docker tag \"\$(eval echo \$TO_RELEASE_DOCKER_IMAGE)\"
     \"\$(eval echo \$RELEASED_DOCKER_IMAGE)\""
-  - &release_step3 sh -c "docker push \"\$(eval echo \$RELEASED_DOCKER_IMAGE)\""
+  - &release_step3 sh -c "docker push
+    \"\$(eval echo \$RELEASED_DOCKER_IMAGE)-dev\"
+    \"\$(eval echo \$RELEASED_DOCKER_IMAGE)\""
   variables: &release_vars
     PRELOAD_IMAGES: ""
     TO_RELEASE_DOCKER_IMAGE: "$CURRENT_DOCKER_IMAGE"

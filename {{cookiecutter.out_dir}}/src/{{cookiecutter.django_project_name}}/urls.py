@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
+from django.conf import settings
+from django.conf.urls import include, url
+from django.contrib import admin
+
 """project URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
@@ -16,10 +21,6 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from django.conf import settings
-from django.conf.urls import include, url
-from django.contrib import admin
-from django.contrib.auth.views import login, logout_then_login
 try:
     from django.urls import path
 except ImportError:
@@ -53,4 +54,4 @@ if settings.DEBUG and 'debug_toolbar' in settings.INSTALLED_APPS:
         url(r'^__debug__/', include(debug_toolbar.urls)),
     ]
 
-admin.site.site_header = '{{cookiecutter.django_project_name}}' 
+admin.site.site_header = '{{cookiecutter.django_project_name}}'

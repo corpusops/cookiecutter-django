@@ -39,7 +39,7 @@ set_dc() {
     for i in $COMPOSE_FILES;do
         DC="${DC} -f $i"
     done
-    DCB="$DC -f docker-compose-build.yml"
+    DCB="$DC -f docker-compose-build.yml -f docker-compose-build-dev.yml"
 }
 
 log(){ echo "$@">&2;}

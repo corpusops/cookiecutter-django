@@ -4,17 +4,18 @@ x-images:
   {{cookiecutter.app_type}}: &{{cookiecutter.app_type}}
     <<: [ *env ]
     tty: true
-    image: "${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE}:${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE_VERSION}"
+    # latest image is only used in prod (without dev & test tools)
+    image: "${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE}:${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE_VERSION}-dev"
     environment:
-      - DJANGO_WSGI=${DJANGO_WSGI:-{{cookiecutter.django_project_name}}.wsgi}
+    - DJANGO_WSGI=${DJANGO_WSGI:-{{cookiecutter.django_project_name}}.wsgi}
     depends_on:
-      - db
-      - redis
+    - db
+    - redis
     working_dir: /code/src
     command: /bin/bash /code/init/init.sh
     volumes:
       {%- if not cookiecutter.remove_cron %}
-      - crontab:/etc/cron.d/{{cookiecutter.app_type}}
+      - ./crontab:/etc/cron.d/{{cookiecutter.app_type}}
       {%- endif %}
       - ./src/{{cookiecutter.django_settings.replace('.', '/')}}/instances:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/instances
       - mediafiles:/code/public/media

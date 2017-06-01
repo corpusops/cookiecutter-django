@@ -2,6 +2,7 @@ version: '3.7'
 x-{{cookiecutter.app_type}}: &{{cookiecutter.app_type}}
   volumes:
   - ./local.py:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/local.py
+  image: "${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE}:${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE_VERSION}"
 services:
   nginx:
     ports:

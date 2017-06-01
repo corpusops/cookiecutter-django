@@ -2,9 +2,8 @@
 import unittest
 
 from django.conf import settings
-from django.core.urlresolvers import reverse
 from django.test import TestCase, override_settings
-from django.utils.formats import get_format
+from django.urls import reverse
 
 
 class ConfigTestCase(TestCase):

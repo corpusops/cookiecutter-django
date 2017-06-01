@@ -66,10 +66,10 @@
     "postgis_image": "corpusops/pgrouting:10.1-2.5.4",
     "postgresql_image": "corpusops/postgres:10",
     "postgres_image": "{{cookiecutter.postgresql_image}}",
-    "mysql_image": "mysql",
+    "mysql_image": "corpusops/mysql",
     "redis_image": "corpusops/redis:4.0-alpine",
     "nginx_image": "corpusops/nginx:1.14-alpine",
-    "user_model": "mysql",
+    "user_model": "",
     "no_lib": "",
     "no_private": ""
 }
