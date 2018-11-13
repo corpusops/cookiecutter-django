@@ -1,0 +1,18 @@
+version: '3.7'
+x-{{cookiecutter.app_type}}: &{{cookiecutter.app_type}}
+  volumes:
+  - ./local.py:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/local.py
+  environment:
+  - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-{{cookiecutter.django_settings}}.prod}
+services:
+  nginx:
+    ports:
+    - 80:80
+  {{cookiecutter.app_type}}:
+    <<: [ *{{cookiecutter.app_type}} ]
+    ports:
+    - "8000:8000"
+  {% if not cookiecutter.remove_cron %}
+  cron:
+    <<: [ *{{cookiecutter.app_type}} ]
+  {%- endif%}

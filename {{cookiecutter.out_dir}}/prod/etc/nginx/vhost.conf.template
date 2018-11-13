@@ -1,0 +1,156 @@
+# optimize internal nginx buffers
+types_hash_max_size 2048;
+variables_hash_max_size 1024;
+variables_hash_bucket_size 256;
+server_names_hash_bucket_size 256;
+server_names_hash_max_size 1024;
+proxy_headers_hash_max_size  1024;
+proxy_headers_hash_bucket_size 128;
+proxy_redirect off;
+proxy_buffer_size 256k;
+proxy_buffers 4 256k;
+proxy_busy_buffers_size 256k;
+
+# logging setup
+log_format custom_combined '"$remote_addr - $remote_user [$time_local] "$request" $status $bytes_sent "$http_referer" "$http_user_agent" "$gzip_ratio"';
+# Define type of requests going to logs (to remove OPTIONS requests for example)
+map $request_method $method_loggable { OPTIONS 0;default 1;}
+
+# activate real_ip logging
+real_ip_recursive on;
+
+# SSL offload support (use_scheme is the proxified scheme)
+# if X-SSL/X-FORWADED-PROTO header is set, we are behind a ssl gateway
+# so the scheme is either from the request or
+# forced to ssl if we have the X-SSL header set to 1
+# break loop resolution loop while map resolution
+map "$http_x_ssl$http_x_forwarded_proto" $forwarded_ssl_scheme {default $scheme; "~(1|https)" https;}
+# if we come directly from https on localbox without x_ssl, set it.
+map $forwarded_ssl_scheme $http_x_ssl_resolved {default 0; https 1;}
+
+# boolean value of https/http: on == https
+# again, we default to the request value
+# but also force it to true when we are forced
+# to be on ssl via X-SSL/X-FORWARDED-PROTO
+map $forwarded_ssl_scheme $fastcgi_ssl_toggle                 {default $https;https on;}
+map $http_x_ssl_resolved  $forwarded_remote_server_port       {default $remote_port;1 443;}
+map $http_x_ssl_resolved  $forwarded_static_server_port       {default 80;1 443;}
+map $http_x_ssl_resolved  $forwarded_server_port              {default $server_port;1 443;}
+map $http_x_ssl_resolved  $forwarded_server_port              {default $server_port;1 443;}
+map $http_x_ssl_resolved  $http_x_forwarded_protocol_resolved {default tcp;1 ssl;}
+map $http_x_ssl_resolved  $http_x_forwarded_ssl_resolved      {default off;1 on;}
+map $http_x_ssl_resolved  $http_x_forwarded_proto_resolved    {default http;1 https;}
+
+server {
+    listen 80;
+
+    server_name localhost;
+    # server_name_in_redirect on;
+
+    error_log  /logs/django-error.log  crit;
+    access_log /logs/django-access.log custom_combined if=$method_loggable;
+
+    gzip on;
+    # adds a Vary: Accept-Encoding in the response, and it's a valid varying
+    # info as we may not gzip depending on the value of Accept-Encoding
+    gzip_vary on;
+    gzip_proxied any;
+    # note that text/html is always on by default
+    gzip_types
+        text/plain
+        text/css
+        text/xml
+        text/javascript
+        text/cache-manifest
+        application/json
+        application/x-javascript
+        application/xml
+        application/xml+rss
+        application/rss+xml
+        application/javascript
+        application/atom+xml
+        application/ld+json
+        application/manifest+json
+        application/vnd.geo+json
+        application/vnd.ms-fontobject
+        application/x-font-ttf
+        application/x-web-app-manifest+json
+        image/svg+xml
+        application/xhtml+xml
+        application/vnd.mapbox-vector-tile
+        font/opentype;
+    gzip_buffers 16 8k;
+    gzip_http_version 1.1;
+    gzip_min_length 256;
+    gzip_comp_level 4;
+    client_max_body_size 100M;
+    # feed the map variables for ssl up
+    set $http_x_ssl                $http_x_ssl_resolved;
+    set $http_x_forwarded_proto    $http_x_forwarded_proto_resolved;
+    set $http_x_forwarded_ssl      $http_x_forwarded_ssl_resolved;
+    set $http_x_forwarded_protocol $http_x_forwarded_protocol_resolved;
+    # set $scheme                    $forwarded_ssl_scheme;
+    # proxy params headers
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-NginX-Proxy true;
+    proxy_set_header x-forwarded-proto $http_x_forwarded_proto_resolved;
+    proxy_set_header x-forwarded-ssl $http_x_forwarded_ssl_resolved;
+    proxy_set_header x-forwarded-protocol $http_x_forwarded_protocol_resolved;
+    proxy_buffering off;
+    proxy_http_version 1.1;
+
+    # Set custom 502 page when service is starting
+    error_page 502 /502.html;
+    location = /502.html {
+        root  /public/502.html;
+    }
+
+    location {{cookiecutter.statics_uri}}/ {
+        alias /public/static/;
+
+        # static optimisations
+        tcp_nodelay off;
+        sendfile on;
+        # Set the OS file cache.
+        open_file_cache max=3000 inactive=300s;
+        open_file_cache_valid 60s;
+        open_file_cache_min_uses 2;
+        open_file_cache_errors off;
+
+        add_header Pragma "cache";
+        add_header Cache-Control "public";
+    }
+
+    location ~ ^/(api/|admin/) {
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
+        proxy_pass http://django:8000;
+
+        # Never cache the API content to prevent proxy caching
+        add_header Pragma "no-cache";
+        add_header Cache-Control "private, max-age=0, no-cache, no-store";
+    }
+
+    location ~ ^{{cookiecutter.media_uri}}/ {
+        internal;
+        root /public/;
+    }
+
+    location / {
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
+        proxy_pass http://django:8000;
+
+        # Never cache the API content to prevent proxy caching
+        add_header Pragma "no-cache";
+        add_header Cache-Control "private, max-age=0, no-cache, no-store";
+    }
+
+    location ~ ^/mailcatcher/ {
+        proxy_pass http://mailcatcher:80;
+    }
+}

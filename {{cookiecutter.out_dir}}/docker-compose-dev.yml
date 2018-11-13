@@ -1,0 +1,42 @@
+version: '3.7'
+x-images:
+  bypass: &bypass
+    command: echo "not started"
+    restart: "no"
+    entrypoint: echo "not started"
+services:
+  nginx: {<<: [ *bypass ]}
+  backup: {<<: [ *bypass ]}
+  {{cookiecutter.app_type}}:
+    environment:
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-{{cookiecutter.django_settings}}.dev}
+      - NO_MIGRATE=1
+      - NO_COLLECT_STATIC=1
+      - NO_GUNICORN=1
+    command: "gosu {{cookiecutter.app_type}} /code/init/start.sh"
+    volumes:
+      {%-if cookiecutter.use_submodule_for_deploy_code %}
+      - ./{{cookiecutter.deploy_project_dir}}/prod/sudoer:/etc/sudoers.d/$APP_TYPE
+      - ./{{cookiecutter.deploy_project_dir}}/prod/init.sh:/code/init/init.sh
+      - ./{{cookiecutter.deploy_project_dir}}/prod/start.sh:/code/init/start.sh
+      - ./{{cookiecutter.deploy_project_dir}}/prod/cron.sh:/code/init/cron.sh
+      {%-else %}
+      - ./prod/sudoer:/etc/sudoers.d/$APP_TYPE
+      - ./prod/init.sh:/code/init/init.sh
+      - ./prod/start.sh:/code/init/start.sh
+      - ./prod/cron.sh:/code/init/cron.sh
+      {%- endif%}
+{%- if not cookiecutter.no_lib %}
+      - ./lib:/code/lib
+{%- endif%}
+      - ./local:/code/local
+      - ./src:/code/src
+{%- if not cookiecutter.no_private %}
+      - ./private:/code/private
+{%- endif%}
+      - ./tox.ini:/code/tox.ini
+      - ./.tox:/code/.tox
+      - ./requirements.txt:/code/requirements.txt
+      - ./requirements-dev.txt:/code/requirements-dev.txt
+    ports:
+      - "8000:8000"

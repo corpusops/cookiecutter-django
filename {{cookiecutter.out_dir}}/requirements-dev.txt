@@ -1,0 +1,10 @@
+# development
+django-debug-toolbar>=1.9,<1.10
+django-extensions>=2.0,<2.1
+tox
+coverage
+isort
+pylama
+tblib
+eradicate
+xlrd

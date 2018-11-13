@@ -1,0 +1,5 @@
+{
+  "name": "{{cookiecutter.django_project_name}}",
+  "dependencies": {
+  }
+}

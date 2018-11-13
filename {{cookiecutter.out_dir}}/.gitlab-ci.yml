@@ -1,0 +1,394 @@
+image: corpusops/ubuntu:18.04
+stages:
+  - manual_jobs
+  - build
+  - tests
+  - flag_success
+  - release
+  - teardown
+  - deploy
+  - manual_dev_build
+  - manual_dev_release
+  - manual_dev_teardown
+  - manual_dev_teardown
+  - manual_dev_deploy
+
+services: ["docker:dind"]
+
+variables:
+  # Keep this two next vars
+  GIT_SSL_CAPATH: /etc/ssl/certs/
+  GIT_SUBMODULE_STRATEGY: recursive
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+  #
+  TZ: Europe/Paris
+  DOCKER_REGISTRY: {{cookiecutter.docker_registry}}
+  # Configure your registry credentials in your CI secret variables
+  REGISTRY_USER: "{{cookiecutter.registry_user}}"
+  REGISTRY_PASSWORD: "{{cookiecutter.registry_password}}"
+  #
+  POSTGRES_USER: user
+  POSTGRES_DB: db
+  POSTGRES_PASSWORD: password
+  POSTGRES_HOST: db
+  # services launched during tests
+  DOCKER_SERVICES: "db redis mailcatcher"
+  # Those services underlying images will be built
+  DOCKER_BUILT_SERVICES: "{{cookiecutter.app_type}}{%if not cookiecutter.remove_cron%} cron{% endif %}"
+  # Main image
+  DOCKER_IMAGE: "{{cookiecutter.simple_docker_image}}"
+  # Image with unique identifier
+  CURRENT_DOCKER_IMAGE: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:build-${CI_PIPELINE_IID}"
+  # Released image (Targeting master)
+  LATEST_DOCKER_IMAGE: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:latest"
+  DEV_DOCKER_IMAGE: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:dev"
+  # Released image (Targeting a tag)
+  TAGGUED_DOCKER_IMAGE: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${CI_COMMIT_REF_NAME}"
+  # Allow to have many compose stacks aside.
+  D_COMPOSE: "docker-compose --verbose -f docker-compose.yml"
+  DEPLOY_PLAYBOOK: ".ansible/playbooks/app.yml"
+  IMAGES_TARBALL: "/cache/$CI_PROJECT_PATH_SLUG/docker-images/build-${CI_PIPELINE_IID}.gz"
+  REFERENCE_IMAGES_TARBALL: "/cache/$CI_PROJECT_PATH_SLUG/docker-images/${CI_COMMIT_REF_NAME}.gz"
+  REFERENCE_MASTER_IMAGES_TARBALL: "/cache/$CI_PROJECT_PATH_SLUG/docker-images/$MASTER_BRANCH.gz"
+  PRELOAD_TARBALLS: "1"
+  # To speed up all builds we may cache in Controls which branch is used to generate image cache tarball
+  CACHE_BUILD_FOR_BRANCH_REGEX: "^(master)$"
+  MASTER_BRANCH: master
+  CACHE_DAYS: "15"
+  # Path to CI success flag marker
+  SUCCESS_FLAG: "/cache/$CI_PROJECT_PATH_SLUG/ci_success_${CI_PIPELINE_IID}"
+{%-if cookiecutter.use_submodule_for_deploy_code%}
+  # {{cookiecutter.lname}} settings
+  DJANGO_DEPLOY_VERSION: origin/stable
+{%endif%}
+
+# NEVER ever use gitlab-ci cache, its broken by design in most case of CI related tasks
+# when it comes to parrallel builds reusing local artefacts during jobs thorough the
+# pipeline. Indeed, as gitlab-ci saves back cache to zipfiles, what would occcur
+# is that the result of a first be would be overwritte/corrupted by the result
+# of a parrallel, quickier, second build !!!
+# That's why, you 'd better have to use a shared volume in your runner configuration,
+# and we by default use /cache.
+# Be ware that you also must use a host volume (not a docker one !)
+# /!\: BIG_WARNING: this cache is common to all projets using this runner !
+# cache:
+#   key: "${CI_PROJECT_PATH_SLUG}"
+#   paths:
+#     - /var/cache/apt/
+#     - .ci_cache_$CI_PIPELINE_IID
+#     - .ci_cache
+
+# /!\  /!\  /!\
+# We use (ba)sh -c to enforce 3rd level of variables resolution,
+# Indeed, gitlab-ci would not interpret multiple nested variables, eg: $PRELOAD_IMAGES
+# /!\  /!\  /!\
+#
+before_script:
+{%-if cookiecutter.use_submodule_for_deploy_code%}
+- &pullsubmodules
+    cd local/terra-back-deploy && git fetch origin && git reset --hard $DJANGO_DEPLOY_VERSION && cd -
+{%endif%}
+- for i in
+    /cache/$CI_PROJECT_PATH_SLUG/docker-images
+    /cache/$CI_PROJECT_PATH_SLUG/apt
+  ;do if [ ! -e "$i" ];then mkdir -p "$i";fi;done
+- rm -rf /var/cache/apt
+- ln -s /cache/$CI_PROJECT_PATH_SLUG/apt /var/cache/apt
+- ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo ${TZ} > /etc/timezone
+- bash -c "cat >/docker_login <<< 'set -e;echo \"$REGISTRY_PASSWORD\"
+                | docker login \"$DOCKER_REGISTRY\" --username=\"$REGISTRY_USER\" --password-stdin';
+                  touch /docker_login_success"
+# first registry login does not have to success, we only want it to be available on release
+- sh /docker_login || /bin/true
+# workaround as docker-compose doesn't support default shell variable substitution in .env
+- cat .env.dist | envsubst | sed
+  -re "s/^([^=]+_IMAGE_VERSION=.*)latest/\\1build-${CI_PIPELINE_IID}/g"
+  -e "s/^(CI_COMMIT_SHA=).*/\\1${CI_COMMIT_SHA}/g" > .env
+- envsubst < docker.env.dist > docker.env
+# Also we only pull images if we got a successful login
+- sh -c "if [ -e /docker_login_success ];then
+          for i in ${PRELOAD_IMAGES};do
+            ( echo \"docker pull \$i\" && docker pull \$i || /bin/true )&
+          done;wait;
+         fi"
+# As an aditionnal source of cache, we may restore the first found reference tarball
+# in this order
+# - Current pipeline tarball
+# - A REF NAME from which we cache the build
+# - The related master (latest) branch
+- find /cache/$CI_PROJECT_PATH_SLUG
+- bash -c "if [ \"x${PRELOAD_TARBALLS}\" != \"x\" ];then for i in
+  \"\$IMAGES_TARBALL\"
+  \"\$REFERENCE_IMAGES_TARBALL\"
+  \"\$REFERENCE_MASTER_IMAGES_TARBALL\"
+  ;do
+    if [ -e \"\$i\" ];then
+     echo \"Warming docker cache from \$i\" >&2;
+     gzip -ckd \"\$i\" | docker load;
+     break;
+    fi;done;fi"
+
+build_images: &build_images
+  variables:
+    PRELOAD_IMAGES: "$LATEST_DOCKER_IMAGE $TAGGUED_DOCKER_IMAGE"
+  tags: ["{{cookiecutter.runner_tag}}"]
+  stage: build
+  script:
+  - |-
+    for i in $DOCKER_BUILT_SERVICES;do
+      ( echo "$D_COMPOSE -f docker-compose-build.yml build $i" >&2 )&
+      ( $D_COMPOSE -f docker-compose-build.yml build $i \
+        || ( echo "BUILD ERROR: $i" >> /docker_images_errors ) )&
+    done;wait;
+    if [ -e /docker_images_errors ];then cat /docker_images_errors;exit 1;fi
+  - sh -c "set -ex
+    && docker inspect \"\${CURRENT_DOCKER_IMAGE}\" >/dev/null
+    && docker save \"\${CURRENT_DOCKER_IMAGE}\"
+       | gzip > \"\${IMAGES_TARBALL}-pending\"
+    && mv -fv \"\${IMAGES_TARBALL}-pending\" \"${IMAGES_TARBALL}\""
+
+.tests_tpl: &tests_tpl
+  tags: ["{{cookiecutter.runner_tag}}"]
+  stage: tests
+  variables: {PRELOAD_IMAGES: ""}
+  script:
+  - &launch_test_stack |-
+    sh -c 'for i in $DOCKER_BUILT_SERVICES;
+     do $D_COMPOSE up -d --force-recreate --no-deps $i;done'
+
+{%- set testsc = (not cookiecutter.test_tests) and '#' or '' %}
+{{testsc}}tests:
+{{testsc}}  <<: [ *tests_tpl ]
+{{testsc}}  coverage: '/TOTAL.+ ([0-9]{1,3}%)/'
+{{testsc}}  script:
+{{testsc}}  - *launch_test_stack
+{{testsc}}  - sh -c "\$D_COMPOSE run --rm -v \$PWD/tox.ini:/code/tox.ini -T -u {{cookiecutter.app_type}} {{cookiecutter.app_type}}
+{{testsc}}    ../venv/bin/tox -c ../tox.ini -e tests,coverage"
+
+{%- set lintingc = (not cookiecutter.test_linting) and '#' or '' %}
+{{lintingc}}linting:
+{{lintingc}}  <<: [ *tests_tpl ]
+{{lintingc}}  script:
+{{lintingc}}  - *launch_test_stack
+{{lintingc}}  - sh -c "\$D_COMPOSE run --rm -v \$PWD/tox.ini:/code/tox.ini -T -u {{cookiecutter.app_type}} {{cookiecutter.app_type}}
+{{lintingc}}    ../venv/bin/tox -c ../tox.ini -e linting"
+
+.release_tpl: &release_tpl
+  stage: release
+  tags: ["{{cookiecutter.runner_tag}}"]
+  script:
+  # redo the docker login, without the /bin/true, failing if the registry is down
+  - sh /docker_login
+  # quoting & subshelling to work around gitlab variable substitutions
+  - sh -c "docker tag \"\$(eval echo \$TO_RELEASE_DOCKER_IMAGE)\"
+    \"\$(eval echo \$RELEASED_DOCKER_IMAGE)\""
+  - sh -c "docker push \"\$(eval echo \$RELEASED_DOCKER_IMAGE)\""
+  variables: &release_vars
+    PRELOAD_IMAGES: ""
+    TO_RELEASE_DOCKER_IMAGE: "$CURRENT_DOCKER_IMAGE"
+
+release_taggued_imagep: &release_taggued_image
+  <<: [ *release_tpl ]
+  only: [tags]
+  variables:
+    <<: [ *release_vars ]
+    RELEASED_DOCKER_IMAGE: "$TAGGUED_DOCKER_IMAGE"
+
+release_latest_image: &release_latest_image
+  <<: [ *release_tpl ]
+  # all branchs given here will be associated to update the latest tag
+  only: [master]
+  variables:
+    <<: [ *release_vars ]
+    RELEASED_DOCKER_IMAGE: "$LATEST_DOCKER_IMAGE"
+
+# the job will only create a file upon full tests pipeline success
+flag_success_only_on_success:
+  tags: ["{{cookiecutter.runner_tag}}"]
+  stage: flag_success
+  before_script: []
+  script:
+  - touch "${SUCCESS_FLAG}"
+
+teardown_env: &teardown_env
+  tags: ["{{cookiecutter.runner_tag}}"]
+  variables:
+    PRELOAD_TARBALLS: ""
+  stage: teardown
+  when: always
+  script:
+  - $D_COMPOSE down || /bin/true
+  # keep latest tarballs in cache for rebuilds on references branch(s)
+  - if [ -e "${IMAGES_TARBALL}" ] && [ -e "${SUCCESS_FLAG}" ];then
+      if ( echo "$CI_COMMIT_REF_NAME"
+         | egrep -q "(^($MASTER_BRANCH)$|$RESTORE_REF_TARBALL_REGEX)" )
+      ;then
+           mv -f "$IMAGES_TARBALL" "$REFERENCE_IMAGES_TARBALL";
+      fi;
+    fi
+  # cleanup pipeline image & pending artefacts
+  - rm -fv ${IMAGES_TARBALL}* "${SUCCESS_FLAG}"
+
+.deploy_tpl: &deploy_tpl
+  tags: ["{{cookiecutter.runner_tag}}"]
+  stage: deploy
+  when: manual
+  allow_failure: false
+  variables: &deploy_vars_tpl
+    NONINTERACTIVE: "1"
+    DEPLOY_PLAYBOOK: ".ansible/playbooks/app.yml"
+    NO_SILENT: ""
+  before_script:
+  # make this in only one block to be easily reusable in deploy jobs
+  - &deploy_setup set -e;vv(){ echo "$@">&2;"$@"; };
+    if [ "x${A_ENV_NAME}" = x ];then
+    echo "\$A_ENV_NAME is not set, bailing out" >&2 ;exit 1;fi;
+    vv .ansible/scripts/download_corpusops.sh;
+    vv .ansible/scripts/setup_ansible.sh;
+  - &deploy_key_setup set -e;vv(){ echo "$@">&2;"$@"; };vv
+    .ansible/scripts/call_ansible.sh -vv .ansible/playbooks/deploy_key_setup.yml
+  script:
+  - .ansible/scripts/call_ansible.sh -vv -l $A_ENV_NAME "${DEPLOY_PLAYBOOK}"
+
+deploy_dev: &deploy_dev
+  <<: [ *deploy_tpl ]
+  when: on_success
+  variables:
+    <<: [ *deploy_vars_tpl ]
+    A_ENV_NAME: dev
+  only: [master, tags]
+  environment:
+    name: dev
+    url: https://{{cookiecutter.dev_domain}}
+
+# manual rebuild on any branch except master or tags , no filter
+# and the according deploy job
+# implicitly the deploy job on the branch will auto-deploy the manually built image
+.manual_jobs_on_branches_tpl: &manual_jobs_on_branches_tpl
+  only: [branches, triggers, web, api, schedules]
+  except: [master, tags]
+
+## # separate manual launch job to allow concurrent pushing of images
+## # when project has multiple images to release
+## manual_build_image_from_any_commit_as_dev_image:
+##   <<: [ *build_images, *manual_jobs_on_branches_tpl ]
+##   stage: manual_dev_build
+##   when: manual
+##   allow_failure: false
+##
+## manual_release_any_commit_as_dev_image:
+##   <<: [ *manual_jobs_on_branches_tpl,  *release_taggued_image ]
+##   stage: manual_dev_release
+##   variables:
+##     <<: [ *release_vars ]
+##     RELEASED_DOCKER_IMAGE: "$DEV_DOCKER_IMAGE"
+##
+## manual_teardown_dev_image:
+##   <<: [ *manual_jobs_on_branches_tpl,  *teardown_env ]
+##   stage: manual_dev_teardown
+##   when: always
+##
+## deploy_dev_after_manual_release:
+##   <<: [ *manual_jobs_on_branches_tpl,  *deploy_dev ]
+##   stage: manual_dev_deploy
+##   script:
+##   - |-
+##     .ansible/scripts/call_ansible.sh -vv -l $A_ENV_NAME \
+##     "${DEPLOY_PLAYBOOK}" -e "{cops_{{cookiecutter.app_type}}_docker_tag: dev}"
+
+{% if cookiecutter.qa_host -%}
+deploy_qa: &deploy_qa
+  <<: [ *deploy_tpl ]
+  only: [tags, master]
+  variables:
+    <<: [ *deploy_vars_tpl ]
+    A_ENV_NAME: qa
+  environment:
+    name: qa
+    url: https://{{cookiecutter.qa_domain}}
+
+{% endif -%}
+{%- if cookiecutter.staging_host -%}
+deploy_staging: &deploy_staging
+  <<: [ *deploy_tpl ]
+  only: [tags, master]
+  variables:
+    <<: [ *deploy_vars_tpl ]
+    A_ENV_NAME: staging
+  environment:
+    name: staging
+    url: https://{{cookiecutter.staging_domain}}
+
+{%endif-%}
+deploy_prod: &deploy_prod
+  <<: [ *deploy_tpl ]
+  only: [tags, master]
+  variables:
+    <<: [ *deploy_vars_tpl ]
+    A_ENV_NAME: prod
+  environment:
+    name: prod
+    url: https://{{cookiecutter.prod_domain}}
+
+.manual_job_tpl: &manual_job_tpl
+  tags: ["{{cookiecutter.runner_tag}}"]
+  allow_failure: true
+  stage: manual_jobs
+  when: manual
+  only: [master, tags]
+  except: []
+{%- if cookiecutter.haproxy %}
+
+.reconfigure_haproxy_and_fw: &reconfigure_haproxy_and_firewall_tpl
+  <<: [ *manual_job_tpl ]
+  when: manual
+  script:
+  - .ansible/scripts/call_ansible.sh -vvv -l baremetals_${A_ENV_NAME}
+    local/*/*/*/playbooks/provision/lxc_compute_node/main.yml
+    -t lxc_haproxy_registrations,lxc_ms_iptables_registrations
+
+reconfigure_prod_haproxy_and_fw:
+  <<: [ *reconfigure_haproxy_and_firewall_tpl, *deploy_prod ]
+
+reconfigure_dev_haproxy_and_fw:
+  <<: [ *reconfigure_haproxy_and_firewall_tpl, *deploy_dev ]
+{% endif %}
+cleanup_all_expired_build_artefacts_from_cache:
+  <<: [ *manual_job_tpl ]
+  script:
+  - bash -c 'while read f;do rm -fv "$f";done
+    < <( find /cache/$CI_PROJECT_PATH_SLUG/docker-images/build-*
+         -type f -mtime +\$CACHE_DAYS )'
+
+cleanup_all_expired_docker_images_from_cache:
+  <<: [ *manual_job_tpl ]
+  before_script: []
+  script:
+  - bash -c 'while read f;do rm -fv "$f";done
+    < <( find /cache/$CI_PROJECT_PATH_SLUG/docker-images
+         -type f -mtime +\$CACHE_DAYS )'
+
+cleanup_all_project_cache:
+  <<: [ *manual_job_tpl ]
+  before_script: []
+  script:
+  - rm -rf /cache/$CI_PROJECT_PATH_SLUG
+
+# Allow to immediatly trigger a deploy without waiting for the full pipeline to complete
+# eg: redeploying after only issuing a deploy code or configuration change.
+manual_deploy_dev:
+  <<: [ *manual_job_tpl, *deploy_dev ]
+
+{% if cookiecutter.qa_host -%}
+manual_deploy_qa:
+  <<: [ *manual_job_tpl, *deploy_qa ]
+
+{% endif -%}
+{%- if cookiecutter.staging_host -%}
+manual_deploy_staging:
+  <<: [ *manual_job_tpl, *deploy_staging ]
+
+{% endif -%}
+manual_deploy_prod:
+  <<: [ *manual_job_tpl, *deploy_prod ]
