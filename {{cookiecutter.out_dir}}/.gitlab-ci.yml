@@ -7,11 +7,10 @@ stages:
   - release
   - teardown
   - deploy
-  - manual_dev_build
-  - manual_dev_release
-  - manual_dev_teardown
-  - manual_dev_teardown
-  - manual_dev_deploy
+# - manual_dev_build
+# - manual_dev_release
+# - manual_dev_teardown
+# - manual_dev_deploy
 
 services: ["docker:dind"]
 
@@ -269,6 +268,7 @@ deploy_dev: &deploy_dev
   only: [branches, triggers, web, api, schedules]
   except: [master, tags]
 
+# disabled for now
 ## # separate manual launch job to allow concurrent pushing of images
 ## # when project has multiple images to release
 ## manual_build_image_from_any_commit_as_dev_image:
