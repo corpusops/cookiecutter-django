@@ -1,7 +1,20 @@
 #!/bin/bash
 set -e
+readlinkf() {
+    if ( uname | egrep -iq "darwin|bsd" );then
+        if ( which greadlink 2>&1 >/dev/null );then
+            greadlink -f "$@"
+        elif ( which perl 2>&1 >/dev/null );then
+            perl -MCwd -le 'print Cwd::abs_path shift' "$@"
+        elif ( which python 2>&1 >/dev/null );then
+            python -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "$@"
+        fi
+    else
+        readlink -f "$@"
+    fi
+}
 THISSCRIPT=$0
-W="$(dirname $(readlink -f $0))"
+W="$(dirname $(readlinkf $0))"
 
 SHELL_DEBUG=${SHELL_DEBUG-${SHELLDEBUG}}
 if  [[ -n $SHELL_DEBUG ]];then set -x;fi
@@ -35,17 +48,52 @@ vv() { log "$@";"$@";}
 
 dvv() { if [[ -n $DEBUG ]];then log "$@";fi;"$@";}
 
+#  up_corpusops: update corpusops
+do_up_corpusops() {
+    local/corpusops.bootstrap/bin/install.sh -C
+}
+
 _shell() {
+    local pre=""
     local container="$1" user="$2"
+    local services_ports=${services_ports-}
     shift;shift
     local bargs="$@"
-    set -- dvv $DC \
-        run --rm --no-deps --service-ports \
-        -e TERM=$TERM -e COLUMNS=$COLUMNS -e LINES=$LINES \
-        -u $user $container bash
-    if [[ -n "$bargs" ]];then
-        set -- $@ -c "$bargs"
+    NO_VIRTUALENV=${NO_VIRTUALENV-}
+    NO_NVM=${NO_VIRTUALENV-}
+    NVMRC=${NVMRC:-.nvmrc}
+    NVM_PATH=${VENV_PATH:-..}
+    NVM_PATHS=${NVMS_PATH:-${NVM_PATH}}
+    VENV_PATH=${VENV_PATH:-../venv}
+    VENV_PATHS=${VENV_PATHS:-${VENV_PATH}}
+    # DOCKER_SHELL=${DOCKER_SHELL:-bash --norc}
+    pre="echo 8 >/code/.nvmrc"
+    if [[ -z "$NO_NVM" ]];then
+        if [[ -n "$pre" ]];then pre=" && $pre";fi
+        pre="for i in $NVM_PATHS;do \
+        if [ -e \$i/$NVMRC ] && ( nvm --help > /dev/null );then \
+            printf \"\ncd \$i && nvm install \
+            && nvm use && cd - && break\n\">>/control_bash_rc; \
+        fi;done $pre"
     fi
+    if [[ -z "$NO_VIRTUALENV" ]];then
+        if [[ -n "$pre" ]];then pre=" && $pre";fi
+        pre="for i in $VENV_PATHS;do \
+        if [ -e \$i/bin/activate ];then \
+            printf \"\n. \$i/bin/activate\n\">>/control_bash_rc && break;\
+        fi;done $pre"
+    fi
+    DOCKER_SHELL=${DOCKER_SHELL:-bash -c}
+    if [[ -z "$bargs" ]];then
+        bargs="$pre && . /control_bash_rc && sh -i"
+    else
+        bargs="$pre && . /control_bash_rc && $DOCKER_SHELL \"$bargs\""
+    fi
+    set -- dvv $DC \
+        run --rm --no-deps \
+        $( if [[ -n "$services_ports" ]];then echo "--service-ports";fi ) \
+        -e TERM=$TERM -e COLUMNS=$COLUMNS -e LINES=$LINES \
+        -u $user $container $DOCKER_SHELL "$bargs"
     "$@"
 }
 
@@ -210,7 +258,7 @@ do_coverage() { do_test coverage; }
 
 do_main() {
     local args=${@:-usage}
-    local actions="shell|usage|install_docker|setup_corpusops"
+    local actions="up_corpusops|shell|usage|install_docker|setup_corpusops"
     actions="$actions|yamldump|stop|usershell"
     actions="$actions|init|up|fg|pull|build|buildimages|down"
     actions_{{cookiecutter.app_type}}="runserver|tests|test|coverage|linting|manage|python"

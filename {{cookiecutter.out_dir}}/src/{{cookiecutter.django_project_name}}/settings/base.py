@@ -235,7 +235,7 @@ for i, val in os.environ.items():
     # Bring back prefixed env vars
     # eg DJANGO__SECRET_KEY to SECRET_KEY form.
     if i.startswith(SETTINGS_ENV_PREFIX):
-        s = prefix.join(i.split(SETTINGS_ENV_PREFIX)[1:])
+        s = SETTINGS_ENV_PREFIX.join(i.split(SETTINGS_ENV_PREFIX)[1:])
         DJANGO_ENV_VARS[s] = val
     #
     # Look also at the environ Root for explicit env vars
