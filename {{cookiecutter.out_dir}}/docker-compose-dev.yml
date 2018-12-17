@@ -1,9 +1,9 @@
 version: '3.7'
 x-images:
   bypass: &bypass
-    command: echo "not started"
+    command: 'sh -c "while true;do echo notstarted;sleep 65000;done"'
+    entrypoint: 'sh -c "while true;do echo notstarted;sleep 65000;done"'
     restart: "no"
-    entrypoint: echo "not started"
 services:
   nginx: {<<: [ *bypass ]}
   backup: {<<: [ *bypass ]}
