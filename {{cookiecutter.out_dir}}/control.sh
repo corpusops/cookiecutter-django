@@ -73,21 +73,21 @@ _shell() {
         pre="for i in $NVM_PATHS;do \
         if [ -e \$i/$NVMRC ] && ( nvm --help > /dev/null );then \
             printf \"\ncd \$i && nvm install \
-            && nvm use && cd - && break\n\">>/control_bash_rc; \
+            && nvm use && cd - && break\n\">>\$HOME/.control_bash_rc; \
         fi;done $pre"
     fi
     if [[ -z "$NO_VIRTUALENV" ]];then
         if [[ -n "$pre" ]];then pre=" && $pre";fi
         pre="for i in $VENV_PATHS;do \
         if [ -e \$i/bin/activate ];then \
-            printf \"\n. \$i/bin/activate\n\">>/control_bash_rc && break;\
+            printf \"\n. \$i/bin/activate\n\">>\$HOME/.control_bash_rc && break;\
         fi;done $pre"
     fi
     DOCKER_SHELL=${DOCKER_SHELL:-bash -c}
     if [[ -z "$bargs" ]];then
-        bargs="$pre && . /control_bash_rc && sh -i"
+        bargs="$pre && . \$HOME/.control_bash_rc && sh -i"
     else
-        bargs="$pre && . /control_bash_rc && $DOCKER_SHELL \"$bargs\""
+        bargs="$pre && . \$HOME/.control_bash_rc && $DOCKER_SHELL \"$bargs\""
     fi
     set -- dvv $DC \
         run --rm --no-deps \
