@@ -7,10 +7,7 @@ stages:
   - release
   - teardown
   - deploy
-# - manual_dev_build
-# - manual_dev_release
-# - manual_dev_teardown
-# - manual_dev_deploy
+  - manual_dev_deploy
 
 services: ["docker:dind"]
 
@@ -83,7 +80,7 @@ variables:
 # Indeed, gitlab-ci would not interpret multiple nested variables, eg: $PRELOAD_IMAGES
 # /!\  /!\  /!\
 #
-before_script:
+before_script: &top_before_script
 {%-if cookiecutter.use_submodule_for_deploy_code%}
 - &pullsubmodules
     cd local/terra-back-deploy && git fetch origin && git reset --hard $DJANGO_DEPLOY_VERSION && cd -
@@ -129,19 +126,19 @@ before_script:
     fi;done;fi"
 
 build_images: &build_images
-  variables:
+  variables: &build_images_vars
     PRELOAD_IMAGES: "$LATEST_DOCKER_IMAGE $TAGGUED_DOCKER_IMAGE"
   tags: ["{{cookiecutter.runner_tag}}"]
   stage: build
   script:
-  - |-
+  - &build_step1 |-
     for i in $DOCKER_BUILT_SERVICES;do
       ( echo "$D_COMPOSE -f docker-compose-build.yml build $i" >&2 )&
       ( $D_COMPOSE -f docker-compose-build.yml build $i \
         || ( echo "BUILD ERROR: $i" >> /docker_images_errors ) )&
     done;wait;
     if [ -e /docker_images_errors ];then cat /docker_images_errors;exit 1;fi
-  - sh -c "set -ex
+  - &build_step2 sh -c "set -ex
     && docker inspect \"\${CURRENT_DOCKER_IMAGE}\" >/dev/null
     && docker save \"\${CURRENT_DOCKER_IMAGE}\"
        | gzip > \"\${IMAGES_TARBALL}-pending\"
@@ -178,11 +175,11 @@ build_images: &build_images
   tags: ["{{cookiecutter.runner_tag}}"]
   script:
   # redo the docker login, without the /bin/true, failing if the registry is down
-  - sh /docker_login
+  - &release_step1 sh /docker_login
   # quoting & subshelling to work around gitlab variable substitutions
-  - sh -c "docker tag \"\$(eval echo \$TO_RELEASE_DOCKER_IMAGE)\"
+  - &release_step2 sh -c "docker tag \"\$(eval echo \$TO_RELEASE_DOCKER_IMAGE)\"
     \"\$(eval echo \$RELEASED_DOCKER_IMAGE)\""
-  - sh -c "docker push \"\$(eval echo \$RELEASED_DOCKER_IMAGE)\""
+  - &release_step3 sh -c "docker push \"\$(eval echo \$RELEASED_DOCKER_IMAGE)\""
   variables: &release_vars
     PRELOAD_IMAGES: ""
     TO_RELEASE_DOCKER_IMAGE: "$CURRENT_DOCKER_IMAGE"
@@ -217,9 +214,9 @@ teardown_env: &teardown_env
   stage: teardown
   when: always
   script:
-  - $D_COMPOSE down || /bin/true
+  - &teardown_step1 $D_COMPOSE down || /bin/true
   # keep latest tarballs in cache for rebuilds on references branch(s)
-  - if [ -e "${IMAGES_TARBALL}" ] && [ -e "${SUCCESS_FLAG}" ];then
+  - &teardown_step2 if [ -e "${IMAGES_TARBALL}" ] && [ -e "${SUCCESS_FLAG}" ];then
       if ( echo "$CI_COMMIT_REF_NAME"
          | egrep -q "(^($MASTER_BRANCH)$|$RESTORE_REF_TARBALL_REGEX)" )
       ;then
@@ -227,7 +224,7 @@ teardown_env: &teardown_env
       fi;
     fi
   # cleanup pipeline image & pending artefacts
-  - rm -fv ${IMAGES_TARBALL}* "${SUCCESS_FLAG}"
+  - &teardown_step3 rm -fv ${IMAGES_TARBALL}* "${SUCCESS_FLAG}"
 
 .deploy_tpl: &deploy_tpl
   tags: ["{{cookiecutter.runner_tag}}"]
@@ -253,7 +250,7 @@ teardown_env: &teardown_env
 deploy_dev: &deploy_dev
   <<: [ *deploy_tpl ]
   when: on_success
-  variables:
+  variables: &deploy_dev_vars
     <<: [ *deploy_vars_tpl ]
     A_ENV_NAME: dev
   only: [master, tags]
@@ -268,34 +265,30 @@ deploy_dev: &deploy_dev
   only: [branches, triggers, web, api, schedules]
   except: [master, tags]
 
-# disabled for now
-## # separate manual launch job to allow concurrent pushing of images
-## # when project has multiple images to release
-## manual_build_image_from_any_commit_as_dev_image:
-##   <<: [ *build_images, *manual_jobs_on_branches_tpl ]
-##   stage: manual_dev_build
-##   when: manual
-##   allow_failure: false
-##
-## manual_release_any_commit_as_dev_image:
-##   <<: [ *manual_jobs_on_branches_tpl,  *release_taggued_image ]
-##   stage: manual_dev_release
-##   variables:
-##     <<: [ *release_vars ]
-##     RELEASED_DOCKER_IMAGE: "$DEV_DOCKER_IMAGE"
-##
-## manual_teardown_dev_image:
-##   <<: [ *manual_jobs_on_branches_tpl,  *teardown_env ]
-##   stage: manual_dev_teardown
-##   when: always
-##
-## deploy_dev_after_manual_release:
-##   <<: [ *manual_jobs_on_branches_tpl,  *deploy_dev ]
-##   stage: manual_dev_deploy
-##   script:
-##   - |-
-##     .ansible/scripts/call_ansible.sh -vv -l $A_ENV_NAME \
-##     "${DEPLOY_PLAYBOOK}" -e "{cops_{{cookiecutter.app_type}}_docker_tag: dev}"
+# As gitlab-ci does not support pipeline branching, for manual dev release, we need
+# to make a last and one-for-all deploy step for non-blocking pipelines when we do a merge request
+manual_dev_release_and_deploy:
+  <<: [ *manual_jobs_on_branches_tpl, *deploy_dev, *release_tpl ]
+  stage: manual_dev_deploy
+  when: manual
+  allow_failure: true
+  variables:
+    <<: [ *build_images_vars, *release_vars, *deploy_dev_vars ]
+    RELEASED_DOCKER_IMAGE: "$DEV_DOCKER_IMAGE"
+  before_script: *top_before_script
+  script:
+  - *build_step1
+  - *release_step1
+  - *release_step2
+  - *release_step3
+  - *teardown_step1
+  - *teardown_step2
+  - *teardown_step3
+  - *deploy_setup
+  - *deploy_key_setup
+  - |-
+    .ansible/scripts/call_ansible.sh -vv -l $A_ENV_NAME \
+    "${DEPLOY_PLAYBOOK}" -e "{cops_{{cookiecutter.app_type}}_docker_tag: dev}"
 
 {% if cookiecutter.qa_host -%}
 deploy_qa: &deploy_qa
