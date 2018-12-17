@@ -67,7 +67,7 @@ _shell() {
     VENV_PATH=${VENV_PATH:-../venv}
     VENV_PATHS=${VENV_PATHS:-${VENV_PATH}}
     # DOCKER_SHELL=${DOCKER_SHELL:-bash --norc}
-    pre="echo 8 >/code/.nvmrc"
+    pre=""
     if [[ -z "$NO_NVM" ]];then
         if [[ -n "$pre" ]];then pre=" && $pre";fi
         pre="for i in $NVM_PATHS;do \
@@ -85,7 +85,7 @@ _shell() {
     fi
     DOCKER_SHELL=${DOCKER_SHELL:-bash -c}
     if [[ -z "$bargs" ]];then
-        bargs="$pre && . \$HOME/.control_bash_rc && sh -i"
+        bargs="$pre && if ( echo \"$DOCKER_SHELL\" |grep -q bash );then exec bash --init-file \$HOME/.control_bash_rc -i;else . \$HOME/.control_bash_rc && exec sh -i;fi"
     else
         bargs="$pre && . \$HOME/.control_bash_rc && $DOCKER_SHELL \"$bargs\""
     fi
