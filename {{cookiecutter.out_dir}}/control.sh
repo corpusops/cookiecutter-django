@@ -55,19 +55,29 @@ do_up_corpusops() {
 
 _shell() {
     local pre=""
-    local container="$1" user="$2"
+    local container="$1" user="$2" run_mode="$3"
+    shift;shift;shift
     local services_ports=${services_ports-}
-    shift;shift
     local bargs="$@"
-    NO_VIRTUALENV=${NO_VIRTUALENV-}
-    NO_NVM=${NO_VIRTUALENV-}
-    NVMRC=${NVMRC:-.nvmrc}
-    NVM_PATH=${VENV_PATH:-..}
-    NVM_PATHS=${NVMS_PATH:-${NVM_PATH}}
-    VENV_PATH=${VENV_PATH:-../venv}
-    VENV_PATHS=${VENV_PATHS:-${VENV_PATH}}
-    # DOCKER_SHELL=${DOCKER_SHELL:-bash --norc}
-    pre=""
+    local NO_VIRTUALENV=${NO_VIRTUALENV-}
+    local NO_NVM=${NO_VIRTUALENV-}
+    local NVMRC=${NVMRC:-.nvmrc}
+    local NVM_PATH=${VENV_PATH:-..}
+    local NVM_PATHS=${NVMS_PATH:-${NVM_PATH}}
+    local VENV_PATH=${VENV_PATH:-../venv}
+    local VENV_PATHS=${VENV_PATHS:-${VENV_PATH}}
+    local DOCKER_SHELL=${DOCKER_SHELL-}
+    local run_mode_args=""
+    local pre="DOCKER_SHELL=\"$DOCKER_SHELL\";touch \$HOME/.control_bash_rc;
+    if [ \"x\$DOCKER_SHELL\" = \"x\" ];then
+        if ( bash --version >/dev/null 2>&1 );then DOCKER_SHELL=\"bash\"; else DOCKER_SHELL=\"sh\";fi;
+    fi"
+    if [[ "$run_mode" == "run" ]];then
+        run_mode_args="$run_mode_args --rm --no-deps"
+        if [[ -n "$services_ports" ]];then
+            run_mode_args="$run_mode_args --service-ports"
+        fi
+    fi
     if [[ -z "$NO_NVM" ]];then
         if [[ -n "$pre" ]];then pre=" && $pre";fi
         pre="for i in $NVM_PATHS;do \
@@ -83,25 +93,39 @@ _shell() {
             printf \"\n. \$i/bin/activate\n\">>\$HOME/.control_bash_rc && break;\
         fi;done $pre"
     fi
-    DOCKER_SHELL=${DOCKER_SHELL:-bash -c}
     if [[ -z "$bargs" ]];then
-        bargs="$pre && if ( echo \"$DOCKER_SHELL\" |grep -q bash );then exec bash --init-file \$HOME/.control_bash_rc -i;else . \$HOME/.control_bash_rc && exec sh -i;fi"
+        bargs="$pre && if ( echo \"\$DOCKER_SHELL\" | grep -q bash );then \
+            exec bash --init-file \$HOME/.control_bash_rc -i;\
+            else . \$HOME/.control_bash_rc && exec sh -i;fi"
     else
-        bargs="$pre && . \$HOME/.control_bash_rc && $DOCKER_SHELL \"$bargs\""
+        bargs="$pre && . \$HOME/.control_bash_rc && \$DOCKER_SHELL -c \"$bargs\""
     fi
     set -- dvv $DC \
-        run --rm --no-deps \
-        $( if [[ -n "$services_ports" ]];then echo "--service-ports";fi ) \
+        $run_mode $run_mode_args \
         -e TERM=$TERM -e COLUMNS=$COLUMNS -e LINES=$LINES \
-        -u $user $container $DOCKER_SHELL "$bargs"
+        -u $user $container sh $( if [[ -z "$bargs" ]];then echo "-i";fi ) -c "$bargs"
     "$@"
 }
 
-#  usershell $user [$args]: open shell inside container as \$APP_USER
-do_usershell() { _shell $APP_CONTAINER $APP_USER $@;}
+#  usershell $user [$args]: open shell inside container as \$APP_USER using docker-compose run
+#       APP_USER=django ./control.sh usershell ls /
+#       APP_USER=root APP_CONTAINER=redis ./control.sh usershell ls /
+do_usershell() { _shell $APP_CONTAINER $APP_USER run $@;}
 
-#  shell [$args]: open root shell inside \$APP_CONTAINER
-do_shell()     { _shell $APP_CONTAINER root      $@;}
+#  shell [$args]: open root shell inside \$APP_CONTAINER using docker-compose run
+do_shell()     { _shell $APP_CONTAINER root      run $@;}
+
+_exec() {
+    local user="$2" container="$1";shift;shift
+    _shell "$container" "$user" exec $@
+}
+#  userexec [$args]: exec command or shell as $user inside running \$APP_CONTAINER using docker-compose exec
+#       APP_USER=django ./control.sh userexec ls /
+#       APP_USER=root APP_CONTAINER=redis ./control.sh userexec ls /
+do_userexec() { _exec $APP_CONTAINER $APP_USER $@;}
+
+#  exec [$args]: exec command or shell as root inside running \$APP_CONTAINER using docker-compose exec
+do_exec()     { _exec $APP_CONTAINER root      $@;}
 
 #  install_docker: install docker and docker-compose on ubuntu
 do_install_docker() {
@@ -146,7 +170,7 @@ stop_containers() {
 #  fg: launch app container in foreground (using entrypoint)
 do_fg() {
     stop_containers
-    vv $DC run --rm --no-deps --service-ports $APP_CONTAINER $@
+    vv $DC run --rm --no-deps --use-aliases --service-ports $APP_CONTAINER $@
 }
 
 #  build [$args]: rebuild app containers ($BUILD_CONTAINERS)
@@ -259,7 +283,7 @@ do_coverage() { do_test coverage; }
 do_main() {
     local args=${@:-usage}
     local actions="up_corpusops|shell|usage|install_docker|setup_corpusops"
-    actions="$actions|yamldump|stop|usershell"
+    actions="$actions|yamldump|stop|usershell|exec|userexec"
     actions="$actions|init|up|fg|pull|build|buildimages|down"
     actions_{{cookiecutter.app_type}}="runserver|tests|test|coverage|linting|manage|python"
     actions="@($actions|$actions_{{cookiecutter.app_type}})"
