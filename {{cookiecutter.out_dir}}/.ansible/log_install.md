@@ -118,6 +118,8 @@
       local/*/*/corpusops.roles/services_ci_gitlab_runner/role.yml
     ```
 ### Register to gitlab server each CI node runner
+- ``pre_clone_script`` is suport important to workaround [gitlab#1736](https://gitlab.com/gitlab-org/gitlab-runner/issues/1736)
+- you also need to adjust ``volumes``
 - On your docker executor gitlabCI runner, ensure it is configured as the following
 
     ```sh
@@ -132,6 +134,7 @@
     # [[runners]]
     # builds_dir = "/srv/nobackup/gitlabrunner/builds"
     # cache_dir = "/cache"
+    # pre_clone_script = "umask 0022"
     # [runners.docker]
     # privileged: true
     # disable_cache: false
