@@ -83,7 +83,7 @@ variables:
 before_script: &top_before_script
 {%-if cookiecutter.use_submodule_for_deploy_code%}
 - &pullsubmodules
-    cd local/terra-back-deploy && git fetch origin && git reset --hard $DJANGO_DEPLOY_VERSION && cd -
+    cd {{cookiecutter.deploy_project_dir}} && git fetch origin && git reset --hard $DJANGO_DEPLOY_VERSION && cd -
 {%endif%}
 - for i in
     /cache/$CI_PROJECT_PATH_SLUG/docker-images
