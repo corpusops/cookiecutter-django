@@ -216,6 +216,8 @@ CACHES = {
     }
 }
 
+CORS_ORIGIN_ALLOW_ALL = True
+
 # Make django configurable via environment
 SETTINGS_ENV_PREFIX = 'DJANGO__'
 # Those settings will throw a launch failure in deploy envs
@@ -274,6 +276,7 @@ def set_prod_settings(g, env):
             env=env))
     g['CORS_ORIGIN_WHITELIST '] = (
         '{env}-{{cookiecutter.lname}}.{{cookiecutter.tld_domain}}'.format(env=env),  #noqa
+        '.{{cookiecutter.tld_domain}}'
     )
     g['ALLOWED_HOSTS'] = [
         '{env}-{{cookiecutter.lname}}.{{cookiecutter.tld_domain}}'.format(
