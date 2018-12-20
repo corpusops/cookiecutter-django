@@ -100,32 +100,76 @@ _shell() {
     else
         bargs="$pre && . \$HOME/.control_bash_rc && \$DOCKER_SHELL -c \"$bargs\""
     fi
-    set -- dvv $DC \
-        $run_mode $run_mode_args \
-        -e TERM=$TERM -e COLUMNS=$COLUMNS -e LINES=$LINES \
-        -u $user $container sh $( if [[ -z "$bargs" ]];then echo "-i";fi ) -c "$bargs"
+    if [[ "$run_mode" == "dexec" ]];then
+        set -- dvv docker exec -ti \
+            -e TERM=$TERM -e COLUMNS=$COLUMNS -e LINES=$LINES \
+            -u $user $container sh $( if [[ -z "$bargs" ]];then echo "-i";fi ) -c "$bargs"
+    else
+        set -- dvv $DC \
+            $run_mode $run_mode_args \
+            -e TERM=$TERM -e COLUMNS=$COLUMNS -e LINES=$LINES \
+            -u $user $container sh $( if [[ -z "$bargs" ]];then echo "-i";fi ) -c "$bargs"
+    fi
     "$@"
 }
 
+#  dcompose $@: wrapper to docker-compose
+do_dcompose() {
+    set -- dvv $DC "$@"
+    "$@"
+}
+
+#  ----
 #  usershell $user [$args]: open shell inside container as \$APP_USER using docker-compose run
 #       APP_USER=django ./control.sh usershell ls /
 #       APP_USER=root APP_CONTAINER=redis ./control.sh usershell ls /
-do_usershell() { _shell $APP_CONTAINER $APP_USER run $@;}
+do_usershell() { _shell "$APP_CONTAINER" "$APP_USER" run $@;}
 
 #  shell [$args]: open root shell inside \$APP_CONTAINER using docker-compose run
-do_shell()     { _shell $APP_CONTAINER root      run $@;}
+#  ----
+do_shell()     { _shell "$APP_CONTAINER" root      run $@;}
 
 _exec() {
     local user="$2" container="$1";shift;shift
     _shell "$container" "$user" exec $@
 }
-#  userexec [$args]: exec command or shell as $user inside running \$APP_CONTAINER using docker-compose exec
+
+#  userexec [$args]: exec command or make an interactive shell as $user inside running \$APP_CONTAINER using docker-compose exec
 #       APP_USER=django ./control.sh userexec ls /
 #       APP_USER=root APP_CONTAINER=redis ./control.sh userexec ls /
-do_userexec() { _exec $APP_CONTAINER $APP_USER $@;}
+do_userexec() { _exec "$APP_CONTAINER" "$APP_USER" $@;}
 
 #  exec [$args]: exec command or shell as root inside running \$APP_CONTAINER using docker-compose exec
-do_exec()     { _exec $APP_CONTAINER root      $@;}
+#  ----
+do_exec()     { _exec "$APP_CONTAINER" root      $@;}
+
+_dexec() {
+    local user="$2" container="$1";shift;shift
+    if [[ -z $container ]];then
+        container=$(docker ps -a|grep _${APP_CONTAINER}_|awk '{print $1}')
+    fi
+    if [[ -z $container ]];then
+        echo "Provide container to execute into (docker ps -a)" >&2
+        exit 1
+    fi
+    _shell "$container" "$user" dexec $@
+}
+
+#  duserexec $container  [$args]: exec command or make an interactive shell as $user inside running \$APP_CONTAINER using docker exec
+#       APP_USER=django ./control.sh duserexec -> run interactive shell inside default container
+#       APP_USER=django ./control.sh duserexec foo123 -> run interactive shell inside foo123 container
+#       APP_USER=django ./control.sh duserexec django_123 ls / -> run comand inside foo123 container
+do_duserexec() {
+    local container="${1-}";if [[ -n "${1-}" ]];then shift;fi
+    _dexec "${container}" "$APP_USER" $@;
+}
+
+#  dexec $container  [$args]: exec command or make an interactive shell as root inside running \$APP_CONTAINER using docker exec
+#  ----
+do_dexec() {
+    local container="${1-}";if [[ -n "${1-}" ]];then shift;fi
+    _dexec "${container}" root      $@;
+}
 
 #  install_docker: install docker and docker-compose on ubuntu
 do_install_docker() {
@@ -250,14 +294,9 @@ do_manage() {
     do_python manage.py $@
 }
 
-#  runserver [$args]: launch app container in foreground (using {{cookiecutter.app_type}} runserver)
+#  runserver [$args]: alias for fg
 do_runserver() {
-    local bargs=${@:-0.0.0.0:8000}
-    stop_containers
-    do_shell \
-    ". ../venv/bin/activate
-    && ./manage.py migrate
-    && ./manage.py runserver $bargs"
+    do_fg "$@"
 }
 
 do_run_server() { do_runserver $@; }
@@ -283,7 +322,7 @@ do_coverage() { do_test coverage; }
 do_main() {
     local args=${@:-usage}
     local actions="up_corpusops|shell|usage|install_docker|setup_corpusops"
-    actions="$actions|yamldump|stop|usershell|exec|userexec"
+    actions="$actions|yamldump|stop|usershell|exec|userexec|dexec|duserexec|dcompose"
     actions="$actions|init|up|fg|pull|build|buildimages|down"
     actions_{{cookiecutter.app_type}}="runserver|tests|test|coverage|linting|manage|python"
     actions="@($actions|$actions_{{cookiecutter.app_type}})"
