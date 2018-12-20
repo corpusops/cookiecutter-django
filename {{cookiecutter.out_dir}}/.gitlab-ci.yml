@@ -7,7 +7,6 @@ stages:
   - release
   - teardown
   - deploy
-  - manual_dev_deploy
 
 services: ["docker:dind"]
 
@@ -269,7 +268,7 @@ deploy_dev: &deploy_dev
 # to make a last and one-for-all deploy step for non-blocking pipelines when we do a merge request
 manual_dev_release_and_deploy:
   <<: [ *manual_jobs_on_branches_tpl, *deploy_dev, *release_tpl ]
-  stage: manual_dev_deploy
+  stage: manual_jobs
   when: manual
   allow_failure: true
   variables:
