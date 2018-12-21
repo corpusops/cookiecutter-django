@@ -290,8 +290,8 @@ def post_process_settings(g=None):
             if g[setting]:
                 g[setting] = as_bool(g[setting])
         except KeyError:
-            pass 
-    {%- if cookiecutter.with_sentry %}sentry_dsn = g.setdefault('SENTRY_DSN', '')
+            pass
+    {% if cookiecutter.with_sentry -%}sentry_dsn = g.setdefault('SENTRY_DSN', '')
     if sentry_dsn:
         if 'raven.contrib.django.raven_compat' not in g['INSTALLED_APPS']:
             g['INSTALLED_APPS'] = (
@@ -302,7 +302,7 @@ def post_process_settings(g=None):
 
 
 def set_prod_settings(g, env):
-    {%- if cookiecutter.with_sentry %}sentry_dsn = g.setdefault('SENTRY_DSN', '')
+    {% if cookiecutter.with_sentry -%}sentry_dsn = g.setdefault('SENTRY_DSN', '')
     sentry_release = g.setdefault('SENTRY_RELEASE', 'prod')
     if sentry_dsn:
         if 'raven.contrib.django.raven_compat' not in g['INSTALLED_APPS']:
