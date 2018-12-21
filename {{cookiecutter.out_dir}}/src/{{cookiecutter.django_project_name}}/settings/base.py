@@ -218,6 +218,10 @@ CACHES = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 
+# Mail
+EMAIL_HOST = 'mailcatcher'
+EMAIL_PORT = 1025
+
 # Make django configurable via environment
 SETTINGS_ENV_PREFIX = 'DJANGO__'
 # Those settings will throw a launch failure in deploy envs
@@ -287,20 +291,18 @@ def post_process_settings(g=None):
                 g[setting] = as_bool(g[setting])
         except KeyError:
             pass 
-    {%- if cookiecutter.with_sentry %}
-    sentry_dsn = g.setdefault('SENTRY_DSN', '')
+    {%- if cookiecutter.with_sentry %}sentry_dsn = g.setdefault('SENTRY_DSN', '')
     if sentry_dsn:
         if 'raven.contrib.django.raven_compat' not in g['INSTALLED_APPS']:
             g['INSTALLED_APPS'] = (
                 type(g['INSTALLED_APPS'])(['raven.contrib.django.raven_compat']) +
                 g['INSTALLED_APPS'])
-    {% endif %}
+    {%- endif %}
     return g
 
 
 def set_prod_settings(g, env):
-    {%- if cookiecutter.with_sentry %}
-    sentry_dsn = g.setdefault('SENTRY_DSN', '')
+    {%- if cookiecutter.with_sentry %}sentry_dsn = g.setdefault('SENTRY_DSN', '')
     sentry_release = g.setdefault('SENTRY_RELEASE', 'prod')
     if sentry_dsn:
         if 'raven.contrib.django.raven_compat' not in g['INSTALLED_APPS']:
@@ -324,7 +326,9 @@ def set_prod_settings(g, env):
                 'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',  #noqa
                 'tags': {},
             }})
-    {% endif %}
+        if 'DEPLOY_ENV' in g:
+            log['handlers']['sentry']['tags']['deploy_env'] = g['DEPLOY_ENV']
+    {%- endif %}
     server_email = g.setdefault(
         'SERVER_EMAIL',
         '{env}-{{cookiecutter.lname}}@{{cookiecutter.tld_domain}}'.format(env=env))

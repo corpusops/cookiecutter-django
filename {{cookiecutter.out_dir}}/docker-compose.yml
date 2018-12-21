@@ -21,8 +21,7 @@ x-images:
       - logs:/logs/
 services:
     image: mailhog/mailhog
-     hostname: mailcatcher
-+    volumes: ["mails:/mails"]
+    volumes: ["mails:/mails"]
     environment:
       MH_STORAGE: maildir
       MH_MAILDIR_PATH: /mails

@@ -13,3 +13,5 @@ cops_{{cookiecutter.app_type}}_registries:
 - username: "userA"
   registry: "{{cookiecutter.docker_registry}}"
   password: "superpwd"
+# cops_{{cookiecutter.lname}}_sentry_dsn: ""
+# cops_{{cookiecutter.lname}}_mailcatcher_password: ""

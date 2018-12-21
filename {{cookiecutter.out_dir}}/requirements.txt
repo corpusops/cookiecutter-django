@@ -28,4 +28,4 @@ gunicorn>=19.8,<19.9
 
 {%- if cookiecutter.with_sentry -%}
 raven==6.10.0
-{%- endif%} 
+{%- endif%}
