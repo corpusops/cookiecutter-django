@@ -2,8 +2,6 @@ version: '3.7'
 x-{{cookiecutter.app_type}}: &{{cookiecutter.app_type}}
   volumes:
   - ./local.py:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/local.py
-  environment:
-  - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-{{cookiecutter.django_settings}}.prod}
 services:
   nginx:
     ports:

@@ -27,6 +27,8 @@ MIDDLEWARE += (
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
+g = post_process_settings(globals())
+globals().update(g)
 try:
     from .local import *  # noqa
 except ImportError:

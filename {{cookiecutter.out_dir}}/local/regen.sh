@@ -27,7 +27,7 @@ fi
 if [ -e "$out" ];then vv rm -rf "$out";fi
 vv cookiecutter --no-input -o "$out" -f "$u" \
     {% for i, val in cookiecutter.items() %}{% if
-        i not in ['_template']%}{{i}}="{{val}}" \
+        i not in ['_template']%}{{i}}="{{val.replace('$', '\$')}}" \
     {%endif%}{%endfor %} "$@"
 
 # to finish template loop

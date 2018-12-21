@@ -20,15 +20,15 @@ from django.utils.log import DEFAULT_LOGGING
 
 
 def as_bool(value, asbool=True):
-    if isinstance(string, six.string_types):
+    if isinstance(value, six.string_types):
         if value and asbool:
             low = value.lower().strip()
             if low in [
-                'non', 'no', 'n', 'off', '0', '',
+                'false', 'non', 'no', 'n', 'off', '0', '',
             ]:
                 return False
             if low in [
-                'oui', 'yes', 'y', 'on', '1',
+                'true', 'oui', 'yes', 'y', 'on', '1',
             ]:
                 return True
     return bool(value)
@@ -263,21 +263,78 @@ def check_explicit_settings(g=None):
             _ = g[i]  #noqa
         except KeyError:
             raise Error('{0} django settings is not defined')
+    return g
+
+
+def post_process_settings(g=None):
+    if g is None:
+        g = globals()
+    g = check_explicit_settings(g)
+    for setting in (
+        'EMAIL_PORT',
+    ):
+        try:
+            if g[setting]:
+                g[setting] = int(g[setting])
+        except KeyError:
+            pass
+    for setting in (
+        'EMAIL_USE_TLS',
+        'CORS_ORIGIN_ALLOW_ALL',
+    ):
+        try:
+            if g[setting]:
+                g[setting] = as_bool(g[setting])
+        except KeyError:
+            pass 
+    {%- if cookiecutter.with_sentry %}
+    sentry_dsn = g.setdefault('SENTRY_DSN', '')
+    if sentry_dsn:
+        if 'raven.contrib.django.raven_compat' not in g['INSTALLED_APPS']:
+            g['INSTALLED_APPS'] = (
+                type(g['INSTALLED_APPS'])(['raven.contrib.django.raven_compat']) +
+                g['INSTALLED_APPS'])
+    {% endif %}
+    return g
 
 
 def set_prod_settings(g, env):
-    check_explicit_settings(g)
+    {%- if cookiecutter.with_sentry %}
+    sentry_dsn = g.setdefault('SENTRY_DSN', '')
+    sentry_release = g.setdefault('SENTRY_RELEASE', 'prod')
+    if sentry_dsn:
+        if 'raven.contrib.django.raven_compat' not in g['INSTALLED_APPS']:
+            g['INSTALLED_APPS'] = (
+                type(g['INSTALLED_APPS'])(['raven.contrib.django.raven_compat']) +
+                g['INSTALLED_APPS'])
+        s = g.setdefault('RAVEN_CONFIG', {})
+        s['dsn'] = sentry_dsn
+        s.setdefault('transport',
+                     'raven.transport.requests.RequestsHTTPTransport')
+        # If you are using git, you can also automatically
+        # configure the release based on the git info.
+        s.setdefault('release', sentry_release)
+        log = g.setdefault('LOGGING', copy.deepcopy(DEFAULT_LOGGING))
+        root = log.setdefault('root', {})
+        root['handlers'] = ['sentry']
+        log['disable_existing_loggers'] = True
+        log.setdefault('handlers', {}).update({
+            'sentry': {
+                'level': 'ERROR',
+                'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',  #noqa
+                'tags': {},
+            }})
+    {% endif %}
+    server_email = g.setdefault(
+        'SERVER_EMAIL',
+        '{env}-{{cookiecutter.lname}}@{{cookiecutter.tld_domain}}'.format(env=env))
+    g.setdefault('admins', [('root', server_email)])
     g.setdefault('EMAIL_HOST', 'localhost')
-    g.setdefault('EMAIL_PORT', 1025)
-    g.setdefault('EMAIL_USE_TLS', False)
-    g.setdefault(
-        'DEFAULT_FROM_EMAIL',
-        '{env}-{{cookiecutter.lname}}@{{cookiecutter.tld_domain}}'.format(
-            env=env))
-    g['CORS_ORIGIN_WHITELIST '] = (
+    g.setdefault('DEFAULT_FROM_EMAIL', server_email)
+    g['CORS_ORIGIN_WHITELIST'] = [
         '{env}-{{cookiecutter.lname}}.{{cookiecutter.tld_domain}}'.format(env=env),  #noqa
         '.{{cookiecutter.tld_domain}}'
-    )
+    ]
     g['ALLOWED_HOSTS'] = [
         '{env}-{{cookiecutter.lname}}.{{cookiecutter.tld_domain}}'.format(
             env=env),

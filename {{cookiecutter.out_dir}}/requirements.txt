@@ -25,3 +25,7 @@ Fiona>=1.7,<1.8
 
 # webserver
 gunicorn>=19.8,<19.9
+
+{%- if cookiecutter.with_sentry -%}
+raven==6.10.0
+{%- endif%} 

@@ -6,7 +6,6 @@ x-images:
     tty: true
     image: "${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE}:${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE_VERSION}"
     environment:
-      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-{{cookiecutter.django_settings}}.prod}
       - DJANGO_WSGI=${DJANGO_WSGI:-{{cookiecutter.django_project_name}}.wsgi}
     depends_on:
       - db
@@ -21,6 +20,26 @@ x-images:
       - statics:/code/public/static
       - logs:/logs/
 services:
+    image: mailhog/mailhog
+     hostname: mailcatcher
++    volumes: ["mails:/mails"]
+    environment:
+      MH_STORAGE: maildir
+      MH_MAILDIR_PATH: /mails
+      MH_SMTP_BIND_ADDR: 0.0.0.0:1025
+      MH_API_BIND_ADDR: 0.0.0.0:8025
+      MH_UI_BIND_ADDR: 0.0.0.0:8025
+      MH_UI_WEB_PATH: /mailcatcher
+      MH_AUTH_FILE: /home/mailhog/pw
+    user: root
+    entrypoint:
+      - sh
+      - -c
+      - >
+        chown mailhog /mails
+        && pw=$$(MH_AUTH_FILE="" MailHog bcrypt "$${MAILCATCHER_PASSWORD:-mailcatcher}")
+        && echo "$${MAILCATCHER_USER:-mailcatcher}:$$pw" > $$MH_AUTH_FILE
+        && su mailhog -p -c MailHog
   mailcatcher:
     <<: [ *env ]
     image: djfarrelly/maildev
@@ -85,3 +104,4 @@ volumes:
     name: "${{'{'}}{{cookiecutter.app_type.upper()}}_NAME}-statics-${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE_VERSION}"
     external: false
   logs:
+  mails:

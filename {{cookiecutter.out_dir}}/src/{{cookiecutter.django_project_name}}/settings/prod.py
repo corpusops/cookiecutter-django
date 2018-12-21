@@ -15,8 +15,10 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = False
 
-MEDIA_ACCEL_REDIRECT = True
+MEDIA_ACCEL_REDIRECT = False
 
+g = post_process_settings(globals())
+globals().update(g)
 try:
     from .local import *  # noqa
 except ImportError:
