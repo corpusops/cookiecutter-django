@@ -27,6 +27,13 @@ local/*/bin/cops_apply_role --become \
   [docker-compose](https://docs.docker.com/compose/install/).
 
 
+## Update corpusops
+You may have to update corpusops time to time with
+￼
+```
+./control.sh up_corpusops
+```
+￼
 ## Configuration
 
 Use the wrapper to init configuration files from their ``.dist`` counterpart

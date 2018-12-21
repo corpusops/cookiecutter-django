@@ -9,6 +9,7 @@ services:
   backup: {<<: [ *bypass ]}
   {{cookiecutter.app_type}}:
     environment:
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-{{cookiecutter.django_settings}}}
       - NO_MIGRATE=1
       - NO_COLLECT_STATIC=1
       - NO_GUNICORN=1
