@@ -3,7 +3,9 @@ import tempfile
 
 from .base import *  # noqa
 
-REST_FRAMEWORK['TEST_REQUEST_DEFAULT_FORMAT'] = 'json'
+for a in INSTALLED_APPS:
+    if 'rest_framework' in a:
+        REST_FRAMEWORK['TEST_REQUEST_DEFAULT_FORMAT'] = 'json'
 
 SECRET_KEY = 'spam-spam-spam-spam'
 
@@ -28,8 +30,8 @@ CACHES = {
 for logger in six.itervalues(LOGGING['loggers']):  # noqa
     logger['handlers'] = ['console']
 
-g = post_process_settings(globals())
-globals().update(g)
+exec('import {0} as outerns'.format(__name__), globals(), locals())
+post_process_settings(outerns)
 try:
     from .local import *  # noqa
 except ImportError:

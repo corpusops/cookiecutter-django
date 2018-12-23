@@ -173,3 +173,26 @@ docker-compose -f docker-compose.yml -f docker-compose-dev.yml up -d db
 # wait fot postgis to be installed
 docker-compose -f docker-compose.yml -f docker-compose-dev.yml up django
 ```
+
+## Django settings managment
+- We embrace many concepts to manage django settings
+    - 12Factors: we try to make system environment the primary sources of settings
+    - For hosted environments, we use ByEnv pythonic settings that extends prod and
+      leverage complexity of combining settings by allowing to write logic to factorize the needed glue
+- The layout and variable precedence is as-follow:
+    - ``settings.base``
+    - ``environ (DJANGO__* variables)``: every environment var that has that prefix will be exposed
+      as a django setting (without the prefix).<br/>
+      For example ``DJANGO__SECRET_KEY`` ➡️ ``SECRET_KEY``
+    - ``settings.base.{dev,test,prod}``
+    - ``settings.base.instances{dev,qa,staging,prod,...}``
+- So where do you need to put your settings ?
+    - **Generic env values**:
+        - The default form needs to be, even with a null value (``[]``, ``0``, ``None``, ``{}``) in ``settings/base.py``.
+        - If you need a specific value for ``dev envs (localhost)`` or ``test (ci)``, you can put in in ``settings/{dev/test}.py``.
+        - If the production value is the same for every one, you can make it vary in ``settings/prod.py``.
+    - **Hosted env values**: If the value has to vary on a specific, hosted env. <br/>Say that you need ``'prod.foo.com'`` in prod but the default value
+      everywhere else, you need to put your settings in  ``settings/instances/prod.py``.
+    - If the value is exposed on the environment, whenever you add/edit it, you need to add it
+        - to ``docker.env`` & ``docker.env.dist`` in dev
+        - To **ansible setup**, [Read this section of the ansible readme](./.ansible/README.md#django-settings-setup).

@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 from ..prod import *
 
-g = set_prod_settings(globals(), 'prod')
-globals().update(g)
+exec('import {0} as outerns'.format(__name__), globals(), locals())
+set_prod_settings(outerns)
+# Already set in ansible code, only here for example
+# hosts = ['0.0.0.0', 'www.mixity.co', 'mixity.co',]
+# CORS_ORIGIN_WHITELIST = CORS_ORIGIN_WHITELIST + tuple(hosts)
+# ALLOWED_HOSTS.extend(hosts)
 # vim:set et sts=4 ts=4 tw=80:

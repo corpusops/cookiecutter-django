@@ -224,3 +224,43 @@ The ansible playbook do:
 - Install systemd launcher and start it
 - Restart explictly each docker services
 - Cleanup stale docker volumes
+
+
+## django settings setup
+To add/modify django settings, you specifically need to edit ``.ansible/playbooks/roles/django_vars/defaults/main.yml`` for hosted deployments,<br/>
+and adapt certainly one of ``cops_django_docker_env_freeform``, ``cops_django_docker_env_defaults``, ``cops_django_docker_env_extra``.
+  - Here, never forget to abuse ansible variables to cut variables from their templates<br/>
+    and put what's need to be in the general inventory and what needs to be crypted in the crypted vault.<br/>
+    eg:
+      - In all cases, adapt/edit inventory (variables may already exist)
+        ```sh
+        $EDITOR .ansible/playbooks/roles/django_vars/defaults/main.yml
+        ```
+
+          ```yaml
+          # ...
+          cops_django_docker_env_extra:
+            MYSETTINGS={{'{{'}}cops_django_foobar}}
+            MYSECRETSETTINGS={{'{{'}}cops_django_footruc}}
+          ```
+      - Set variables values in related clear group vars
+        ```sh
+        $EDITOR .ansible/inventory/group_vars/all/app.yml̀
+        ```
+
+          ```yaml
+          # ...
+          cops_django_foobar: supervalue
+          ```
+
+      - Set crypted values (see ansible/README about vaults) in related crypted group vars
+        ```sh
+        .ansible/scripts/edit_vault.sh  .ansible/inventory/group_vars/all/default.yml̀
+        # for a specific env
+        .ansible/scripts/edit_vault.sh  .ansible/inventory/group_vars/prod/default.yml̀
+        ```
+
+          ```yaml
+          # ...
+          cops_django_footruc: abcd123456789secret
+          ```

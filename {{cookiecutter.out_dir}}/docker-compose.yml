@@ -20,6 +20,7 @@ x-images:
       - statics:/code/public/static
       - logs:/logs/
 services:
+  mailcatcher:
     image: mailhog/mailhog
     volumes: ["mails:/mails"]
     environment:
@@ -39,11 +40,7 @@ services:
         && pw=$$(MH_AUTH_FILE="" MailHog bcrypt "$${MAILCATCHER_PASSWORD:-mailcatcher}")
         && echo "$${MAILCATCHER_USER:-mailcatcher}:$$pw" > $$MH_AUTH_FILE
         && su mailhog -p -c MailHog
-  mailcatcher:
     <<: [ *env ]
-    image: djfarrelly/maildev
-    hostname: mailcatcher
-    entrypoint: "./bin/maildev --web 80 --smtp 25 --base-pathname '/mailcatcher/'"
   redis:
     <<: [ *env ]
     image: redis:4.0-alpine

@@ -17,8 +17,8 @@ SECURE_SSL_REDIRECT = False
 
 MEDIA_ACCEL_REDIRECT = False
 
-g = post_process_settings(globals())
-globals().update(g)
+exec('import {0} as outerns'.format(__name__), globals(), locals())
+post_process_settings(outerns)
 try:
     from .local import *  # noqa
 except ImportError:
