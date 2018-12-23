@@ -64,7 +64,7 @@ def as_bool(value, asbool=True):
     return bool(value)
 
 
-def locals_settings_update(locals_, d=None):
+def locals_settings_update(locs_, d=None):
     if d is None:
         d = {}
     for a, b in six.iteritems(d):
@@ -74,14 +74,14 @@ def locals_settings_update(locals_, d=None):
             '__cached__', '__builtins__'
         ]:
             continue
-        locals_[a] = b
-    return locals_, d.get('__name__', '').split('.')[-1]
+        locs_[a] = b
+    return locs_, d.get('__name__', '').split('.')[-1]
 
 
-def module_settings_update(mod, locals_):
+def module_settings_update(mod, locs_):
     if mod is not None:
-        mod.__dict__.update(locals_)
-    return locals_
+        mod.update(locs_)
+    return locs_
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -305,32 +305,32 @@ for i, val in os.environ.items():
                 pass
 
 # export back DJANGO_ENV_VARS dict as django settings
-exec('import {0} as BASESETTINGSMODULE'.format(__name__))
-for s, val in DJANGO_ENV_VARS.items():
-    setattr(BASESETTINGSMODULE, s, val)
+globs = globals()
+for s, val in six.iteritems(DJANGO_ENV_VARS):
+    globs[s] = val
 
 
-def check_explicit_settings(outerns=None):
+def check_explicit_settings(globs=None):
     '''
     verify that some vars are explicitly defined
     '''
-    locals_, env = locals_settings_update(locals(), outerns.__dict__)
+    locs_, env = locals_settings_update(locals(), globs)
     for i in EXPLICIT_ENV_VARS:
         try:
-            _ = locals_[i]  #noqa
+            _ = locs_[i]  #noqa
         except KeyError:
             raise Error('{0} django settings is not defined')
-    return module_settings_update(outerns, locals_), outerns, env
+    return module_settings_update(globs, locs_), globs, env
 
 
-def post_process_settings(outerns=None):
+def post_process_settings(globs=None):
     '''
     Make intermediary processing on settings like:
         - checking explicit vars
         - tranforming vars which can come from system environment as strings
           in their final values as django settings
     '''
-    locals_, outerns, env = check_explicit_settings(outerns)
+    locs_, globs, env = check_explicit_settings(globs)
     for setting, func, fkw in (
         ('EMAIL_PORT', as_int, {}),
         ('EMAIL_USE_TLS', as_bool, {}),
@@ -339,37 +339,41 @@ def post_process_settings(outerns=None):
         ('ALLOWED_HOSTS', as_col, {}),
     ):
         try:
-            locals_[setting]
+            locs_[setting]
         except KeyError:
             continue
-        locals_[setting] = func(locals_[setting], **fkw)
-    {% if cookiecutter.with_sentry -%}SENTRY_DSN = locals_.setdefault('SENTRY_DSN', '')
-    SENTRY_RELEASE = locals_.setdefault('SENTRY_RELEASE', 'prod')
+        locs_[setting] = func(locs_[setting], **fkw)
+    {% if cookiecutter.with_sentry -%}SENTRY_DSN = locs_.setdefault('SENTRY_DSN', '')
+    SENTRY_RELEASE = locs_.setdefault('SENTRY_RELEASE', 'prod')
+    INSTALLED_APPS = locs_.setdefault('INSTALLED_APPS', tuple())
     if SENTRY_DSN:
         if 'raven.contrib.django.raven_compat' not in INSTALLED_APPS:
-            INSTALLED_APPS = (
-                type(INSTALLED_APPS)(['raven.contrib.django.raven_compat']) +
-                INSTALLED_APPS)
-        RAVEN_CONFIG = locals_.setdefault('RAVEN_CONFIG', {})
-        RAVEN_CONFIG['dsn'] = SENTRY_DSN
-        RAVEN_CONFIG.setdefault('transport',
-                     'raven.transport.requests.RequestsHTTPTransport')
+            locs_['INSTALLED_APPS'] = (
+                type(
+                    locs_['INSTALLED_APPS']
+                )(['raven.contrib.django.raven_compat']) +
+                locs_['INSTALLED_APPS'])
+        RAVEN_CONFIG = locs_.setdefault('RAVEN_CONFIG', {})
         RAVEN_CONFIG.setdefault('release', SENTRY_RELEASE)
+        RAVEN_CONFIG['dsn'] = SENTRY_DSN
+        RAVEN_CONFIG.setdefault(
+            'transport',
+            'raven.transport.requests.RequestsHTTPTransport')
     {%- endif %}
-    return module_settings_update(outerns, locals_), outerns, env
+    return module_settings_update(globs, locs_), globs, env
 
 
-def set_prod_settings(outerns=None):
+def set_prod_settings(globs):
     '''
     Additional post processing of settings only ran on hosted environments
     '''
-    locals_, env = locals_settings_update(locals(), outerns.__dict__)
-    {% if cookiecutter.with_sentry -%}SENTRY_DSN = locals_.setdefault('SENTRY_DSN', '')
+    locs_, env = locals_settings_update(locals(), globs)
+    {% if cookiecutter.with_sentry -%}SENTRY_DSN = locs_.setdefault('SENTRY_DSN', '')
     if SENTRY_DSN:
         # If you are using git, you can also automatically
         # configure the release based on the git info.
-        log = locals_.setdefault('LOGGING', copy.deepcopy(DEFAULT_LOGGING))
-        RAVEN_CONFIG = locals_.setdefault('RAVEN_CONFIG', {})
+        log = locs_.setdefault('LOGGING', copy.deepcopy(DEFAULT_LOGGING))
+        RAVEN_CONFIG = locs_.setdefault('RAVEN_CONFIG', {})
         root = log.setdefault('root', {})
         root['handlers'] = ['sentry']
         log['disable_existing_loggers'] = True
@@ -378,17 +382,17 @@ def set_prod_settings(outerns=None):
                 'level': 'ERROR',
                 'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',  #noqa
             }})
-        if 'DEPLOY_ENV' in locals_:
-            locals_['RAVEN_CONFIG']['environment'] = locals_['DEPLOY_ENV']
+        if 'DEPLOY_ENV' in locs_:
+            locs_['RAVEN_CONFIG']['environment'] = locs_['DEPLOY_ENV']
     {%- endif %}
-    SERVER_EMAIL = locals_.setdefault(
+    SERVER_EMAIL = locs_.setdefault(
         'SERVER_EMAIL',
         '{env}-{{cookiecutter.lname}}@{{cookiecutter.tld_domain}}'.format(env=env))
-    ADMINS = [('root', SERVER_EMAIL)]
-    EMAIL_HOST = locals_.setdefault('EMAIL_HOST', 'localhost')
-    DEFAULT_FROM_EMAIL = locals_.setdefault('DEFAULT_FROM_EMAIL', SERVER_EMAIL)
-    ALLOWED_HOSTS = locals_.setdefault('ALLOWED_HOSTS', [])
-    CORS_ORIGIN_WHITELIST = locals_.setdefault(
+    locs_.setdefault('ADMINS', [('root', SERVER_EMAIL)])
+    locs_.setdefault('EMAIL_HOST', 'localhost')
+    locs_.setdefault('DEFAULT_FROM_EMAIL', SERVER_EMAIL)
+    ALLOWED_HOSTS = locs_.setdefault('ALLOWED_HOSTS', [])
+    CORS_ORIGIN_WHITELIST = locs_.setdefault(
         'CORS_ORIGIN_WHITELIST', tuple())
     # those settings by default are empty, we need to handle this case
     if not CORS_ORIGIN_WHITELIST:
@@ -399,4 +403,4 @@ def set_prod_settings(outerns=None):
         ALLOWED_HOSTS = [
             '{env}-{{cookiecutter.lname}}.{{cookiecutter.tld_domain}}'.format(env=env),  # noqa
             '.{{cookiecutter.tld_domain}}']
-    return module_settings_update(outerns, locals_), outerns, env
+    return module_settings_update(outerns, locs_), outerns, env

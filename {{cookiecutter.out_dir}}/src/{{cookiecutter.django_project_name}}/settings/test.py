@@ -30,8 +30,7 @@ CACHES = {
 for logger in six.itervalues(LOGGING['loggers']):  # noqa
     logger['handlers'] = ['console']
 
-exec('import {0} as outerns'.format(__name__), globals(), locals())
-post_process_settings(outerns)
+post_process_settings(locals())
 try:
     from .local import *  # noqa
 except ImportError:
