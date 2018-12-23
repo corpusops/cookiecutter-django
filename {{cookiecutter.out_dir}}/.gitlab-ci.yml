@@ -266,7 +266,7 @@ deploy_dev: &deploy_dev
 
 # As gitlab-ci does not support pipeline branching, for manual dev release, we need
 # to make a last and one-for-all deploy step for non-blocking pipelines when we do a merge request
-manual_dev_release_and_deploy:
+manual_dev_release_and_deploy: &manual_dev_release_and_deploy
   <<: [ *manual_jobs_on_branches_tpl, *deploy_dev, *release_tpl ]
   stage: manual_jobs
   when: manual
@@ -285,9 +285,15 @@ manual_dev_release_and_deploy:
   - *teardown_step3
   - *deploy_setup
   - *deploy_key_setup
-  - |-
+  - &deploy_manual_dev_cmd |-
     .ansible/scripts/call_ansible.sh -vv -l $A_ENV_NAME \
     "${DEPLOY_PLAYBOOK}" -e "{cops_{{cookiecutter.app_type}}_docker_tag: dev}"
+manual_dev_deploy_without_release:
+  <<: [ *manual_dev_release_and_deploy ]
+  script:
+  - *deploy_setup
+  - *deploy_key_setup
+  - *deploy_manual_dev_cmd
 
 {% if cookiecutter.qa_host -%}
 deploy_qa: &deploy_qa
