@@ -16,6 +16,7 @@ x-images:
       {%- if not cookiecutter.remove_cron %}
       - crontab:/etc/cron.d/{{cookiecutter.app_type}}
       {%- endif %}
+      - ./src/{{cookiecutter.django_settings.replace('.', '/')}}/instances:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/instances
       - mediafiles:/code/public/media
       - statics:/code/public/static
       - logs:/logs/
