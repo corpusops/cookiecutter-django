@@ -403,4 +403,4 @@ def set_prod_settings(globs):
         ALLOWED_HOSTS = [
             '{env}-{{cookiecutter.lname}}.{{cookiecutter.tld_domain}}'.format(env=env),  # noqa
             '.{{cookiecutter.tld_domain}}']
-    return module_settings_update(outerns, locs_), outerns, env
+    return module_settings_update(globs, locs_), globs, env
