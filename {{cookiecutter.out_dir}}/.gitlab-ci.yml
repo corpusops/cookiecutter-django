@@ -50,7 +50,7 @@ variables:
   # To speed up all builds we may cache in Controls which branch is used to generate image cache tarball
   CACHE_BUILD_FOR_BRANCH_REGEX: "^(master)$"
   MASTER_BRANCH: master
-  CACHE_DAYS: "15"
+  CACHE_DAYS: "7"
   # Path to CI success flag marker
   SUCCESS_FLAG: "/cache/$CI_PROJECT_PATH_SLUG/ci_success_${CI_PIPELINE_IID}"
 {%-if cookiecutter.use_submodule_for_deploy_code%}
@@ -60,7 +60,7 @@ variables:
 
 # NEVER ever use gitlab-ci cache, its broken by design in most case of CI related tasks
 # when it comes to parrallel builds reusing local artefacts during jobs thorough the
-# pipeline. Indeed, as gitlab-ci saves back cache to zipfiles, what would occcur
+# pipeline. Indeed, as gitlab-ci saves cache to zipfiles, what would occcur
 # is that the result of a first be would be overwritte/corrupted by the result
 # of a parrallel, quickier, second build !!!
 # That's why, you 'd better have to use a shared volume in your runner configuration,
@@ -124,6 +124,36 @@ before_script: &top_before_script
      break;
     fi;done;fi"
 
+.manual_job_tpl: &manual_job_tpl
+  tags: ["{{cookiecutter.runner_tag}}"]
+  allow_failure: true
+  stage: manual_jobs
+  when: manual
+  only: [master, tags]
+  except: []
+
+cleanup_all_expired_build_artefacts_from_cache:
+  <<: [ *manual_job_tpl ]
+  script:
+  - &cleanup_all_expired_build_artefacts_from_cache |-
+    bash -c 'while read f;do rm -fv "$f";done \
+    < <( find /cache/$CI_PROJECT_PATH_SLUG/docker-images/build-* \
+         -type f -mtime +$CACHE_DAYS )'
+
+cleanup_all_expired_docker_images_from_cache:
+  <<: [ *manual_job_tpl ]
+  before_script: []
+  script:
+  - &cleanup_all_expired_docker_images |-
+    bash -c 'while read f;do rm -fv "$f";done \
+    < <( find /cache/$CI_PROJECT_PATH_SLUG/docker-images -type f )'
+
+cleanup_all_project_cache:
+  <<: [ *manual_job_tpl ]
+  before_script: []
+  script:
+  - &cleanup_all_project_cache rm -rf /cache/$CI_PROJECT_PATH_SLUG
+
 build_images: &build_images
   variables: &build_images_vars
     PRELOAD_IMAGES: "$LATEST_DOCKER_IMAGE $TAGGUED_DOCKER_IMAGE"
@@ -139,7 +169,9 @@ build_images: &build_images
     if [ -e /docker_images_errors ];then cat /docker_images_errors;exit 1;fi
   - &build_step2 sh -c "set -ex
     && docker inspect \"\${CURRENT_DOCKER_IMAGE}\" >/dev/null
-    && docker save \"\${CURRENT_DOCKER_IMAGE}\"
+    && docker save
+       \$(docker history -q \"\${CURRENT_DOCKER_IMAGE}\" | tr '\n' ' ' | tr -d '<missing>')
+       \"\${CURRENT_DOCKER_IMAGE}\"
        | gzip > \"\${IMAGES_TARBALL}-pending\"
     && mv -fv \"\${IMAGES_TARBALL}-pending\" \"${IMAGES_TARBALL}\""
 
@@ -224,6 +256,7 @@ teardown_env: &teardown_env
     fi
   # cleanup pipeline image & pending artefacts
   - &teardown_step3 rm -fv ${IMAGES_TARBALL}* "${SUCCESS_FLAG}"
+  - *cleanup_all_expired_build_artefacts_from_cache
 
 .deploy_tpl: &deploy_tpl
   tags: ["{{cookiecutter.runner_tag}}"]
@@ -235,6 +268,9 @@ teardown_env: &teardown_env
     DEPLOY_PLAYBOOK: ".ansible/playbooks/app.yml"
     NO_SILENT: ""
   before_script:
+{%-if cookiecutter.use_submodule_for_deploy_code%}
+  - *pullsubmodules
+{%endif%}
   # make this in only one block to be easily reusable in deploy jobs
   - &deploy_setup set -e;vv(){ echo "$@">&2;"$@"; };
     if [ "x${A_ENV_NAME}" = x ];then
@@ -328,14 +364,6 @@ deploy_prod: &deploy_prod
   environment:
     name: prod
     url: https://{{cookiecutter.prod_domain}}
-
-.manual_job_tpl: &manual_job_tpl
-  tags: ["{{cookiecutter.runner_tag}}"]
-  allow_failure: true
-  stage: manual_jobs
-  when: manual
-  only: [master, tags]
-  except: []
 {%- if cookiecutter.haproxy %}
 
 .reconfigure_haproxy_and_fw: &reconfigure_haproxy_and_firewall_tpl
@@ -352,27 +380,6 @@ reconfigure_prod_haproxy_and_fw:
 reconfigure_dev_haproxy_and_fw:
   <<: [ *reconfigure_haproxy_and_firewall_tpl, *deploy_dev ]
 {% endif %}
-cleanup_all_expired_build_artefacts_from_cache:
-  <<: [ *manual_job_tpl ]
-  script:
-  - bash -c 'while read f;do rm -fv "$f";done
-    < <( find /cache/$CI_PROJECT_PATH_SLUG/docker-images/build-*
-         -type f -mtime +\$CACHE_DAYS )'
-
-cleanup_all_expired_docker_images_from_cache:
-  <<: [ *manual_job_tpl ]
-  before_script: []
-  script:
-  - bash -c 'while read f;do rm -fv "$f";done
-    < <( find /cache/$CI_PROJECT_PATH_SLUG/docker-images
-         -type f -mtime +\$CACHE_DAYS )'
-
-cleanup_all_project_cache:
-  <<: [ *manual_job_tpl ]
-  before_script: []
-  script:
-  - rm -rf /cache/$CI_PROJECT_PATH_SLUG
-
 # Allow to immediatly trigger a deploy without waiting for the full pipeline to complete
 # eg: redeploying after only issuing a deploy code or configuration change.
 manual_deploy_dev:
