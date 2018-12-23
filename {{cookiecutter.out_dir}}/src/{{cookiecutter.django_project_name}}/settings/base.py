@@ -17,6 +17,7 @@ import os
 import copy
 from datetime import timedelta
 from importlib import import_module
+
 import six
 import django
 from django.utils.log import DEFAULT_LOGGING
@@ -42,7 +43,7 @@ def as_col(value, separators=None, final_type=None, **kw):
     return value
 
 
-def as_int(value, asbool=True, **kw):
+def as_int(value, **kw):
     if value not in ['', None]:
         value = int(value)
     return value
