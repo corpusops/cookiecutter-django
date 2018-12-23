@@ -346,6 +346,7 @@ def post_process_settings(globs=None):
     {% if cookiecutter.with_sentry -%}SENTRY_DSN = locs_.setdefault('SENTRY_DSN', '')
     SENTRY_RELEASE = locs_.setdefault('SENTRY_RELEASE', 'prod')
     INSTALLED_APPS = locs_.setdefault('INSTALLED_APPS', tuple())
+	SENTRY_TAGS = locs_.pop('SENTRY_TAGS', None)
     if SENTRY_DSN:
         if 'raven.contrib.django.raven_compat' not in INSTALLED_APPS:
             locs_['INSTALLED_APPS'] = (
@@ -359,6 +360,26 @@ def post_process_settings(globs=None):
         RAVEN_CONFIG.setdefault(
             'transport',
             'raven.transport.requests.RequestsHTTPTransport')
+        # If you are using git, you can also automatically
+        # configure the release based on the git info.
+        LOGGING = locs_.setdefault('LOGGING', copy.deepcopy(DEFAULT_LOGGING))
+        LOGGING['disable_existing_loggers'] = True
+        LOGGING.setdefault('handlers', {}).update({
+            'sentry': {
+                'level': 'ERROR',
+                'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',  #noqa
+            }})
+        root = LOGGING.setdefault('root', {})
+        root['handlers'] = ['sentry']
+        if SENTRY_TAGS and isinstance(SENTRY_TAGS, six.string_types):
+            locs_['SENTRY_TAGS'] = {}
+            for a in SENTRY_TAGS.split(','):
+                tag, val = a.split(':')[0], ':'.join(a.split(':')[1:])
+                if not val:
+                    val, tag = tag, 'general'
+                locs_['SENTRY_TAGS'][tag] = val
+        if 'DEPLOY_ENV' in locs_:
+            locs_['RAVEN_CONFIG']['environment'] = locs_['DEPLOY_ENV']
     {%- endif %}
     return module_settings_update(globs, locs_), globs, env
 
@@ -368,23 +389,6 @@ def set_prod_settings(globs):
     Additional post processing of settings only ran on hosted environments
     '''
     locs_, env = locals_settings_update(locals(), globs)
-    {% if cookiecutter.with_sentry -%}SENTRY_DSN = locs_.setdefault('SENTRY_DSN', '')
-    if SENTRY_DSN:
-        # If you are using git, you can also automatically
-        # configure the release based on the git info.
-        log = locs_.setdefault('LOGGING', copy.deepcopy(DEFAULT_LOGGING))
-        RAVEN_CONFIG = locs_.setdefault('RAVEN_CONFIG', {})
-        root = log.setdefault('root', {})
-        root['handlers'] = ['sentry']
-        log['disable_existing_loggers'] = True
-        log.setdefault('handlers', {}).update({
-            'sentry': {
-                'level': 'ERROR',
-                'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',  #noqa
-            }})
-        if 'DEPLOY_ENV' in locs_:
-            locs_['RAVEN_CONFIG']['environment'] = locs_['DEPLOY_ENV']
-    {%- endif %}
     SERVER_EMAIL = locs_.setdefault(
         'SERVER_EMAIL',
         '{env}-{{cookiecutter.lname}}@{{cookiecutter.tld_domain}}'.format(env=env))
