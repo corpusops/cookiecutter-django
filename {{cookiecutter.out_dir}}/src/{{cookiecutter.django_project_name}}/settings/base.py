@@ -346,7 +346,7 @@ def post_process_settings(globs=None):
     {% if cookiecutter.with_sentry -%}SENTRY_DSN = locs_.setdefault('SENTRY_DSN', '')
     SENTRY_RELEASE = locs_.setdefault('SENTRY_RELEASE', 'prod')
     INSTALLED_APPS = locs_.setdefault('INSTALLED_APPS', tuple())
-	SENTRY_TAGS = locs_.pop('SENTRY_TAGS', None)
+    SENTRY_TAGS = locs_.pop('SENTRY_TAGS', None)
     if SENTRY_DSN:
         if 'raven.contrib.django.raven_compat' not in INSTALLED_APPS:
             locs_['INSTALLED_APPS'] = (
