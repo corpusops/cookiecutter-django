@@ -22,7 +22,7 @@ x-images:
       - logs:/logs/
 services:
   mailcatcher:
-    image: mailhog/mailhog
+    image: corpusops/mailhog
     volumes: ["mails:/mails"]
     environment:
       MH_STORAGE: maildir
@@ -44,7 +44,7 @@ services:
     <<: [ *env ]
   redis:
     <<: [ *env ]
-    image: redis:4.0-alpine
+    image: "{{cookiecutter.redis_image}}"
     hostname: redis
     volumes:
       - 'redis:/data'
@@ -56,7 +56,7 @@ services:
   nginx:
     <<: [ *env ]
     restart: always
-    image: corpusops/nginx
+    image: "{{cookiecutter.nginx_image}}"
     depends_on:
       - {{cookiecutter.app_type}}
     volumes:

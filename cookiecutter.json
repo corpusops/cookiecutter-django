@@ -63,11 +63,13 @@
     "media_uri": "/media",
     "use_tz": "y",
     "language_code": "fr-fr",
-	"postgis_image": "makinacorpus/pgrouting:10.1-2.5.4",
-	"postgresql_image": "postgres:10",
-	"postgres_image": "{{cookiecutter.postgresql_image}}",
-	"mysql_image": "mysql",
-	"user_model": "mysql",
-	"no_lib": "",
-	"no_private": ""
+    "postgis_image": "corpusops/pgrouting:10.1-2.5.4",
+    "postgresql_image": "corpusops/postgres:10",
+    "postgres_image": "{{cookiecutter.postgresql_image}}",
+    "mysql_image": "mysql",
+    "redis_image": "corpusops/redis:4.0-alpine",
+    "nginx_image": "corpusops/nginx:1.14-alpine",
+    "user_model": "mysql",
+    "no_lib": "",
+    "no_private": ""
 }
