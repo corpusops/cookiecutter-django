@@ -78,6 +78,12 @@ def locals_settings_update(locs_, d=None):
     return locs_, d.get('__name__', '').split('.')[-1]
 
 
+def filter_globals(locs_, d=None):
+    if d is None:
+        d = {}
+    return locals_settings_update({}, globals())[0]
+
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 {{cookiecutter.lname.upper()}}_DIR = PROJECT_DIR
@@ -315,7 +321,7 @@ def check_explicit_settings(globs=None):
         except KeyError:
             raise Exception('{0} django settings is not defined')
     globals().update(locs_)
-    return locals(), globals(), env
+    return locs_, filter_globals(globals()), env
 
 
 def post_process_settings(globs=None):
@@ -377,7 +383,7 @@ def post_process_settings(globs=None):
             locs_['RAVEN_CONFIG']['environment'] = locs_['DEPLOY_ENV']
     {%- endif %}
     globals().update(locs_)
-    return locals(), globals(), env
+    return locs_, filter_globals(globals()), env
 
 
 def set_prod_settings(globs):
@@ -404,4 +410,4 @@ def set_prod_settings(globs):
             '{env}-{{cookiecutter.lname}}.{{cookiecutter.tld_domain}}'.format(env=env),  # noqa
             '.{{cookiecutter.tld_domain}}']
     globals().update(locs_)
-    return locals(), globals(), env
+    return locs_, filter_globals(globals()), env
