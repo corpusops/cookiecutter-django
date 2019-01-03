@@ -6,7 +6,7 @@ from __future__ import print_function
 from ..prod import *
 
 locs_, globs_, env = set_prod_settings(locals())
-locals().update(locs_)
+globals().update(globs_)
 # Already set in ansible code, only here for example
 # hosts = ['0.0.0.0', 'staging.mixity.co', '.mixity.co',]
 # CORS_ORIGIN_WHITELIST = CORS_ORIGIN_WHITELIST + tuple(hosts)

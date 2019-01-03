@@ -17,7 +17,8 @@ SECURE_SSL_REDIRECT = False
 
 MEDIA_ACCEL_REDIRECT = False
 
-post_process_settings(locals())
+locs_, globs_, env = post_process_settings(locals())
+globals().update(globs_)
 try:
     from .local import *  # noqa
 except ImportError:
