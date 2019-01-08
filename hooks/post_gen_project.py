@@ -164,7 +164,7 @@ def main():
             slash = (i in SYMLINKS_DIRS) and '/' or ''
             d = os.path.dirname(i)
             s += '\nrsync -azv --delete {0}{1} {2}{1}'.format(
-                SYMLINKS_DIRS[i].replace('../', ''), slash, i)
+                SYMLINKS[i].replace('../', ''), slash, i)
             if d and not os.path.exists(d):
                 os.makedirs(d)
             remove_path(i)

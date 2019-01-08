@@ -68,7 +68,6 @@ services:
     command: >
       /bin/sh -c "
       CONF_PREFIX=DJANGO__ confenvsubst.sh /etc/nginx/conf.d/default.conf.template
-      > /etc/nginx/conf.d/default.conf
       && exec /bin/supervisord.sh"
     environment:
     - SUPERVISORD_CONFIGS=/etc/supervisor.d/cron /etc/supervisor.d/nginx

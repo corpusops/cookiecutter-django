@@ -239,7 +239,7 @@ DJANGO_ENV_VARS = {}
 for cenvvar, value in os.environ.items():
     # Bring back prefixed env vars
     # eg DJANGO__SECRET_KEY to SECRET_KEY form.
-    if var.startswith(SETTINGS_ENV_PREFIX):
+    if cenvvar.startswith(SETTINGS_ENV_PREFIX):
         setting = SETTINGS_ENV_PREFIX.join(
             cenvvar.split(SETTINGS_ENV_PREFIX)[1:])
         DJANGO_ENV_VARS[setting] = value
@@ -261,7 +261,6 @@ for setting, value in six.iteritems(DJANGO_ENV_VARS):
 
 
 def as_col(value, separators=None, final_type=None, **kw):
-
     if final_type is None:
         final_type = list
     if separators is None:
@@ -324,18 +323,15 @@ def locals_settings_update(_locals, mapping=None):
     return _locals, mapping.get('__name__', '').split('.')[-1]
 
 
-def filter_globals(_locals, mapping=None):
+def filter_globals():
     '''
-    Shortcut help to only get locals_ from the locals_settings_update call;
-    with current module globals
+    Shortcut helper to locals_settings_update() to only get
+    the filtered globals from this current module without special variables
     '''
-    if mapping is None:
-        mapping = globals()
-    return locals_settings_update({}, mapping)[0]
+    return locals_settings_update({}, globals())[0]
 
 
-
-def check_explicit_settings(globs=None):
+def check_explicit_settings(_locals):
     '''
     verify that some vars are explicitly defined
     '''
@@ -409,7 +405,7 @@ def post_process_settings(globs=None):
             _locals['RAVEN_CONFIG']['environment'] = _locals['DEPLOY_ENV']
     {%- endif %}
     globals().update(_locals)
-    return _locals, filter_globals(globals()), env
+    return _locals, filter_globals(), env
 
 
 def set_prod_settings(globs):
@@ -436,4 +432,4 @@ def set_prod_settings(globs):
             '{env}-{{cookiecutter.lname}}.{{cookiecutter.tld_domain}}'.format(env=env),  # noqa
             '.{{cookiecutter.tld_domain}}']
     globals().update(_locals)
-    return _locals, filter_globals(globals()), env
+    return _locals, filter_globals(), env
