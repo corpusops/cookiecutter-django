@@ -396,7 +396,7 @@ def post_process_settings(globs=None):
             _locals['SENTRY_TAGS'] = {}
             for tagentry in SENTRY_TAGS.split(','):
                 tag = tagentry.split(':')[0]
-                value = ':'.join(a.split(':')[1:])
+                value = ':'.join(tagentry.split(':')[1:])
                 if not value:
                     value = tag
                     tag = 'general'
