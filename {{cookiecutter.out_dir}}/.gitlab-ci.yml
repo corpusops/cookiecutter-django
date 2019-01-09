@@ -220,7 +220,7 @@ build_images: &build_images
     && docker tag \"\$(eval echo \$TO_RELEASE_DOCKER_IMAGE)\"
     \"\$(eval echo \$RELEASED_DOCKER_IMAGE)\""
   - &release_step3 sh -c "
-    docker push \"\$(eval echo \$RELEASED_DOCKER_IMAGE)-dev\"
+    docker push \"\$(eval echo \$RELEASED_DOCKER_IMAGE)-dev\" &&
     docker push \"\$(eval echo \$RELEASED_DOCKER_IMAGE)\""
   variables: &release_vars
     PRELOAD_IMAGES: ""
