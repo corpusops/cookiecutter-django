@@ -155,19 +155,21 @@ def sym(i, target):
 
 def main():
     s = GITSCRIPT
-    if use_submodule_for_deploy_code:
+    for i in SYMLINKS:
+        sym(i, SYMLINKS[i])
+    if not use_submodule_for_deploy_code:
         for i in SYMLINKS:
-            sym(i, SYMLINKS[i])
-    else:
-        for i in SYMLINKS:
-            slash = '/'
+            remove_path(i)
+            target = SYMLINKS[i]
             slash = (i in SYMLINKS_DIRS) and '/' or ''
             d = os.path.dirname(i)
-            s += '\nrsync -azv --delete {0}{1} {2}{1}'.format(
-                SYMLINKS[i].replace('../', ''), slash, i)
             if d and not os.path.exists(d):
                 os.makedirs(d)
-            remove_path(i)
+            if '/' not in target:
+                sym(i, SYMLINKS[i])
+            else:
+                s += '\nrsync -azv --delete {0}{1} {2}{1}'.format(
+                    SYMLINKS[i].replace('../', ''), slash, i)
         s += '\nrsync -azv {0}/Dockerfile Dockerfile'.format(
             "{{cookiecutter.deploy_project_dir}}")
         s += '\nrsync -azv {0}/prod/ prod/'.format(
