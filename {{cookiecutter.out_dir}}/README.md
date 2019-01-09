@@ -56,7 +56,7 @@ docker login {{cookiecutter.docker_registry}}  # use your gitlab user
 
 {%- if cookiecutter.registry_is_gitlab_registry %}
 **⚠️ See also ⚠️** the
-    [project docker registry]({{cookiecutter.git_project_url}}/container_registry)
+    [project docker registry]({{cookiecutter.git_project_url.replace('ssh://', 'https://').replace('git@', '')}}/container_registry)
 {%- else %}
 **⚠️ See also ⚠️** the makinacorpus doc in the docs/tools/dockerregistry section.
 {%- endif%}
