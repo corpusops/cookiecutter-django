@@ -13,7 +13,6 @@ services:
       - NO_MIGRATE=1
       - NO_COLLECT_STATIC=1
       - NO_GUNICORN=1
-    command: "gosu {{cookiecutter.app_type}} /code/init/start.sh"
     volumes:
       {%-if cookiecutter.use_submodule_for_deploy_code %}
       - ./{{cookiecutter.deploy_project_dir}}/prod/sudoer:/etc/sudoers.d/$APP_TYPE
