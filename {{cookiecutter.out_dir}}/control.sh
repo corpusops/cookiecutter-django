@@ -70,6 +70,7 @@ _shell() {
     local DOCKER_SHELL=${DOCKER_SHELL-}
     local run_mode_args=""
     local pre="DOCKER_SHELL=\"$DOCKER_SHELL\";touch \$HOME/.control_bash_rc;
+    if [ -e /etc/default/locale ];then . /etc/default/locale;fi
     if [ \"x\$DOCKER_SHELL\" = \"x\" ];then
         if ( bash --version >/dev/null 2>&1 );then DOCKER_SHELL=\"bash\"; else DOCKER_SHELL=\"sh\";fi;
     fi"
