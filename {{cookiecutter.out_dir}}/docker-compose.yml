@@ -11,8 +11,12 @@ x-images:
     depends_on:
     - db
     - redis
+    {% if 'post' in cookiecutter.db_mode%}- setup_postgres{%endif%}
     working_dir: /code/src
-    command: /bin/bash /code/init/init.sh
+    command: >-
+      sh -c '{% if 'post' in cookiecutter.db_mode %}
+      dockerize -wait http://setup_postgres -timeout $${POSTGRES_STARTUP_TIMEOUT}
+      && {%endif%}/bin/bash /code/init/init.sh'
     volumes:
       {%- if not cookiecutter.remove_cron %}
       - ./crontab:/etc/cron.d/{{cookiecutter.app_type}}
@@ -90,6 +94,32 @@ services:
       - backupdb-logs:/srv/backups/logs/
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
       - ./local/backup/setup/reconfigure.yml:/setup/reconfigure.yml:ro
+{% if 'post' in cookiecutter.db_mode %}
+  setup_postgres:
+    <<: [ *env ]
+    image: corpusops/pgrouting:10.1-2.5.4
+    depends_on:
+    - db
+    environment:
+    - POSTGRES_STARTUP_TIMEOUT=${MINIO_STARTUP_TIMEOUT:-45s}
+    entrypoint:
+    - /bin/sh
+    - '-c'
+    - |-
+      set -ex
+      flag=/started_$$(echo $$POSTGRES_DB|sed -re "s![/:]!__!g")
+      if [ -e "$$flag" ];then rm -f "$$flag";fi
+      echo "Try connection to pgsql: $$POSTGRES_DB & wait for db init" >&2 \
+      && ( while true;do if ( \
+        echo "select 1 from zip_lookup limit 1;\
+          select 1 from spatial_ref_sys limit 1;select postgis_version();"\
+        | psql -v ON_ERROR_STOP=1 \
+          "postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@db/$$POSTGRES_DB"\
+      );then touch $$flag && break;fi;done )&
+      set -x \
+      && dockerize -wait file://$$flag -timeout $${MINIO_STARTUP_TIMEOUT:-30s} \
+      && while true;do printf "HTTP/1.1 200 OK\n\nstarted"| ( nc -l -p 80 || /bin/true);done
+{% endif %}
 volumes:
   backupdb-logs:
   backupdb-dumps:
