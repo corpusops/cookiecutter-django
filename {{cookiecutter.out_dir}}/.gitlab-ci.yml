@@ -161,16 +161,16 @@ build_images: &build_images
   stage: build
   script:
   - &build_step1 |-
+    set +e
+    set -x
     for i in $DOCKER_BUILT_SERVICES;do
-      ( echo "$D_COMPOSE -f docker-compose-prod.yml -f docker-compose-build.yml build $i" >&2 )&
-      (       $D_COMPOSE -f docker-compose-prod.yml -f docker-compose-build.yml build $i \
-        || ( echo "BUILD ERROR: $i" >> /docker_images_errors ) )&
-    done;wait;
+        $D_COMPOSE -f docker-compose-prod.yml -f docker-compose-build.yml build $i \
+        || ( echo "BUILD ERROR: $i" >> /docker_images_errors )
+    done
     for i in $DOCKER_BUILT_SERVICES;do
-      ( echo "$D_COMPOSE -f docker-compose-build.yml -f docker-compose-build-dev.yml build $i" >&2 )&
-      (       $D_COMPOSE -f docker-compose-build.yml -f docker-compose-build-dev.yml build $i \
-        || ( echo "BUILD ERROR: $i" >> /docker_images_errors ) )&
-    done;wait;
+        $D_COMPOSE -f docker-compose-build.yml -f docker-compose-build-dev.yml build $i \
+        || ( echo "BUILD ERROR: $i" >> /docker_images_errors )
+    done
     if [ -e /docker_images_errors ];then cat /docker_images_errors;exit 1;fi
   - &build_step2 sh -c "set -ex
     && docker inspect \"\${CURRENT_DOCKER_IMAGE}\" >/dev/null
