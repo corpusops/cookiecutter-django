@@ -100,7 +100,6 @@ services:
     image: corpusops/pgrouting:10.1-2.5.4
     depends_on:
     - db
-    environment:
     entrypoint:
     - /bin/sh
     - '-c'
