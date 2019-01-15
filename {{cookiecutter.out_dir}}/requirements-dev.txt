@@ -8,3 +8,4 @@ pylama
 tblib
 eradicate
 xlrd
+pdb_clone
