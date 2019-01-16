@@ -188,7 +188,7 @@ do_pull() {
 
 #  up [$args]: start stack
 do_up() {
-    local bars=$@
+    local bargs=$@
     set -- vv $DC up
     if [[ -z $NO_BACKGROUND ]];then bargs="-d $bargs";fi
     $@ $bargs
