@@ -61,7 +61,7 @@ _shell() {
     local services_ports=${services_ports-}
     local bargs="$@"
     local NO_VIRTUALENV=${NO_VIRTUALENV-}
-    local NO_NVM=${NO_VIRTUALENV-}
+    local NO_NVM=${NO_NVM-1}
     local NVMRC=${NVMRC:-.nvmrc}
     local NVM_PATH=${NVM_PATH:-..}
     local NVM_PATHS=${NVMS_PATH:-${NVM_PATH}}
@@ -70,7 +70,7 @@ _shell() {
     local DOCKER_SHELL=${DOCKER_SHELL-}
     local run_mode_args=""
     local pre="DOCKER_SHELL=\"$DOCKER_SHELL\";touch \$HOME/.control_bash_rc;
-    if [ -e /etc/default/locale ];then . /etc/default/locale;fi
+    if [ -e /etc/default/locale ];then . /etc/default/locale;fi;
     if [ \"x\$DOCKER_SHELL\" = \"x\" ];then
         if ( bash --version >/dev/null 2>&1 );then DOCKER_SHELL=\"bash\"; else DOCKER_SHELL=\"sh\";fi;
     fi"

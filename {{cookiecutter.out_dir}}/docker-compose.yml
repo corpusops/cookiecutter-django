@@ -93,7 +93,6 @@ services:
       && {%endif%}/bin/bash /code/init/cron.sh
     depends_on:
       - {{cookiecutter.app_type}}
-    command: /bin/sh /code/init/cron.sh
   {%-endif%}
   backup:
     <<: [ *env ]
