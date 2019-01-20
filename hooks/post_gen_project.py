@@ -116,7 +116,6 @@ fi
 set +x
 {% if not cookiecutter.use_submodule_for_deploy_code %}
 while read f;do
-if [ $f = Dockerfile ];then cat Dockerfile;fi
     if ( egrep -q "local/{{cookiecutter.app_type}}" "$f" );then
         echo "rewrite: $f"
         vv sed -i -r \
