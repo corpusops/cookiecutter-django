@@ -308,7 +308,7 @@ do_test() {
     local bargs=${@:-tests}
     stop_containers
     set -- vv do_shell \
-        "chown {{cookiecutter.app_type}} ../.tox
+        "if [ -e ../tox ];then chown {{cookiecutter.app_type}} ../.tox;fi
         && gosu {{cookiecutter.app_type}} $VENV/bin/tox -c ../tox.ini -e $bargs"
     "$@"
 }

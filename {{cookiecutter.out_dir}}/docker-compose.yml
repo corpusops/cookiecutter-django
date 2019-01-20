@@ -14,8 +14,8 @@ x-images:
     {% if 'post' in cookiecutter.db_mode%}- setup_postgres{%endif%}
     working_dir: /code/src
     command: >-
-      sh -c '{% if 'post' in cookiecutter.db_mode %}
-      dockerize -wait http://setup_postgres -timeout $${POSTGRES_STARTUP_TIMEOUT}
+      sh -c ':\{% if 'post' in cookiecutter.db_mode %}
+      && dockerize -wait http://setup_postgres -timeout $${POSTGRES_STARTUP_TIMEOUT}
       && {%endif%}/bin/bash /code/init/init.sh'
     volumes:
       {%- if not cookiecutter.remove_cron %}
@@ -27,7 +27,9 @@ x-images:
       - logs:/logs/
 services:
   mailcatcher:
+    <<: [ *env ]
     image: corpusops/mailhog
+    hostname: mailcatcher
     volumes: ["mails:/mails"]
     environment:
       MH_STORAGE: maildir
@@ -46,7 +48,6 @@ services:
         && pw=$$(MH_AUTH_FILE="" MailHog bcrypt "$${MAILCATCHER_PASSWORD:-mailcatcher}")
         && echo "$${MAILCATCHER_USER:-mailcatcher}:$$pw" > $$MH_AUTH_FILE
         && su mailhog -p -c MailHog
-    <<: [ *env ]
   redis:
     <<: [ *env ]
     image: "{{cookiecutter.redis_image}}"
@@ -77,10 +78,13 @@ services:
     - SUPERVISORD_CONFIGS=/etc/supervisor.d/cron /etc/supervisor.d/nginx
   {{cookiecutter.app_type}}:
     <<: [ *{{cookiecutter.app_type}} ]
-  {{cookiecutter.app_type}}: {<<: [ *{{cookiecutter.app_type}} ]}
   {%- if not cookiecutter.remove_cron %}
   cron:
     <<: [ *{{cookiecutter.app_type}} ]
+    command: >-
+      sh -c ':\{% if 'post' in cookiecutter.db_mode %}
+      && dockerize -wait http://setup_postgres -timeout $${POSTGRES_STARTUP_TIMEOUT}
+      && {%endif%}/bin/bash /code/init/cron.sh'
     depends_on:
       - {{cookiecutter.app_type}}
     command: /bin/sh /code/init/cron.sh

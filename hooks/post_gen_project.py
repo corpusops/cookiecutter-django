@@ -116,11 +116,13 @@ fi
 set +x
 {% if not cookiecutter.use_submodule_for_deploy_code %}
 while read f;do
+if [ $f = Dockerfile ];then cat Dockerfile;fi
     if ( egrep -q "local/{{cookiecutter.app_type}}" "$f" );then
         echo "rewrite: $f"
         vv sed -i -r \
-        -e "s|{{cookiecutter.deploy_project_dir}}/||g" \
         -e "s|local/{{cookiecutter.app_type}}/||g" \
+        -e "/(ADD\s+){{cookiecutter.deploy_project_dir.replace('/', '\/')}}\/ local/d" \
+        -e "s|{{cookiecutter.deploy_project_dir}}/||g" \
         "$f"
     fi
 done < <( find -type f|egrep -v "((^./(\.tox|\.git|local))|/static/)"; )
