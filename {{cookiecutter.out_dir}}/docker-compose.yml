@@ -13,10 +13,13 @@ x-images:
     - redis
     {% if 'post' in cookiecutter.db_mode%}- setup_postgres{%endif%}
     working_dir: /code/src
-    command: >-
-      sh -c ':\{% if 'post' in cookiecutter.db_mode %}
+    command:
+    - sh
+    - '-c'
+    - >-
+      :{% if 'post' in cookiecutter.db_mode %}
       && dockerize -wait http://setup_postgres -timeout $${POSTGRES_STARTUP_TIMEOUT}
-      && {%endif%}/bin/bash /code/init/init.sh'
+      && {%endif%}/bin/bash /code/init/init.sh
     volumes:
       {%- if not cookiecutter.remove_cron %}
       - ./crontab:/etc/cron.d/{{cookiecutter.app_type}}
@@ -42,7 +45,7 @@ services:
     user: root
     entrypoint:
       - sh
-      - -c
+      - '-c'
       - >
         chown mailhog /mails
         && pw=$$(MH_AUTH_FILE="" MailHog bcrypt "$${MAILCATCHER_PASSWORD:-mailcatcher}")
@@ -81,10 +84,13 @@ services:
   {%- if not cookiecutter.remove_cron %}
   cron:
     <<: [ *{{cookiecutter.app_type}} ]
-    command: >-
-      sh -c ':\{% if 'post' in cookiecutter.db_mode %}
+    command: |-
+    - sh
+    - '-c'
+    - >-
+      :{% if 'post' in cookiecutter.db_mode %}
       && dockerize -wait http://setup_postgres -timeout $${POSTGRES_STARTUP_TIMEOUT}
-      && {%endif%}/bin/bash /code/init/cron.sh'
+      && {%endif%}/bin/bash /code/init/cron.sh
     depends_on:
       - {{cookiecutter.app_type}}
     command: /bin/sh /code/init/cron.sh
