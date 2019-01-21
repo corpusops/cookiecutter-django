@@ -121,6 +121,16 @@ After a last verification of the files, to run with docker, just type:
 control.sh buildimages
 ```
 
+## Running heavy session
+Like for installing and testing packages without burning them right now in requirements.<br/>
+You will need to add the network alias and maybe stop the django worker
+
+```sh
+./control.sh stop {{cookiecutter.app_type}}
+services_ports=1 ./control.sh usershell
+./manage.py runserserver 0.0.0.0:8000
+```
+
 ## Calling Django manage commands
 
 ```sh

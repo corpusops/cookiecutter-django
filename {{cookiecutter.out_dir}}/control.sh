@@ -122,12 +122,14 @@ do_dcompose() {
 }
 
 #  ----
-#  usershell $user [$args]: open shell inside container as \$APP_USER using docker-compose run
+#  [services_ports=1] usershell $user [$args]: open shell inside container as \$APP_USER using docker-compose run
 #       APP_USER=django ./control.sh usershell ls /
 #       APP_USER=root APP_CONTAINER=redis ./control.sh usershell ls /
+#       if services_ports is set, network alias will be set (--services-ports docker compose flag)
 do_usershell() { _shell "$APP_CONTAINER" "$APP_USER" run $@;}
 
-#  shell [$args]: open root shell inside \$APP_CONTAINER using docker-compose run
+#  [services_ports=1] shell [$args]: open root shell inside \$APP_CONTAINER using docker-compose run
+#       if services_ports is set, network alias will be set (--services-ports docker compose flag)
 #  ----
 do_shell()     { _shell "$APP_CONTAINER" root      run $@;}
 
