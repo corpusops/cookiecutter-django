@@ -13,5 +13,5 @@ cops_{{cookiecutter.app_type}}_postgres_startup_timeout: 45s
 cops_{{cookiecutter.app_type}}_docker_env_extra: |-
   # db
   {% if 'post' in cookiecutter.db_mode %}
-  POSTGRES_STARTUP_TIMEOUT={{'{{'}}cops_terralego_postgres_startup_timeout}}
+  POSTGRES_STARTUP_TIMEOUT={{'{{'}}cops_{{cookiecutter.app_type}}_postgres_startup_timeout}}
   {% endif %}
