@@ -6,12 +6,22 @@ cops_{{cookiecutter.app_type}}_mail_domain: "{{ cookiecutter.mail_domain }}"
 cops_{{cookiecutter.app_type}}_docker_image: "{{cookiecutter.docker_image}}"
 cops_{{cookiecutter.app_type}}_gitref: "{{'{{'}}lookup('env', 'CI_COMMIT_TAG_NAME') or lookup('env', 'CI_COMMIT_REF_NAME') or 'latest'}}"
 cops_{{cookiecutter.app_type}}_docker_tag: "{{'{{'}}cops_{{cookiecutter.app_type}}_gitref.replace('master', 'latest')}}"
-
-{% if 'post' in cookiecutter.db_mode %}
+{% if 'post' in cookiecutter.db_mode -%}
 cops_{{cookiecutter.app_type}}_postgres_startup_timeout: 45s
-{% endif %}
+{%- endif %}
+{% if cookiecutter.with_celery -%}
+cops_{{cookiecutter.app_type}}_rabbitmq_user: rabbit
+cops_{{cookiecutter.app_type}}_rabbitmq_password: rabbitpw
+{%- endif%}
 cops_{{cookiecutter.app_type}}_docker_env_extra: |-
   # db
-  {% if 'post' in cookiecutter.db_mode %}
-  POSTGRES_STARTUP_TIMEOUT={{'{{'}}cops_{{cookiecutter.app_type}}_postgres_startup_timeout}}
-  {% endif %}
+  {% if cookiecutter.with_celery -%}
+  {% if cookiecutter.celery_broker == 'rabbitmq' %}RABBITMQ_DEFAULT_USER={{'{{'}}cops_{{cookiecutter.app_type}}_rabbitmq_user}}
+  RABBITMQ_DEFAULT_PASS={{'{{'}}cops_{{cookiecutter.app_type}}_rabbitmq_password}}{% endif %}
+  {%- endif %}
+  {% if 'post' in cookiecutter.db_mode %}POSTGRES_STARTUP_TIMEOUT={{'{{'}}cops_{{cookiecutter.app_type}}_postgres_startup_timeout}}{% endif %}
+{% if cookiecutter.with_celery %}
+cops_django_restarted_services: "{{'{{'}}cops_django_restarted_services_default.replace(' django', ' django{%
+  if cookiecutter.with_celery%} celery_beat celery_worker{%endif
+  %}{%if 'post' in cookiecutter.db_mode%} setup_postgres{%endif%}')}}"
+{% endif %}

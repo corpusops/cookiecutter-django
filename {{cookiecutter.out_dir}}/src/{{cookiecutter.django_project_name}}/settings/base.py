@@ -51,6 +51,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    {% if cookiecutter.with_celery -%}'django_celery_beat',
+    'django_celery_results',{%- endif %}
     #
     'apptest'
 )
@@ -209,6 +211,16 @@ CORS_ORIGIN_ALLOW_ALL = True
 # Mail
 EMAIL_HOST = 'mailcatcher'
 EMAIL_PORT = 1025
+
+{% if cookiecutter.with_celery %}
+# Celery settings
+CELERY_BROKER_URL = 'amqp://celery-broker//'
+#: Only add pickle to this list if your broker is secured
+#: from unwanted access (see userguide/security.html)
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_TASK_SERIALIZER = 'json'
+{% endif %}
 
 ###############################################################################
 # Environment settings routines, compliant with 12Factor: https://12factor.net/

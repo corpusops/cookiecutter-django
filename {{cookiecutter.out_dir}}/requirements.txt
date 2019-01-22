@@ -22,10 +22,12 @@ deepmerge<=1.0
 # SIG
 mercantile>=1.0,<1.1
 Fiona>=1.7,<1.8
-
+{% if cookiecutter.with_celery %}
+django_celery_results>={{cookiecutter.celery_results_version}}
+celery=={{cookiecutter.celery_version}}
+{% endif %}
+{% if cookiecutter.with_sentry %}
+raven==6.10.0
+{% endif%}
 # webserver
 gunicorn>=19.8,<19.9
-
-{%- if cookiecutter.with_sentry -%}
-raven==6.10.0
-{%- endif%}
