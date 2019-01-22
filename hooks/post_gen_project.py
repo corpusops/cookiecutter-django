@@ -9,6 +9,7 @@ import os
 import subprocess
 
 
+DEPLOY_BR = os.environ.get('DEPLOY_BR', 'stable')
 use_submodule_for_deploy_code = bool(
     '{{cookiecutter.use_submodule_for_deploy_code}}'.strip())
 
@@ -70,8 +71,8 @@ if [ ! -e "{{cookiecutter.deploy_project_dir}}/.git" ];then
             "{{cookiecutter.deploy_project_dir}}"
     fi
 ( cd "{{cookiecutter.deploy_project_dir}}" \
-  && git fetch origin && git reset --hard origin/stable )
-"""
+  && git fetch origin && git reset --hard origin/{DEPLOY_BR} )
+""".format(**locals())
 EGITSCRIPT = """
 {%raw%}vv() {{ echo "$@">&2;"$@"; }}{%endraw%}
 {% if cookiecutter.remove_cron %}
@@ -115,6 +116,7 @@ sed -i -re \
 fi
 set +x
 {% if not cookiecutter.use_submodule_for_deploy_code %}
+
 while read f;do
     if ( egrep -q "local/{{cookiecutter.app_type}}" "$f" );then
         echo "rewrite: $f"
@@ -127,6 +129,9 @@ while read f;do
 done < <( find -type f|egrep -v "((^./(\.tox|\.git|local))|/static/)"; )
 {% endif %}
 set -x
+{% if not cookiecutter.with_celery %}
+find src -name celery.py -delete
+{% endif %}
         """
 
 MOTD = '''
@@ -172,6 +177,8 @@ def main():
                 s += '\nrsync -azv --delete {0}{1} {2}{1}'.format(
                     SYMLINKS[i].replace('../', ''), slash, i)
         s += '\nrsync -azv {0}/Dockerfile Dockerfile'.format(
+            "{{cookiecutter.deploy_project_dir}}")
+        s += '\nrsync -azv {0}/.ansible/playbooks/ .ansible/playbooks/'.format(
             "{{cookiecutter.deploy_project_dir}}")
         s += '\nrsync -azv {0}/prod/ prod/'.format(
             "{{cookiecutter.deploy_project_dir}}")
