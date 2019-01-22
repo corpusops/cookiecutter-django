@@ -1,3 +1,4 @@
+{%- set db_tag = 'post' in cookiecutter.db_mode and 'postgres' or cookiecutter.db_mode -%}
 version: '3.7'
 x-images:
   env: &env {env_file: [.env, docker.env]}
@@ -6,20 +7,23 @@ x-images:
     tty: true
     # latest image is only used in prod (without dev & test tools)
     image: "${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE}:${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE_VERSION}-dev"
-    environment:
-    - DJANGO_WSGI=${DJANGO_WSGI:-{{cookiecutter.django_project_name}}.wsgi}
-    depends_on:
+    environment: &django_env
+      DJANGO_WSGI: "${DJANGO_WSGI:-{{cookiecutter.django_project_name}}.wsgi}"
+{% if cookiecutter.with_celery %}      DJANGO_CELERY: "${DJANGO_CELERY:-{{cookiecutter.django_project_name}}.celery:app}"
+      DJANGO_CELERY_BROKER: "${DJANGO_CELERY_BROKER:-{{cookiecutter.celery_broker}}}"
+      DJANGO_CELERY_HOST: "${DJANGO_CELERY_HOST:-celery-broker}"
+{% endif %}    depends_on:
     - db
     - redis
-    {% if 'post' in cookiecutter.db_mode%}- setup_postgres{%endif%}
+    - setup-{{db_tag}}
     working_dir: /code/src
     command:
-    - sh
+    - /bin/sh
     - '-c'
     - >-
-      :{% if 'post' in cookiecutter.db_mode %}
-      && dockerize -wait http://setup_postgres -timeout $${POSTGRES_STARTUP_TIMEOUT}
-      && {%endif%}/bin/bash /code/init/init.sh
+      :
+      && dockerize -wait http://setup-{{db_tag}} -timeout $${POSTGRES_STARTUP_TIMEOUT}
+      && /init.sh
     volumes:
       {%- if not cookiecutter.remove_cron %}
       - ./crontab:/etc/cron.d/{{cookiecutter.app_type}}
@@ -84,15 +88,11 @@ services:
   {%- if not cookiecutter.remove_cron %}
   cron:
     <<: [ *{{cookiecutter.app_type}} ]
-    command:
-    - sh
-    - '-c'
-    - >-
-      :{% if 'post' in cookiecutter.db_mode %}
-      && dockerize -wait http://setup_postgres -timeout $${POSTGRES_STARTUP_TIMEOUT}
-      && {%endif%}/bin/bash /code/init/cron.sh
+    environment:
+      <<: [ *django_env ]
+      IMAGE_MODE: cron
     depends_on:
-      - {{cookiecutter.app_type}}
+    - {{cookiecutter.app_type}}
   {%-endif%}
   backup:
     <<: [ *env ]
@@ -103,8 +103,26 @@ services:
       - backupdb-logs:/srv/backups/logs/
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
       - ./local/backup/setup/reconfigure.yml:/setup/reconfigure.yml:ro
-{% if 'post' in cookiecutter.db_mode %}
-  setup_postgres:
+{% if cookiecutter.with_celery %}  celery-broker:
+    <<: [ *env ]
+    image: "{{cookiecutter['{0}_image'.format(cookiecutter.celery_broker)]}}"
+    {% if cookiecutter.celery_broker in ['redis', 'rabbitmq'] -%}
+    volumes:
+    - celery{{cookiecutter.celery_broker}}:{% if cookiecutter.celery_broker in ['rabbitmq']%}/var/lib/{{cookiecutter.celery_broker}}{%else%}/data{%endif%}:rw
+    {%- endif %}
+  celery-beat: &celery
+    <<: [ *django ]
+    environment:
+      <<: [ *django_env ]
+      IMAGE_MODE: celery_beat
+    depends_on: [db, celery-broker, setup-{{db_tag}}]
+  celery-worker:
+    <<: [ *celery ]
+    environment:
+      <<: [ *django_env ]
+      IMAGE_MODE: celery_worker
+{% endif -%}
+{% if db_tag == 'postgres' %}  setup-postgres:
     <<: [ *env ]
     image: corpusops/pgrouting:10.1-2.5.4
     depends_on:
@@ -138,3 +156,5 @@ volumes:
     external: false
   logs:
   mails:
+  {%if cookiecutter.with_celery%}celery{{cookiecutter.celery_broker}}:{%endif%}
+

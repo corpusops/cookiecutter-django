@@ -61,7 +61,7 @@ _shell() {
     local services_ports=${services_ports-}
     local bargs="$@"
     local NO_VIRTUALENV=${NO_VIRTUALENV-}
-    local NO_NVM=${NO_NVM-1}
+    local NO_NVM=${NO_VIRTUALENV-}
     local NVMRC=${NVMRC:-.nvmrc}
     local NVM_PATH=${NVM_PATH:-..}
     local NVM_PATHS=${NVMS_PATH:-${NVM_PATH}}
@@ -70,7 +70,7 @@ _shell() {
     local DOCKER_SHELL=${DOCKER_SHELL-}
     local run_mode_args=""
     local pre="DOCKER_SHELL=\"$DOCKER_SHELL\";touch \$HOME/.control_bash_rc;
-    if [ -e /etc/default/locale ];then . /etc/default/locale;fi;
+    if [ -e /etc/default/locale ];then . /etc/default/locale;fi
     if [ \"x\$DOCKER_SHELL\" = \"x\" ];then
         if ( bash --version >/dev/null 2>&1 );then DOCKER_SHELL=\"bash\"; else DOCKER_SHELL=\"sh\";fi;
     fi"
@@ -125,6 +125,7 @@ do_dcompose() {
 #  [services_ports=1] usershell $user [$args]: open shell inside container as \$APP_USER using docker-compose run
 #       APP_USER=django ./control.sh usershell ls /
 #       APP_USER=root APP_CONTAINER=redis ./control.sh usershell ls /
+#       if services_ports is set, network alias will be set (--services-ports docker compose flag)
 #       if services_ports is set, network alias will be set (--services-ports docker compose flag)
 do_usershell() { _shell "$APP_CONTAINER" "$APP_USER" run $@;}
 
@@ -221,6 +222,22 @@ do_fg() {
     vv $DC run --rm --no-deps --use-aliases --service-ports $APP_CONTAINER $@
 }
 
+{% if cookiecutter.with_celery -%}
+#  celery_beat_fg: launch celery app container in foreground (using entrypoint)
+do_celery_beat_fg() {
+    stop_containers
+    vv $DC run --rm --no-deps --use-aliases --service-ports $APP_CONTAINER \
+        celery beat -A $DJANGO_CELERY -l $CELERY_LOGLEVEL $@
+}
+
+#  celery_worker_fg: launch celery beat container in foreground (using entrypoint)
+do_celery_worker_fg() {
+    stop_containers
+    vv $DC run --rm --no-deps --use-aliases --service-ports $APP_CONTAINER \
+        celery worker -A $DJANGO_CELERY -l $CELERY_LOGLEVEL -B $@
+}
+
+{% endif -%}
 #  build [$args]: rebuild app containers ($BUILD_CONTAINERS)
 do_build() {
     local bargs="$@" bp=""
@@ -310,7 +327,7 @@ do_test() {
     local bargs=${@:-tests}
     stop_containers
     set -- vv do_shell \
-        "if [ -e ../tox ];then chown {{cookiecutter.app_type}} ../.tox;fi
+        "if [ -e ../.tox ];then chown {{cookiecutter.app_type}} ../.tox;fi
         && gosu {{cookiecutter.app_type}} $VENV/bin/tox -c ../tox.ini -e $bargs"
     "$@"
 }
@@ -328,7 +345,7 @@ do_main() {
     local actions="up_corpusops|shell|usage|install_docker|setup_corpusops"
     actions="$actions|yamldump|stop|usershell|exec|userexec|dexec|duserexec|dcompose"
     actions="$actions|init|up|fg|pull|build|buildimages|down"
-    actions_{{cookiecutter.app_type}}="runserver|tests|test|coverage|linting|manage|python"
+    actions_{{cookiecutter.app_type}}="runserver|tests|test|coverage|linting|manage|python{% if cookiecutter.with_celery%}|celery_beat_fg|celery_worker_fg{%endif%}"
     actions="@($actions|$actions_{{cookiecutter.app_type}})"
     action=${1-}
     if [[ -n $@ ]];then shift;fi
