@@ -10,10 +10,10 @@ from .base import *  # noqa
 
 os.environ['RELATIVE_SETTINGS_MODULE'] = '.dev'
 
-INSTALLED_APPS += (  # noqa
-    'debug_toolbar',
-    'django_extensions',
-)
+INSTALLED_APPS += tuple([  # noqa
+    {% if cookiecutter.with_toolbar %}'debug_toolbar',{%endif%}
+    {% if cookiecutter.with_djextensions %}'django_extensions',{%endif%}
+])
 SECRET_KEY = os.environ.get('SECRET_KEY', 'secretkey-superhot-12345678')
 ALLOWED_HOSTS = ['*']
 # INTERNAL_IPS = ('127.0.0.1',)  # Used by app debug_toolbar
@@ -26,9 +26,12 @@ for logger in six.itervalues(LOGGING['loggers']):  # noqa
 # Log every level.
 LOGGING['handlers']['console']['level'] = logging.NOTSET  # noqa
 
-MIDDLEWARE += (
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
-)
+MIDDLEWARE += tuple([
+    {% if cookiecutter.with_toolbar %}'debug_toolbar.middleware.DebugToolbarMiddleware',{%endif %}
+])
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK': lambda x: True,
+}
 
 locs_, globs_, env = post_process_settings(locals())
 globals().update(globs_)

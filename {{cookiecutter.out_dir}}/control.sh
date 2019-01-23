@@ -17,7 +17,7 @@ THISSCRIPT=$0
 W="$(dirname $(readlinkf $0))"
 
 SHELL_DEBUG=${SHELL_DEBUG-${SHELLDEBUG}}
-if  [[ -n $SHELL_DEBUG ]];then set -x;fi
+if [[ -n $SHELL_DEBUG ]];then set -x;fi
 
 shopt -s extglob
 
@@ -33,6 +33,20 @@ EDITOR=${EDITOR:-vim}
 DIST_FILES_FOLDERS=". src/*/settings"
 CONTROL_COMPOSE_FILES="${CONTROL_COMPOSE_FILES:-docker-compose.yml docker-compose-dev.yml}"
 COMPOSE_COMMAND=${COMPOSE_COMMAND:-docker-compose}
+ENV_FILES="${ENV_FILES:-.env docker.env}"
+
+source_envs() {
+    set -o allexport
+    for i in $ENV_FILES;do
+        if [ -e "$i" ];then
+            eval "$(cat $i\
+                | egrep "^([^#=]+)=" \
+                | sed   's/^\([^=]\+\)=\(.*\)$/export \1=\"\2\"/g' \
+                )"
+        fi
+    done
+    set +o allexport
+}
 
 set_dc() {
     local COMPOSE_FILES="${@:-${CONTROL_COMPOSE_FILES}}"
@@ -59,58 +73,31 @@ _shell() {
     local container="$1" user="$2" run_mode="$3"
     shift;shift;shift
     local services_ports=${services_ports-}
-    local bargs="$@"
-    local NO_VIRTUALENV=${NO_VIRTUALENV-}
-    local NO_NVM=${NO_VIRTUALENV-}
-    local NVMRC=${NVMRC:-.nvmrc}
-    local NVM_PATH=${NVM_PATH:-..}
-    local NVM_PATHS=${NVMS_PATH:-${NVM_PATH}}
-    local VENV_NAME=${VENV_NAME:-$VENV}
-    local VENV_PATHS=${VENV_PATHS:-./$VENV_NAME ../$VENV_NAME}
+    local use_aliases=${use_aliases-}
+    local bargs="${@:-shell}"
     local DOCKER_SHELL=${DOCKER_SHELL-}
+    local SHELL_USER=${user-${SHELL_USER}}
     local run_mode_args=""
-    local pre="DOCKER_SHELL=\"$DOCKER_SHELL\";touch \$HOME/.control_bash_rc;
-    if [ -e /etc/default/locale ];then . /etc/default/locale;fi
-    if [ \"x\$DOCKER_SHELL\" = \"x\" ];then
-        if ( bash --version >/dev/null 2>&1 );then DOCKER_SHELL=\"bash\"; else DOCKER_SHELL=\"sh\";fi;
-    fi"
     if [[ "$run_mode" == "run" ]];then
         run_mode_args="$run_mode_args --rm --no-deps"
+        if [[ -n "$use_aliases" ]];then
+            run_mode_args="$run_mode_args --use-aliases"
+        fi
         if [[ -n "$services_ports" ]];then
             run_mode_args="$run_mode_args --service-ports"
         fi
     fi
-    if [[ -z "$NO_NVM" ]];then
-        if [[ -n "$pre" ]];then pre=" && $pre";fi
-        pre="for i in $NVM_PATHS;do \
-        if [ -e \$i/$NVMRC ] && ( nvm --help > /dev/null );then \
-            printf \"\ncd \$i && nvm install \
-            && nvm use && cd - && break\n\">>\$HOME/.control_bash_rc; \
-        fi;done $pre"
-    fi
-    if [[ -z "$NO_VIRTUALENV" ]];then
-        if [[ -n "$pre" ]];then pre=" && $pre";fi
-        pre="for i in $VENV_PATHS;do \
-        if [ -e \$i/bin/activate ];then \
-            printf \"\n. \$i/bin/activate\n\">>\$HOME/.control_bash_rc && break;\
-        fi;done $pre"
-    fi
-    if [[ -z "$bargs" ]];then
-        bargs="$pre && if ( echo \"\$DOCKER_SHELL\" | grep -q bash );then \
-            exec bash --init-file \$HOME/.control_bash_rc -i;\
-            else . \$HOME/.control_bash_rc && exec sh -i;fi"
-    else
-        bargs="$pre && . \$HOME/.control_bash_rc && \$DOCKER_SHELL -c \"$bargs\""
-    fi
     if [[ "$run_mode" == "dexec" ]];then
         set -- dvv docker exec -ti \
             -e TERM=$TERM -e COLUMNS=$COLUMNS -e LINES=$LINES \
-            -u $user $container sh $( if [[ -z "$bargs" ]];then echo "-i";fi ) -c "$bargs"
+            -e SHELL_USER=${SHELL_USER} \
+            $container /init.sh $bargs
     else
         set -- dvv $DC \
             $run_mode $run_mode_args \
             -e TERM=$TERM -e COLUMNS=$COLUMNS -e LINES=$LINES \
-            -u $user $container sh $( if [[ -z "$bargs" ]];then echo "-i";fi ) -c "$bargs"
+            -e SHELL_USER=${SHELL_USER} \
+            $container /init.sh $bargs
     fi
     "$@"
 }
@@ -122,31 +109,30 @@ do_dcompose() {
 }
 
 #  ----
-#  [services_ports=1] usershell $user [$args]: open shell inside container as \$APP_USER using docker-compose run
+#  [services_ports=1] usershell $user [$args]: open shell inside \$CONTAINER as \$APP_USER using docker-compose run
 #       APP_USER=django ./control.sh usershell ls /
-#       APP_USER=root APP_CONTAINER=redis ./control.sh usershell ls /
+#       APP_USER=root CONTAINER=redis ./control.sh usershell ls /
 #       if services_ports is set, network alias will be set (--services-ports docker compose flag)
-#       if services_ports is set, network alias will be set (--services-ports docker compose flag)
-do_usershell() { _shell "$APP_CONTAINER" "$APP_USER" run $@;}
+do_usershell() { _shell "${CONTAINER:-$APP_CONTAINER}" "$APP_USER" run $@;}
 
-#  [services_ports=1] shell [$args]: open root shell inside \$APP_CONTAINER using docker-compose run
+#  [services_ports=1] shell [$args]: open root shell inside \$CONTAINER using docker-compose run
 #       if services_ports is set, network alias will be set (--services-ports docker compose flag)
 #  ----
-do_shell()     { _shell "$APP_CONTAINER" root      run $@;}
+do_shell()     { _shell "${CONTAINER:-$APP_CONTAINER}" root      run $@;}
 
 _exec() {
     local user="$2" container="$1";shift;shift
     _shell "$container" "$user" exec $@
 }
 
-#  userexec [$args]: exec command or make an interactive shell as $user inside running \$APP_CONTAINER using docker-compose exec
+#  userexec [$args]: exec command or make an interactive shell as $user inside running \$CONTAINER using docker-compose exec
 #       APP_USER=django ./control.sh userexec ls /
 #       APP_USER=root APP_CONTAINER=redis ./control.sh userexec ls /
-do_userexec() { _exec "$APP_CONTAINER" "$APP_USER" $@;}
+do_userexec() { _exec "${CONTAINER:-$APP_CONTAINER}" "$APP_USER" $@;}
 
-#  exec [$args]: exec command or shell as root inside running \$APP_CONTAINER using docker-compose exec
+#  exec [$args]: exec command or shell as root inside running \$CONTAINER using docker-compose exec
 #  ----
-do_exec()     { _exec "$APP_CONTAINER" root      $@;}
+do_exec()     { _exec "${CONTAINER:-$APP_CONTAINER}" root      $@;}
 
 _dexec() {
     local user="$2" container="$1";shift;shift
@@ -161,9 +147,9 @@ _dexec() {
 }
 
 #  duserexec $container  [$args]: exec command or make an interactive shell as $user inside running \$APP_CONTAINER using docker exec
-#       APP_USER=django ./control.sh duserexec -> run interactive shell inside default container
-#       APP_USER=django ./control.sh duserexec foo123 -> run interactive shell inside foo123 container
-#       APP_USER=django ./control.sh duserexec django_123 ls / -> run comand inside foo123 container
+#       APP_USER=django ./control.sh duserexec -> run interactive shell inside default CONTAINER
+#       APP_USER=django ./control.sh duserexec foo123 -> run interactive shell inside foo123 CONTAINER
+#       APP_USER=django ./control.sh duserexec django_123 ls / -> run comand inside foo123 CONTAINER
 do_duserexec() {
     local container="${1-}";if [[ -n "${1-}" ]];then shift;fi
     _dexec "${container}" "$APP_USER" $@;
@@ -219,25 +205,9 @@ stop_containers() {
 #  fg: launch app container in foreground (using entrypoint)
 do_fg() {
     stop_containers
-    vv $DC run --rm --no-deps --use-aliases --service-ports $APP_CONTAINER $@
+    vv $DC run --rm --no-deps --use-aliases --service-ports -e IMAGE_MODE=fg $APP_CONTAINER $@
 }
 
-{% if cookiecutter.with_celery -%}
-#  celery_beat_fg: launch celery app container in foreground (using entrypoint)
-do_celery_beat_fg() {
-    stop_containers
-    vv $DC run --rm --no-deps --use-aliases --service-ports $APP_CONTAINER \
-        celery beat -A $DJANGO_CELERY -l $CELERY_LOGLEVEL $@
-}
-
-#  celery_worker_fg: launch celery beat container in foreground (using entrypoint)
-do_celery_worker_fg() {
-    stop_containers
-    vv $DC run --rm --no-deps --use-aliases --service-ports $APP_CONTAINER \
-        celery worker -A $DJANGO_CELERY -l $CELERY_LOGLEVEL -B $@
-}
-
-{% endif -%}
 #  build [$args]: rebuild app containers ($BUILD_CONTAINERS)
 do_build() {
     local bargs="$@" bp=""
@@ -339,6 +309,28 @@ do_linting() { do_test linting; }
 
 #  coverage: run coverage tests
 do_coverage() { do_test coverage; }
+
+{% if cookiecutter.with_celery -%}
+#  celery_beat_fg: launch celery app container in foreground (using entrypoint)
+do_celery_beat_fg() {
+    (   source_envs \
+        && CONTAINER=celery-beat \
+        && stop_containers $CONTAINER \
+        && services_ports=1 do_usershell \
+        celery beat -A \$DJANGO_CELERY -l \$CELERY_LOGLEVEL $@ )
+}
+
+#  celery_worker_fg: launch celery beat container in foreground (using entrypoint)
+do_celery_worker_fg() {
+    (   source_envs \
+        && CONTAINER=celery-worker \
+        && stop_containers celery-worker \
+        && services_ports=1 do_usershell \
+        celery worker -A \$DJANGO_CELERY -l \$CELERY_LOGLEVEL -B $@ )
+}
+
+{% endif -%}
+
 
 do_main() {
     local args=${@:-usage}

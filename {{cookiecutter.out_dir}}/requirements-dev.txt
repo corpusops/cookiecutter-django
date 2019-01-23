@@ -1,6 +1,6 @@
 # development
-django-debug-toolbar>=1.9,<1.10
-django-extensions>=2.0,<2.1
+{% if cookiecutter.with_toolbar %}django-debug-toolbar>=1.9,<1.10{% endif %}
+{% if cookiecutter.with_djextensions %}django-extensions>=2.0,<2.1{% endif %}
 tox
 coverage
 isort

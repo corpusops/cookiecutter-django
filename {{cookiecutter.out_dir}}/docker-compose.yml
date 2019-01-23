@@ -78,8 +78,9 @@ services:
       - statics:/public/static/
       - logs:/logs/
     command: >
-      /bin/sh -c "
-      CONF_PREFIX=DJANGO__ confenvsubst.sh /etc/nginx/conf.d/default.conf.template
+      /bin/sh -c ": \
+      && v=/etc/nginx/conf.d/default.conf
+      && frep $${v}.template:$${v} --overwrite
       && exec /bin/supervisord.sh"
     environment:
     - SUPERVISORD_CONFIGS=/etc/supervisor.d/cron /etc/supervisor.d/nginx

@@ -22,6 +22,6 @@ cops_{{cookiecutter.app_type}}_docker_env_extra: |-
   {% if 'post' in cookiecutter.db_mode %}POSTGRES_STARTUP_TIMEOUT={{'{{'}}cops_{{cookiecutter.app_type}}_postgres_startup_timeout}}{% endif %}
 {% if cookiecutter.with_celery %}
 cops_django_restarted_services: "{{'{{'}}cops_django_restarted_services_default.replace(' django', ' django{%
-  if cookiecutter.with_celery%} celery_beat celery_worker{%endif
-  %}{%if 'post' in cookiecutter.db_mode%} setup_postgres{%endif%}')}}"
+  if cookiecutter.with_celery%} celery-broker celery-beat celery-worker{%endif
+  %}{%if 'post' in cookiecutter.db_mode%} setup-postgres{%endif%}')}}"
 {% endif %}

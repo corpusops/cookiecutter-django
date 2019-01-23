@@ -206,3 +206,22 @@ docker-compose -f docker-compose.yml -f docker-compose-dev.yml up django
     - If the value is exposed on the environment, whenever you add/edit it, you need to add it
         - to ``docker.env`` & ``docker.env.dist`` in dev
         - To **ansible setup**, [Read this section of the ansible readme](./.ansible/README.md#django-settings-setup).
+
+{% if cookiecutter.with_celery %}
+## Celery
+
+Celery can be used in foreground for easy developement<br/>
+Open two shell windows.<br/>
+
+In one of them, launch the beat
+```sh
+./control.sh celery_beat_fg
+```
+
+In the other, launch one worker
+```sh
+./control.sh celery_worker_fg
+```
+
+
+{% endif %}

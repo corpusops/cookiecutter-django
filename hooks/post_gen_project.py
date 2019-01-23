@@ -124,6 +124,7 @@ while read f;do
         -e "s|local/{{cookiecutter.app_type}}/||g" \
         -e "/(ADD\s+){{cookiecutter.deploy_project_dir.replace('/', '\/')}}\/ local/d" \
         -e "s|{{cookiecutter.deploy_project_dir}}/||g" \
+        -e "/ADD\s*\/code\/$/d" \
         "$f"
     fi
 done < <( find -type f|egrep -v "((^./(\.tox|\.git|local))|/static/)"; )

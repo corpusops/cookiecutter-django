@@ -64,6 +64,8 @@
     "use_tz": "y",
     "language_code": "fr-fr",
     "rabbitmq_image": "corpusops/rabbitmq:3",
+    "with_toolbar": "y",
+    "with_djextensions": "y",
     "with_celery": "",
     "celery_broker": "rabbitmq",
     "celery_version": "4.2.1",

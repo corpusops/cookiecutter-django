@@ -26,3 +26,9 @@ __pycache__
 /.ansible/scripts/ansible_deploy_env
 /local/
 !/local/regen.sh
+
+{% if cookiecutter.with_celery %}
+# celery
+/src/celerybeat-schedule.db
+/src/celerybeat.pid
+{% endif %}
