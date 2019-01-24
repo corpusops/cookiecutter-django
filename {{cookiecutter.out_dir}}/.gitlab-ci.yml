@@ -91,7 +91,7 @@ before_script: &top_before_script
 - rm -rf /var/cache/apt
 - ln -s /cache/$CI_PROJECT_PATH_SLUG/apt /var/cache/apt
 - ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo ${TZ} > /etc/timezone
-- bash -c "cat >/docker_login <<< 'set -e;echo \"$REGISTRY_PASSWORD\"
+- bash -ec "cat >/docker_login <<< 'set -e;echo \"$REGISTRY_PASSWORD\"
                 | docker login \"$DOCKER_REGISTRY\" --username=\"$REGISTRY_USER\" --password-stdin';
                   touch /docker_login_success"
 # first registry login does not have to success, we only want it to be available on release
@@ -102,7 +102,7 @@ before_script: &top_before_script
   -e "s/^(CI_COMMIT_SHA=).*/\\1${CI_COMMIT_SHA}/g" > .env
 - envsubst < docker.env.dist > docker.env
 # Also we only pull images if we got a successful login
-- sh -c "if [ -e /docker_login_success ];then
+- sh -ec "if [ -e /docker_login_success ];then
           for i in ${PRELOAD_IMAGES};do
             ( echo \"docker pull \$i\" && docker pull \$i || /bin/true )&
           done;wait;
@@ -113,7 +113,7 @@ before_script: &top_before_script
 # - A REF NAME from which we cache the build
 # - The related master (latest) branch
 - find /cache/$CI_PROJECT_PATH_SLUG
-- bash -c "if [ \"x${PRELOAD_TARBALLS}\" != \"x\" ];then for i in
+- bash -ec "if [ \"x${PRELOAD_TARBALLS}\" != \"x\" ];then for i in
   \"\$IMAGES_TARBALL\"
   \"\$REFERENCE_IMAGES_TARBALL\"
   \"\$REFERENCE_MASTER_IMAGES_TARBALL\"
@@ -136,7 +136,7 @@ cleanup_all_expired_build_artefacts_from_cache:
   <<: [ *manual_job_tpl ]
   script:
   - &cleanup_all_expired_build_artefacts_from_cache |-
-    bash -c 'while read f;do rm -fv "$f";done \
+    bash -ec 'while read f;do rm -fv "$f";done \
     < <( find /cache/$CI_PROJECT_PATH_SLUG/docker-images/build-* \
          -type f -mtime +$CACHE_DAYS )'
 
@@ -145,7 +145,7 @@ cleanup_all_expired_docker_images_from_cache:
   before_script: []
   script:
   - &cleanup_all_expired_docker_images |-
-    bash -c 'while read f;do rm -fv "$f";done \
+    bash -ec 'while read f;do rm -fv "$f";done \
     < <( find /cache/$CI_PROJECT_PATH_SLUG/docker-images -type f )'
 
 cleanup_all_project_cache:
@@ -172,7 +172,7 @@ build_images: &build_images
         || ( echo "BUILD ERROR: $i" >> /docker_images_errors )
     done
     if [ -e /docker_images_errors ];then cat /docker_images_errors;exit 1;fi
-  - &build_step2 sh -c "set -ex
+  - &build_step2 sh -ec "set -x
     && docker inspect \"\${CURRENT_DOCKER_IMAGE}\" >/dev/null
     && docker save
        \$(docker history -q \"\${CURRENT_DOCKER_IMAGE}-dev\" | tr '\n' ' ' | tr -d '<missing>')
@@ -191,7 +191,7 @@ build_images: &build_images
     CONTROL_COMPOSE_FILES: docker-compose.yml
   script:
   - &launch_test_stack |-
-    sh -c 'for i in $DOCKER_SERVICES;
+    sh -ec 'for i in $DOCKER_SERVICES;
      do ./control.sh up --force-recreate --no-deps $i;done'
 
 {% set testsc = (not cookiecutter.test_tests) and '#' or '' -%}
@@ -215,13 +215,13 @@ build_images: &build_images
   tags: ["{{cookiecutter.runner_tag}}"]
   script:
   # redo the docker login, without the /bin/true, failing if the registry is down
-  - &release_step1 sh /docker_login
+  - &release_step1 sh -e /docker_login
   # quoting & subshelling to work around gitlab variable substitutions
-  - &release_step2 sh -c "docker tag \"\$(eval echo \$TO_RELEASE_DOCKER_IMAGE)-dev\"
+  - &release_step2 sh -ec "docker tag \"\$(eval echo \$TO_RELEASE_DOCKER_IMAGE)-dev\"
     \"\$(eval echo \$RELEASED_DOCKER_IMAGE)-dev\"
     && docker tag \"\$(eval echo \$TO_RELEASE_DOCKER_IMAGE)\"
     \"\$(eval echo \$RELEASED_DOCKER_IMAGE)\""
-  - &release_step3 sh -c "
+  - &release_step3 sh -ec "
     docker push \"\$(eval echo \$RELEASED_DOCKER_IMAGE)-dev\" &&
     docker push \"\$(eval echo \$RELEASED_DOCKER_IMAGE)\""
   variables: &release_vars
