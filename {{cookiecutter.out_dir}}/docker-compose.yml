@@ -83,7 +83,7 @@ services:
       && frep $${v}.template:$${v} --overwrite
       && exec /bin/supervisord.sh"
     environment:
-    - SUPERVISORD_CONFIGS=/etc/supervisor.d/cron /etc/supervisor.d/nginx
+    - SUPERVISORD_CONFIGS=/etc/supervisor.d/cron /etc/supervisor.d/nginx /etc/supervisor.d/rsyslog
   {{cookiecutter.app_type}}:
     <<: [ *{{cookiecutter.app_type}} ]
   {%- if not cookiecutter.remove_cron %}
