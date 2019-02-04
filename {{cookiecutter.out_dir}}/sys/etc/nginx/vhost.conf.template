@@ -107,6 +107,8 @@ server {
         root  /public/502.html;
     }
 
+    # if ($forwarded_ssl_scheme != "https"){ rewrite ^(.*)$ https://$host$1 permanent; }
+
     location {{cookiecutter.statics_uri}}/ {
         alias /public/static/;
 
