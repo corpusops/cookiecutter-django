@@ -73,7 +73,7 @@ services:
     depends_on:
       - {{cookiecutter.app_type}}
     volumes:
-      - ./prod/etc/nginx/vhost.conf.template:/etc/nginx/conf.d/default.conf.template
+      - ./sys/etc/nginx/vhost.conf.template:/etc/nginx/conf.d/default.conf.template
       - mediafiles:/public/media/:ro
       - statics:/public/static/
       - logs:/logs/

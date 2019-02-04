@@ -109,10 +109,10 @@ sed -i -re \
 	"s/project/{{cookiecutter.django_project_name}}/g" \
 	Dockerfile
 fi
-if ( find prod/*sh 2>/dev/null );then
+if ( find sys/*sh 2>/dev/null );then
 sed -i -re \
 	"s/project/{{cookiecutter.django_project_name}}/g" \
-	prod/*sh
+	sys/*sh
 fi
 set +x
 {% if not cookiecutter.use_submodule_for_deploy_code %}
@@ -181,7 +181,7 @@ def main():
             "{{cookiecutter.deploy_project_dir}}")
         s += '\nrsync -azv {0}/.ansible/playbooks/ .ansible/playbooks/'.format(
             "{{cookiecutter.deploy_project_dir}}")
-        s += '\nrsync -azv {0}/prod/ prod/'.format(
+        s += '\nrsync -azv {0}/sys/ sys/'.format(
             "{{cookiecutter.deploy_project_dir}}")
         s += '\ngit add .ansible'
         {% if cookiecutter.remove_cron %}
