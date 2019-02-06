@@ -9,6 +9,7 @@ x-images:
        DJANGO_SETTINGS_MODULE: "${DJANGO_SETTINGS_MODULE:-{{cookiecutter.django_settings}}.dev}"
        NO_MIGRATE: "1"
        NO_COLLECT_STATIC: "1"
+       NO_STATICS: "1"
     volumes: &django_volumes
       {%-if cookiecutter.use_submodule_for_deploy_code %}
       - ./{{cookiecutter.deploy_project_dir}}/sys/sudoer:/etc/sudoers.d/$APP_TYPE
@@ -34,6 +35,12 @@ x-images:
       - ./requirements-dev.txt:/code/requirements-dev.txt
 services:
   nginx: {<<: [ *bypass ]}
+  # uncomment to activate in dev
+  # nginx:
+  # environment: {NO_SSL: ""}
+  # ports:
+  #   - 80: 80
+  #   - 443: 443
   backup: {<<: [ *bypass ]}
   {{cookiecutter.app_type}}:
     <<: [ *django ]
