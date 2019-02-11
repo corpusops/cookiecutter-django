@@ -37,7 +37,7 @@ services:
   nginx: {<<: [ *bypass ]}
   # uncomment to activate in dev
   # nginx:
-  # environment: {NO_SSL: ""}
+  # environment: {NO_SSL: "0"}
   # ports:
   #   - 80: 80
   #   - 443: 443

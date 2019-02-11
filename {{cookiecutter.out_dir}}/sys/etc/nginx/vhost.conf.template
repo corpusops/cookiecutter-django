@@ -1,17 +1,16 @@
 {{'{{'}} $dciphers := "EECDH+AESGCM:EDH+AESGCM:ECDHE-RSA-AES128-GCM-SHA256:AES256+EECDH:DHE-RSA-AES128-GCM-SHA256:AES256+EDH:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4" }}
 {{'{{'}} $v := dict "$" $ }}
-{{'{{'}} $v := merge $v ( dict "Env"                           .Env                                                                         ) }}
+{{'{{'}} $v := merge $v ( dict "Env"                           .Env) }}
 {{'{{'}} $v := merge $v ( dict "certspath"                   ( .Env.SSL_CERTS_PATH | default "/certs" )                                     ) }}
 {{'{{'}} $v := merge $v ( dict "cert"                        ( .Env.SSL_CERT_PATH | default ( print $v.certspath  "/cert.crt" ))            ) }}
 {{'{{'}} $v := merge $v ( dict "key"                         ( .Env.SSL_KEY_PATH  | default ( print $v.certspath  "/cert.key" ))            ) }}
 {{'{{'}} $v := merge $v ( dict "diffie"                      ( .Env.NGINX_DH_FILE | default ( print $v.certspath  "/dhparams.pem" ))        ) }}
-{{'{{'}} $v := merge $v ( dict "nossl"                       ( .Env.NO_SSL | default "" )                                                   ) }}
-{{'{{'}} if $v.nossl }}
-{{'{{'}} $v := merge $v ( dict "defaultnoforcessl" "1" )}}
+{{'{{'}} $v := merge $v ( dict "nossl"                       ( .Env.NO_SSL | default "1" )                                                  ) }}
+{{'{{'}} if not ( .Env.NO_FORCE_SSL | empty ) }}
+{{'{{'}} $v := merge $v ( dict "noforcessl" .Env.NO_FORCE_SSL ) }}
 {{'{{'}} else }}
-{{'{{'}} $v := merge $v ( dict "defaultnoforcessl" "" )}}
+{{'{{'}} $v := merge $v ( dict "noforcessl" ((eq $v.nossl "1") | ternary "0" "1" )) }}
 {{'{{'}} end }}
-{{'{{'}} $v := merge $v ( dict "noforcessl"                  ( .Env.NO_FORCE_SSL | default $v.defaultnoforcessl )                           ) }}
 {{'{{'}} $v := merge $v ( dict "nostatics"                   ( .Env.NO_STATICS | default "" )                                               ) }}
 {{'{{'}} $v := merge $v ( dict "server_name"                 ( .Env.NGINX_SERVERNAME | default "localhost" )                                ) }}
 {{'{{'}} $v := merge $v ( dict "server_aliases"              ( .Env.NGINX_SERVER_ALIASES | default "" )                                     ) }}
@@ -66,6 +65,16 @@ map $http_x_ssl_resolved  $forwarded_server_port              {default $server_p
 map $http_x_ssl_resolved  $http_x_forwarded_protocol_resolved {default tcp;1 ssl;}
 map $http_x_ssl_resolved  $http_x_forwarded_ssl_resolved      {default off;1 on;}
 map $http_x_ssl_resolved  $http_x_forwarded_proto_resolved    {default http;1 https;}
+
+# Obtain best http host
+map $http_host $this_host {
+    default          $http_host;
+    ''               $host;
+}
+map $http_x_forwarded_host $best_http_host {
+    default          $http_x_forwarded_host;
+    ''               $this_host;
+}
 
 server {
     listen 80;
@@ -133,9 +142,9 @@ server {
     location = /502.html {
         root  /public/502.html;
     }
-    {{'{{'}} if .noforcessl }}# {{'{{'}} end }}if ($forwarded_ssl_scheme != "https"){ rewrite ^(.*)$ https://$host$1 permanent; }
+    {{'{{'}} if eq .noforcessl "1"}}# {{'{{'}} end }}if ($forwarded_ssl_scheme != "https"){ rewrite ^(.*)$ https://$host$1 permanent; }
 
-    {{'{{'}} if not .nostatics }}
+    {{'{{'}} if ne .nostatics "1" }}
     location {{cookiecutter.statics_uri}}/ {
         alias /public/static/;
 
@@ -188,7 +197,7 @@ server {
 
 }
 
-{{'{{'}} if not $v.nossl }}
+{{'{{'}} if ne $v.nossl "1" }}
 
 server {
     listen 443 ssl;
