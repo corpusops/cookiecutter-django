@@ -1,6 +1,6 @@
 # Init a django project
 
-Idea is to create it with a wonderful python tool called
+Idea is to create the starting point of you new projects with a wonderful python tool called
 [cookiecutter](https://github.com/audreyr/cookiecutter)
 
 ##  Install prerequisites
@@ -12,13 +12,18 @@ virtualenv --python=python3 ~/tools/cookiecutter
 
 ## Create back project
 
-- create on gitlab your project
-- then locally (replace with your values)
+- create on gitlab your project (targeted project)
+- then locally generate te content of this project with cookiecutter (replace with your values)
 
     ```sh
+    # if it's not your first cookiecutter usage this will refresh your local
+    # copy of the project template, **igore this step on first launch**.
     cd ~/.cookiecutters/cookiecutter-django \
         && git fetch origin && git reset --hard origin/master \
         && cd -
+    # activate your cookiecutter env
+    . ~/tools/cookiecutter/bin/activate
+    # and laucnh generation !
     cookiecutter --no-input -f -o ~/out_dir \
         https://github.com/corpusops/cookiecutter-django.git \
         name=foo \
@@ -46,7 +51,7 @@ virtualenv --python=python3 ~/tools/cookiecutter
       autofill ``register_user`` and ``registry_password``.
     - ``db_mode=<mode>``: one of ``postgres|postgis|mysql``
     - ``haproxy=y``: generate haproxy related jobs
-
+- push the generated directories and files (from `~/out_dir` in this example) to your new project
 
 ## Fill ansible inventory
 
