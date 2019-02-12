@@ -18,6 +18,8 @@ x-images:
       - ./{{cookiecutter.deploy_project_dir}}:/code/{{cookiecutter.deploy_project_dir}}
       {%-else %}
       - ./sys/sudoer:/etc/sudoers.d/$APP_TYPE
+      - ./sys/init.sh:/code/init/init.sh
+      # retrocompat
       - ./sys/init.sh:/code/sys/init.sh
       - ./sys/etc/supervisor.d:/code/etc/supervisor.d
       {%- endif%}
@@ -37,10 +39,10 @@ services:
   nginx: {<<: [ *bypass ]}
   # uncomment to activate in dev
   # nginx:
-  # environment: {NO_SSL: "0"}
-  # ports:
-  #   - 80: 80
-  #   - 443: 443
+  #   ports:
+  #   - 80:80
+  #   - 443:443
+  #   environment: {NO_SSL: "0"}
   backup: {<<: [ *bypass ]}
   {{cookiecutter.app_type}}:
     <<: [ *django ]

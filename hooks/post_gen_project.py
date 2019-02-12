@@ -128,6 +128,7 @@ while read f;do
         "$f"
     fi
 done < <( find -type f|egrep -v "((^./(\.tox|\.git|local))|/static/)"; )
+sed -i -re "/\/code\/sys\/\* sys/d" Dockerfile
 {% endif %}
 set -x
 {% if not cookiecutter.with_celery %}
