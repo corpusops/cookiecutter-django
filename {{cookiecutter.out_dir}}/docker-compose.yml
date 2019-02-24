@@ -78,11 +78,22 @@ services:
       - statics:/public/static/
       - logs:/logs/
       - nginx-certs:/certs
-    command: >
-      /bin/sh -c ": \
-      && v=/etc/nginx/conf.d/default.conf
-      && frep $${v}.template:$${v} --overwrite
-      && exec /bin/supervisord.sh"
+    command:
+      - sh
+      - '-ec'
+      - |-
+        export DJANGO__HTTP_PROTECT_USER=$${DJANGO__HTTP_PROTECT_USER:-root}
+        export DJANGO__HTTP_PROTECT_PASSWORD=$${DJANGO__HTTP_PROTECT_PASSWORD-}
+        touch /etc/htpasswd-protect
+        chmod 644 /etc/htpasswd-protect
+        if [ "x$$DJANGO__HTTP_PROTECT_PASSWORD" != "x" ];then
+          echo "/ htpasswd:">&2
+          echo "$$DJANGO__HTTP_PROTECT_PASSWORD"\
+          | htpasswd -bim /etc/htpasswd-protect "$$DJANGO__HTTP_PROTECT_USER"
+        fi
+        v=/etc/nginx/conf.d/default.conf
+        frep $${v}.template:$${v} --overwrite
+        exec /bin/supervisord.sh
     environment:
     - SUPERVISORD_CONFIGS=/etc/supervisor.d/cron /etc/supervisor.d/nginx /etc/supervisor.d/rsyslog
   {{cookiecutter.app_type}}:

@@ -95,10 +95,10 @@ rm -rfv \
 {% endfor %}
 {% if cookiecutter.no_private %}
 rm -rf private
-sed -i -re "/ADD private/d" Dockerfile
+sed -i -re "/ADD( --chown={{cookiecutter.app_type}}:{{cookiecutter.app_type}})? private/d" Dockerfile
 {% endif %}
 {% if cookiecutter.no_lib %}
-sed -i -re "/ADD lib/d" Dockerfile
+sed -i -re "/ADD( --chown={{cookiecutter.app_type}}:{{cookiecutter.app_type}})? lib/d" Dockerfile
 rm -rf lib
 {% endif %}
 if [ -e Dockerfile ] && [ ! -h Dockerfile ];then
