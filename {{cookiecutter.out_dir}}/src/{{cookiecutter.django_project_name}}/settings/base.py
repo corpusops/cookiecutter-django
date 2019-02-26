@@ -41,6 +41,7 @@ SECRET_KEY = None
 DEBUG = False
 
 ALLOWED_HOSTS = []
+USE_X_FORWARDED_HOST = {% if cookiecutter.settings_use_x_forwarded_host%}True{%else%}False{%endif%}
 
 # Application definition
 
@@ -175,8 +176,8 @@ AUTH_USER_MODEL = '{{cookiecutter.user_model}}'
 LANGUAGE_CODE = '{{cookiecutter.language_code}}'
 TIME_ZONE = '{{cookiecutter.tz}}'
 USE_I18N = {{ cookiecutter['use_i18n'] and 'True' or 'False'}}
-USE_L10N =  {{ cookiecutter['use_l10n'] and 'True' or 'False'}}
-USE_TZ =  {{ cookiecutter['use_tz'] and 'True' or 'False'}}
+USE_L10N = {{ cookiecutter['use_l10n'] and 'True' or 'False'}}
+USE_TZ = {{ cookiecutter['use_tz'] and 'True' or 'False'}}
 LOCALE_PATHS = (
     os.path.join(PROJECT_DIR, 'locales'),
 )
@@ -375,6 +376,11 @@ def post_process_settings(globs=None):
         except KeyError:
             continue
         _locals[setting] = func(_locals[setting], **fkwargs)
+    try:
+        redis_url = _locals['REDIS_URL']
+        _locals['CACHES']['default']['location'] = redis_url
+    except KeyError:
+        pass
     {% if cookiecutter.with_sentry -%}SENTRY_DSN = _locals.setdefault('SENTRY_DSN', '')
     SENTRY_RELEASE = _locals.setdefault('SENTRY_RELEASE', 'prod')
     INSTALLED_APPS = _locals.setdefault('INSTALLED_APPS', tuple())
