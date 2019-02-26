@@ -75,11 +75,16 @@ if [ ! -e "{{cookiecutter.deploy_project_dir}}/.git" ];then
 """.format(**locals())
 EGITSCRIPT = """
 {%raw%}vv() {{ echo "$@">&2;"$@"; }}{%endraw%}
+{% if cookiecutter.use_submodule_for_deploy_code %}
+dockerfile={{cookiecutter.deploy_project_dir}}/Dockerfile
+{% else %}
+dockerfile=Dockerfile
+{% endif %}
 {% if cookiecutter.remove_cron %}
-if [ -e Dockerfile ] && [ ! -h Dockerfile ];then
+if [ -e $dockerfile ] && [ ! -h $dockerfile ];then
     rm -f crontab
-    sed -i -re "/ADD .*cron/d" Dockerfile
-    sed -i -re "/CMD .*cron/d" Dockerfile
+    sed -i -re "/ADD .*cron/d" $dockerfile
+    sed -i -re "/CMD .*cron/d" $dockerfile
 fi
 {% endif %}
 {% for i in ['dev', 'prod', 'qa', 'staging'] -%}
@@ -95,19 +100,19 @@ rm -rfv \
 {% endfor %}
 {% if cookiecutter.no_private %}
 rm -rf private
-sed -i -re "/ADD( --chown={{cookiecutter.app_type}}:{{cookiecutter.app_type}})? private/d" Dockerfile
+sed -i -re "/ADD( --chown={{cookiecutter.app_type}}:{{cookiecutter.app_type}})? private/d" $dockerfile
 {% endif %}
 {% if cookiecutter.no_lib %}
-sed -i -re "/ADD( --chown={{cookiecutter.app_type}}:{{cookiecutter.app_type}})? lib/d" Dockerfile
+sed -i -re "/ADD( --chown={{cookiecutter.app_type}}:{{cookiecutter.app_type}})? lib/d" $dockerfile
 rm -rf lib
 {% endif %}
-if [ -e Dockerfile ] && [ ! -h Dockerfile ];then
+if [ -e $dockerfile ] && [ ! -h $dockerfile ];then
 sed -i -re \
 	"s/PY_VER=.*/PY_VER={{cookiecutter.py_ver}}/g" \
-	Dockerfile
+	$dockerfile
 sed -i -re \
 	"s/project/{{cookiecutter.django_project_name}}/g" \
-	Dockerfile
+	$dockerfile
 fi
 if ( find sys/*sh 2>/dev/null );then
 sed -i -re \
@@ -128,7 +133,7 @@ while read f;do
         "$f"
     fi
 done < <( find -type f|egrep -v "((^./(\.tox|\.git|local))|/static/)"; )
-sed -i -re "/\/code\/sys\/\* sys/d" Dockerfile
+sed -i -re "/\/code\/sys\/\* sys/d" $dockerfile
 {% endif %}
 set -x
 {% if not cookiecutter.with_celery %}
