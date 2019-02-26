@@ -39,7 +39,7 @@ x-images:
       - ./requirements-dev.txt:/code/requirements-dev.txt
 services:
   {% if nginxc %}#{%endif%}nginx: {<<: [ *bypass ]}
-  {{nginxc}}# uncomment to activate in dev
+  {% if not nginxc%}# uncomment to activate in dev{%endif%}
   {{nginxc}}nginx:
   {{nginxc}}  ports:
   {{nginxc}}  - 80:80
