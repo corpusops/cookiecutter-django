@@ -1,4 +1,6 @@
 version: '3.7'
+{% set nginxc    = (not cookiecutter.nginx_in_dev) and '#' or '' %}
+{% set nginxsslc = (not cookiecutter.ssl_in_dev) and '#' or '' %}
 x-images:
   bypass: &bypass
     command: 'sh -c "while true;do echo notstarted;sleep 65000;done"'
@@ -36,13 +38,13 @@ x-images:
       - ./requirements.txt:/code/requirements.txt
       - ./requirements-dev.txt:/code/requirements-dev.txt
 services:
-  nginx: {<<: [ *bypass ]}
-  # uncomment to activate in dev
-  # nginx:
-  #   ports:
-  #   - 80:80
-  #   - 443:443
-  #   environment: {NO_SSL: "0"}
+  {% if nginxc %}#{%endif%}nginx: {<<: [ *bypass ]}
+  {{nginxc}}# uncomment to activate in dev
+  {{nginxc}}nginx:
+  {{nginxc}}  ports:
+  {{nginxc}}  - 80:80
+  {{nginxc}}  {% if not nginxc%}{{nginxsslc}}{%endif %}- 443:443
+  {{nginxc}}  environment: {NO_SSL: "0"}
   backup: {<<: [ *bypass ]}
   {{cookiecutter.app_type}}:
     <<: [ *django ]

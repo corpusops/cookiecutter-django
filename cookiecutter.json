@@ -1,6 +1,8 @@
 {
     "name": "myapp",
     "py_ver": "3.7",
+    "nginx_in_dev": "y",
+    "ssl_in_dev": "y",
     "django_ver": "2.1.3",
     "django_ver_1": "{{cookiecutter.django_ver[0:3]}}",
     "git_ns": "{{cookiecutter.name}}-group",
@@ -77,6 +79,10 @@
     "redis_image": "corpusops/redis:4.0-alpine",
     "nginx_image": "corpusops/nginx:1.14-alpine",
     "user_model": "",
+    "settings_account_default_http_protocol": "http",
+    "settings_use_x_forwarded_host": "y",
+    "settings_secure_ssl_redirect": "y",
+    "settings_csrf_cookie_httponly": "y",
     "no_lib": "",
     "no_private": ""
 }
