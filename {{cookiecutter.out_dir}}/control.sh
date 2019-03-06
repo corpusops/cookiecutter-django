@@ -183,6 +183,13 @@ do_up() {
     $@ $bargs
 }
 
+#  run [$args]: run stack
+do_run() {
+    local bargs=$@
+    set -- vv $DC run
+    $@ $bargs
+}
+
 #  rm [$args]: rm stack
 do_rm() {
     local bargs=$@
@@ -343,7 +350,7 @@ do_main() {
     local args=${@:-usage}
     local actions="up_corpusops|shell|usage|install_docker|setup_corpusops"
     actions="$actions|yamldump|stop|usershell|exec|userexec|dexec|duserexec|dcompose"
-    actions="$actions|init|up|fg|pull|build|buildimages|down|rm"
+    actions="$actions|init|up|fg|pull|build|buildimages|down|rm|run"
     actions_{{cookiecutter.app_type}}="runserver|tests|test|coverage|linting|manage|python{% if cookiecutter.with_celery%}|celery_beat_fg|celery_worker_fg{%endif%}"
     actions="@($actions|$actions_{{cookiecutter.app_type}})"
     action=${1-}
