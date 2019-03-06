@@ -21,7 +21,7 @@ x-images:
     - /bin/sh
     - '-c'
     - >-
-      :
+      POSTGRES_STARTUP_TIMEOUT=$${POSTGRES_STARTUP_TIMEOUT:-45s}
       && dockerize -wait http://setup-{{db_tag}} -timeout $${POSTGRES_STARTUP_TIMEOUT}
       && /init.sh
     volumes:
