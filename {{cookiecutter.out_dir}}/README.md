@@ -164,7 +164,7 @@ docker volume rm $id
 ```
 
 ## Doc for deployment on environments
-- [See here](./.ansible/README.md)
+- [See here](./docs/README.md)
 
 ## FAQ
 
@@ -205,7 +205,7 @@ docker-compose -f docker-compose.yml -f docker-compose-dev.yml up django
       everywhere else, you need to put your settings in  ``settings/instances/prod.py``.
     - If the value is exposed on the environment, whenever you add/edit it, you need to add it
         - to ``docker.env`` & ``docker.env.dist`` in dev
-        - To **ansible setup**, [Read this section of the ansible readme](./.ansible/README.md#django-settings-setup).
+        - To **ansible setup**, [Read this section of the ansible readme](./docs/README.md#django-settings-setup).
 
 {% if cookiecutter.with_celery %}
 ## Celery
