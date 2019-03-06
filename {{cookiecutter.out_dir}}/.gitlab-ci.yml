@@ -31,7 +31,7 @@ variables:
   # services launched during tests
   DOCKER_SERVICES: "db redis mailcatcher"
   # Those services underlying images will be built
-  DOCKER_BUILT_SERVICES: "{{cookiecutter.app_type}}{%if not cookiecutter.remove_cron%} cron{% endif %}"
+  DOCKER_BUILT_SERVICES: "{{cookiecutter.app_type}}"
   # Main image
   DOCKER_IMAGE: "{{cookiecutter.simple_docker_image}}"
   # Image with unique identifier
