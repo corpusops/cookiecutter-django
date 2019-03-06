@@ -38,9 +38,9 @@
     ```sh
     .ansible/scripts/download_corpusops.sh
     .ansible/scripts/setup_ansible.sh
-    :; eval "CORPUSOPS_VAULT_PASSWORD_${A_ENV_NAME}='supersecret' \
-        .ansible/scripts/setup_vaults.sh"
-    .ansible/scripts/call_ansible.sh -vvv .ansible/playbooks/deploy_key_setup.yml
+    : ; CORPUSOPS_VAULT_PASSWORD='supersecret' .ansible/scripts/setup_vaults.sh
+    # to review vars and open a crypted inventory file
+    .ansible/scripts/edit_vault.sh .ansible/inventory/group_vars/all/default.yml
     ```
 
 ## Install base softwares (ssh, base pkgs, editors, etc)
