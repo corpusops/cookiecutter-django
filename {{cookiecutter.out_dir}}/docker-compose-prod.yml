@@ -5,13 +5,35 @@ x-{{cookiecutter.app_type}}: &{{cookiecutter.app_type}}
   image: "${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE}:${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE_VERSION}"
 services:
   nginx:
+    restart: always
     ports:
     - 80:80
   {{cookiecutter.app_type}}:
+    restart: always
     <<: [ *{{cookiecutter.app_type}} ]
     ports:
     - "8000:8000"
   {% if not cookiecutter.remove_cron %}
   cron:
-    <<: [ *{{cookiecutter.app_type}} ]
+    restart: always
   {%- endif%}
+  backup:
+    restart: always
+  mailcatcher:
+    restart: always
+  redis:
+    restart: always
+  db:
+    restart: always
+  backup:
+    restart: always
+{% if cookiecutter.with_celery %}  celery-broker:
+    restart: always
+  celery-beat: &celery
+    restart: always
+  celery-worker:
+    restart: always
+{% endif -%}
+{% if db_tag == 'postgres' %}  setup-postgres:
+    restart: always
+{% endif %}

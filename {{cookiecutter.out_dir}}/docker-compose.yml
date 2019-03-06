@@ -68,7 +68,6 @@ services:
       - postgresql:/var/lib/postgresql/data
   nginx:
     <<: [ *env ]
-    restart: always
     image: "{{cookiecutter.nginx_image}}"
     depends_on:
       - {{cookiecutter.app_type}}
@@ -110,7 +109,6 @@ services:
   backup:
     <<: [ *env ]
     image: "corpusops/dbsmartbackup:pg10"
-    restart: always
     volumes:
       - backupdb-dumps:/srv/backups/
       - backupdb-logs:/srv/backups/logs/
