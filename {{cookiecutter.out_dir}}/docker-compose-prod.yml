@@ -34,6 +34,6 @@ services:
   celery-worker:
     restart: unless-stopped
 {% endif -%}
-{% if db_tag == 'postgres' %}  setup-postgres:
+{% if cookiecutter.db_mode == 'postgres' %}  setup-postgres:
     restart: unless-stopped
 {% endif %}

@@ -5,7 +5,7 @@ Idea is to create it with a wonderful python tool called
 
 ##  Install prerequisites
 ```
-if ! ( virtualenv 2>&1 >/dev/null );then echo "ERROR: install venv, on debian/ubuntu: apt install -y virtualenv,fi";fi
+if ! ( virtualenv --version 2>&1 >/dev/null );then echo "ERROR: install venv, on debian/ubuntu: apt install -y virtualenv,fi";fi
 virtualenv --python=python3 ~/tools/cookiecutter
 ~/tools/cookiecutter/bin/pip install cookiecutter
 ```
