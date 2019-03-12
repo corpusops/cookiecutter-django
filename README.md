@@ -13,7 +13,7 @@ virtualenv --python=python3 ~/tools/cookiecutter
 ## Create back project
 
 - create on gitlab your project (targeted project)
-- then locally generate te content of this project with cookiecutter (replace with your values)
+- then locally generate the content of this project with cookiecutter (replace with your values)
 
     ```sh
     # if it's not your first cookiecutter usage this will refresh your local
@@ -23,7 +23,7 @@ virtualenv --python=python3 ~/tools/cookiecutter
         && cd -
     # activate your cookiecutter env
     . ~/tools/cookiecutter/bin/activate
-    # and laucnh generation !
+    # and launch generation !
     cookiecutter --no-input -f -o ~/out_dir \
         https://github.com/corpusops/cookiecutter-django.git \
         name=foo \
