@@ -110,7 +110,7 @@ do_dcompose() {
 
 #  ----
 #  [services_ports=1] usershell $user [$args]: open shell inside \$CONTAINER as \$APP_USER using docker-compose run
-#       APP_USER=django ./control.sh usershell ls /
+#       APP_USER={{cookiecutter.app_type}} ./control.sh usershell ls /
 #       APP_USER=root CONTAINER=redis ./control.sh usershell ls /
 #       if services_ports is set, network alias will be set (--services-ports docker compose flag)
 do_usershell() { _shell "${CONTAINER:-$APP_CONTAINER}" "$APP_USER" run $@;}
@@ -126,7 +126,7 @@ _exec() {
 }
 
 #  userexec [$args]: exec command or make an interactive shell as $user inside running \$CONTAINER using docker-compose exec
-#       APP_USER=django ./control.sh userexec ls /
+#       APP_USER={{cookiecutter.app_type}} ./control.sh userexec ls /
 #       APP_USER=root APP_CONTAINER=redis ./control.sh userexec ls /
 do_userexec() { _exec "${CONTAINER:-$APP_CONTAINER}" "$APP_USER" $@;}
 
@@ -147,9 +147,9 @@ _dexec() {
 }
 
 #  duserexec $container  [$args]: exec command or make an interactive shell as $user inside running \$APP_CONTAINER using docker exec
-#       APP_USER=django ./control.sh duserexec -> run interactive shell inside default CONTAINER
-#       APP_USER=django ./control.sh duserexec foo123 -> run interactive shell inside foo123 CONTAINER
-#       APP_USER=django ./control.sh duserexec django_123 ls / -> run comand inside foo123 CONTAINER
+#       APP_USER={{cookiecutter.app_type}} ./control.sh duserexec -> run interactive shell inside default CONTAINER
+#       APP_USER={{cookiecutter.app_type}} ./control.sh duserexec foo123 -> run interactive shell inside foo123 CONTAINER
+#       APP_USER={{cookiecutter.app_type}} ./control.sh duserexec foo123 ls / -> run comand inside foo123 CONTAINER
 do_duserexec() {
     local container="${1-}";if [[ -n "${1-}" ]];then shift;fi
     _dexec "${container}" "$APP_USER" $@;
@@ -173,6 +173,13 @@ do_install_docker() {
 #  pull [$args]: pull stack container images
 do_pull() {
     vv $DC pull $@
+}
+
+#  ps [$args]: ps
+do_ps() {
+    local bargs=$@
+    set -- vv $DC ps
+    $@ $bargs
 }
 
 #  up [$args]: start stack
@@ -349,7 +356,7 @@ do_celery_worker_fg() {
 do_main() {
     local args=${@:-usage}
     local actions="up_corpusops|shell|usage|install_docker|setup_corpusops"
-    actions="$actions|yamldump|stop|usershell|exec|userexec|dexec|duserexec|dcompose"
+    actions="$actions|yamldump|stop|usershell|exec|userexec|dexec|duserexec|dcompose|ps"
     actions="$actions|init|up|fg|pull|build|buildimages|down|rm|run"
     actions_{{cookiecutter.app_type}}="runserver|tests|test|coverage|linting|manage|python{% if cookiecutter.with_celery%}|celery_beat_fg|celery_worker_fg{%endif%}"
     actions="@($actions|$actions_{{cookiecutter.app_type}})"
