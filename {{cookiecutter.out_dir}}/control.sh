@@ -349,11 +349,31 @@ do_celery_worker_fg() {
 }
 
 {% endif -%}
-
+#  open_perms_valve: Give the host user rights to edit most common files inside the container
+#                    wich are generally mounted as docker volumes from the host via posix ACLs
+#                    This won't work on OSX for now.
+do_open_perms_valve() {
+    SUPEREDITOR="${SUPEREDITOR:-$(id -u)}"
+    OPENVALVE_SOURCE="${OPENVALVE_SOURCE:-${W}}"
+    OPENVALVE_INTERNAL_UID="${OPENVALVE_INTERNAL_UID-1000}"
+    DEFAULT_OPENVALVE_ACL="u:$SUPEREDITOR:rwx,u:$OPENVALVE_INTERNAL_UID:rwx,d:u:$SUPEREDITOR:rwx,d:u:$OPENVALVE_INTERNAL_UID:rwx"
+    OPENVALVE_ACL="${OPENVALVE_ACL:-$DEFAULT_OPENVALVE_ACL}"
+    dvv $DC run --no-deps --rm \
+        -v "$OPENVALVE_SOURCE:/openvalve" \
+        -e "SUPEREDITOR=$SUPEREDITOR" \
+        -e "OPENVALVE_ACL=$OPENVALVE_ACL" \
+        --entrypoint sh $APP_CONTAINER \
+        -exc \
+        'if ! ( setfacl --version >/dev/null 2>&1 );then \
+            if ( apt --version >/dev/null 2>&1   );then apt update -y && apt install -y acl; \
+            elif ( apk --version >/dev/null 2>&1 );then apk update && apk add -y acl;fi \
+        fi\
+        && setfacl -R -m $OPENVALVE_ACL /openvalve'
+}
 
 do_main() {
     local args=${@:-usage}
-    local actions="up_corpusops|shell|usage|install_docker|setup_corpusops"
+    local actions="up_corpusops|shell|usage|install_docker|setup_corpusops|open_perms_valve"
     actions="$actions|yamldump|stop|usershell|exec|userexec|dexec|duserexec|dcompose"
     actions="$actions|init|up|fg|pull|build|buildimages|down|rm|run"
     actions_{{cookiecutter.app_type}}="runserver|tests|test|coverage|linting|manage|python{% if cookiecutter.with_celery%}|celery_beat_fg|celery_worker_fg{%endif%}"
