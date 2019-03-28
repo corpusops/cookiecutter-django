@@ -264,3 +264,16 @@ and adapt certainly one of ``cops_django_docker_env_freeform``, ``cops_django_do
           # ...
           cops_django_footruc: abcd123456789secret
           ```
+
+## Use docker-compose in hosted environments (aka staging/prod)
+### by hand
+```sh
+cd /srv/docker/{{cookiecutter.lname}}  # where your project folder is
+docker-compose -f "docker-compose.yml" -f docker-compose-prod.yml -p "mixity" $ARGS
+```
+
+### via control.sh
+```sh
+cd /srv/docker/{{cookiecutter.lname}}  # where your project folder is
+export CONTROL_COMPOSE_FILES="docker-compose.yml docker-compose-prod.yml"
+./control.sh $args

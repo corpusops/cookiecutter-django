@@ -41,6 +41,7 @@
     : ; CORPUSOPS_VAULT_PASSWORD='supersecret' .ansible/scripts/setup_vaults.sh
     # to review vars and open a crypted inventory file
     .ansible/scripts/edit_vault.sh .ansible/inventory/group_vars/all/default.yml
+    .ansible/scripts/call_ansible.sh -vvv .ansible/playbooks/deploy_key_setup.yml
     ```
 
 ## Install base softwares (ssh, base pkgs, editors, etc)
