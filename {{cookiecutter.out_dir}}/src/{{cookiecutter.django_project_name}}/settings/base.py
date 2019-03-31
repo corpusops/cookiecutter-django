@@ -365,6 +365,7 @@ def post_process_settings(globs=None):
     _locals, env = locals_settings_update(locals(), globs)
     check_explicit_settings(_locals)
     for setting, func, fkwargs in (
+        ('DEBUG', as_bool, {}),
         ('EMAIL_PORT', as_int, {}),
         ('EMAIL_USE_TLS', as_bool, {}),
         ('CORS_ORIGIN_ALLOW_ALL', as_bool, {}),
