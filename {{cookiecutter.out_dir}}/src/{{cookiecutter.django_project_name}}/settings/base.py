@@ -223,6 +223,9 @@ CELERY_RESULT_BACKEND = 'django-db'
 CELERY_TASK_SERIALIZER = 'json'
 {% endif %}
 
+DEBUG = False
+CORS_ORIGIN_ALLOW_ALL = False
+
 ###############################################################################
 # Environment settings routines, compliant with 12Factor: https://12factor.net/
 #  The settings are loaded (first has more priority):
