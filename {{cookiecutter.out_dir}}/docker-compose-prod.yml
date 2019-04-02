@@ -30,8 +30,10 @@ services:
 {% if cookiecutter.with_celery %}  celery-broker:
     restart: unless-stopped
   celery-beat: &celery
+    <<: [ *{{cookiecutter.app_type}} ]
     restart: unless-stopped
   celery-worker:
+    <<: [ *{{cookiecutter.app_type}} ]
     restart: unless-stopped
 {% endif -%}
 {% if cookiecutter.db_mode == 'postgres' %}  setup-postgres:
