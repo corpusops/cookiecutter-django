@@ -124,10 +124,10 @@
 - On your docker executor gitlabCI runner, ensure it is configured as the following
 
     ```sh
-    lxc-attach -n <your ci runner>
+    lxc-attach -n {{cookiecutter.runner}}
     gitlab-runner register
     # - https://gitlab.com/
-    # - ``<token>`` on https://{{cookiecutter.git_url}}/settings/ci_cd
+    # - ``<token>`` on {{cookiecutter.git_project_https_url}}/settings/ci_cd
     # - tags: ["{{cookiecutter.fname_slug}}-ci"]
     # - docker
     # - corpusops/ubuntu:18.04
@@ -143,7 +143,8 @@
     mkdir /srv/nobackup/gitlabrunner/builds /cache -p
     service gitlab-runner restart
     ```
-- On {{cookiecutter.git_url}}/settings/ci_cd / variable
+
+- On {{cookiecutter.git_project_https_url}}/settings/ci_cd / variable
     - setup ``CORPUSOPS_VAULT_PASSWORD``
 
 ## Reconfigure haproxy/msiptables (load balancer & firewall)
@@ -157,7 +158,17 @@
         -t lxc_haproxy_registrations,lxc_ms_iptables_registrations
     ```
 
-## hand delivery on dev/qa/staging/prod
+
+{%- set envs = [] %}
+{%- for e,p in (
+    ('dev',      cookiecutter.dev_host),
+    ('qa',     cookiecutter.qa_host),
+    ('staging',  cookiecutter.staging_host),
+    ('prod',       cookiecutter.prod_host),
+) %}
+{%- if p %}{% set _ = envs.append(e) %}{%endif%}
+{%- endfor %}
+## hand delivery on {{'/'.join(envs)}}
 - do
 
     ```sh
@@ -169,3 +180,12 @@
     # or export A_ENV_NAME=prod
     .ansible/scripts/call_ansible.sh -vvv -l $A_ENV_NAME .ansible/playbooks/app.yml
     ```
+
+## Reconfigure letsencrypt
+Reconfigure free HTTPS certicates using lets encrypt
+```sh
+.ansible/scripts/call_ansible.sh -vvvvv \
+    -l staging_baremetal,prod_baremetal \
+    local/c*/roles/*roles/localsettings_certbot/role.yml \
+    .ansible/playbooks/finish_https.yml
+```

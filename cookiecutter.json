@@ -47,6 +47,7 @@
     "git_project": "{{cookiecutter.lname}}",
     "git_project_url": "{{cookiecutter.git_scheme}}://{%if cookiecutter.git_user%}{{cookiecutter.git_user}}@{%endif%}{{cookiecutter.git_project_server}}/{{cookiecutter.git_ns}}/{{cookiecutter.git_project}}",
     "fname_slug": "{{'{0}-{1}'.format(cookiecutter.git_ns, cookiecutter.lname)|lower|replace('/', '-')|replace('_', '-')}}",
+    "runner": "<your ci runner>",
     "runner_tag": "{{cookiecutter.fname_slug}}-ci",
     "deploy_project_url": "https://github.com/corpusops/{{cookiecutter.app_type}}-deploy-common.git",
     "deploy_project_dir": "local/{{cookiecutter.deploy_project_url.split('/')[-1].replace('.git', '')}}",
@@ -82,6 +83,7 @@
     "settings_account_default_http_protocol": "http",
     "settings_use_x_forwarded_host": "y",
     "settings_secure_ssl_redirect": "y",
+    "git_project_https_url": "{{cookiecutter.git_project_url.replace('ssh', 'https').replace('git@', '')}}",
     "settings_csrf_cookie_httponly": "y",
     "no_lib": "",
     "no_private": ""
