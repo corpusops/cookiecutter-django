@@ -170,7 +170,7 @@ build_images: &build_images
     done
     for i in $DOCKER_BUILT_SERVICES;do
         $D_COMPOSE -f docker-compose-build.yml -f docker-compose-build-dev.yml build $i \
-        || ( echo "BUILD ERROR: $i" >> /docker_images_errors )
+        || ( echo "BUILD ERROR DEV: $i" >> /docker_images_errors )
     done
     if [ -e /docker_images_errors ];then cat /docker_images_errors;exit 1;fi
   - &build_step2 sh -ec "set -x
