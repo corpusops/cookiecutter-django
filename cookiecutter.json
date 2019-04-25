@@ -86,5 +86,6 @@
     "git_project_https_url": "{{cookiecutter.git_project_url.replace('ssh', 'https').replace('git@', '')}}",
     "settings_csrf_cookie_httponly": "y",
     "no_lib": "",
+    "gunicorn_class": "gevent",
     "no_private": ""
 }

@@ -30,4 +30,4 @@ celery=={{cookiecutter.celery_version}}
 raven==6.10.0
 {% endif%}
 # webserver
-gunicorn>=19.8,<19.9
+gunicorn{%if cookiecutter.gunicorn_class not in ['gaiohttp', 'sync']%}[{{cookiecutter.gunicorn_class}}]{%endif%}>=19.8
