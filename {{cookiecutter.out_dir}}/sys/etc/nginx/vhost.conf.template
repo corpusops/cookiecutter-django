@@ -178,7 +178,6 @@ server {
     }
 
     location ~ ^{{cookiecutter.media_uri}}/ {
-        internal;
         root /public/;
     }
 
