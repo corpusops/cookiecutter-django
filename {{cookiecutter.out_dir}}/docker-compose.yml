@@ -75,11 +75,11 @@ services:
       - ./sys/etc/nginx/vhost.conf.template:/etc/nginx/conf.d/default.conf.template
       - mediafiles:/code/public/media/:ro
       - statics:/code/public/static/
+      - logs:/logs/
+      - nginx-certs:/certs
       # retrocompat
       - mediafiles:/public/media/:ro
       - statics:/public/static/
-      - logs:/logs/
-      - nginx-certs:/certs
     command:
       - sh
       - '-ec'
