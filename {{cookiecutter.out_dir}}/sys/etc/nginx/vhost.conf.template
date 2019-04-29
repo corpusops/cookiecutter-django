@@ -150,7 +150,7 @@ server {
 
     {{'{{'}} if ne .nostatics "1" }}
     location {{cookiecutter.statics_uri}}/ {
-        alias /public/static/;
+        alias /code/public/static/;
 
         # static optimisations
         tcp_nodelay off;
@@ -178,7 +178,7 @@ server {
     }
 
     location ~ ^{{cookiecutter.media_uri}}/ {
-        root /public/;
+        root /code/public/;
     }
 
     location / {
