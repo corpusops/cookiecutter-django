@@ -15,6 +15,7 @@ services:
     - "8000:8000"
   {% if not cookiecutter.remove_cron %}
   cron:
+    <<: [ *{{cookiecutter.app_type}} ]
     restart: unless-stopped
   {%- endif%}
   backup:
