@@ -153,6 +153,15 @@ services_ports=1 ./control.sh usershell
 
 **⚠️ Remember ⚠️** to use `./control.sh up` to start the stack before.
 
+## File permissions
+If you get annoying file permissions problems on your host in development, you can use the following routine to (re)allow your host
+user to use files in your working directory
+
+
+```sh
+./control.sh open_perms_valve
+```
+
 ## Docker volumes
 
 Your application extensivly use docker volumes. From times to times you may
