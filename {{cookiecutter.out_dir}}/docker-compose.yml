@@ -138,7 +138,7 @@ services:
 {% endif -%}
 {% if db_tag == 'postgres' %}  setup-postgres:
     <<: [ *env ]
-    image: corpusops/pgrouting:10.1-2.5.4
+    image: "{{cookiecutter["{0}_image".format(cookiecutter.db_mode)]}}"
     depends_on:
     - db
     entrypoint:

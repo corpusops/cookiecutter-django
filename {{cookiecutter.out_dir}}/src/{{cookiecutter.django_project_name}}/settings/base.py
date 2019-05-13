@@ -127,7 +127,7 @@ db_opts = (
         'USER': ('DATABASE_USER', 'DB_USER',),
         'HOST': ('DATABASE_HOST', 'DB_HOST',),
         'PORT': ('DATABASE_PORT', 'DB_PORT',),
-        'PASSWORD': ('DATABASE_PORT', 'DB_PASSWORD',),
+        'PASSWORD': ('DATABASE_PASSWORD', 'DB_PASSWORD',),
     }),
 )
 db_opts_dict = dict(db_opts)
@@ -382,7 +382,7 @@ def post_process_settings(globs=None):
         _locals[setting] = func(_locals[setting], **fkwargs)
     try:
         redis_url = _locals['REDIS_URL']
-        _locals['CACHES']['default']['location'] = redis_url
+        _locals['CACHES']['default']['LOCATION'] = redis_url
     except KeyError:
         pass
     {% if cookiecutter.with_sentry -%}SENTRY_DSN = _locals.setdefault('SENTRY_DSN', '')

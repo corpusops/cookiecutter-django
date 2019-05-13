@@ -69,5 +69,5 @@ yarn-error.log
 /e2e/*.js
 /e2e/*.map
 
-#System Files
-.DS_Store
+#system files
+.ds_store
