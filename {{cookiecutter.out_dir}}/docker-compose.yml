@@ -111,12 +111,10 @@ services:
   {%-endif%}
   backup:
     <<: [ *env ]
-    image: "corpusops/dbsmartbackup:pg10"
+    image: "{{cookiecutter.dbsmartbackup_image}}"
     volumes:
-      - backupdb-dumps:/srv/backups/
-      - backupdb-logs:/srv/backups/logs/
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-      - ./local/backup/setup/reconfigure.yml:/setup/reconfigure.yml:ro
+      - backupdb-dumps:/var/db_smart_backup/
+      - backupdb-logs:/var/db_smart_backup/logs/
 {% if cookiecutter.with_celery %}  celery-broker:
     <<: [ *env ]
     image: "{{cookiecutter['{0}_image'.format(cookiecutter.celery_broker)]}}"
