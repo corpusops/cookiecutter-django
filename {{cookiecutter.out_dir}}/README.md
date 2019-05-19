@@ -115,6 +115,14 @@ After a last verification of the files, to run with docker, just type:
 
 **⚠️ Remember ⚠️** to use `./control.sh up` to start the stack before.
 
+## Run plain docker-compose commands
+
+- Please remember that the ``CONTROL_COMPOSE_FILES`` env var controls which docker-compose configs are use (list of space separated files), by default it uses the dev set.
+
+    ```sh
+    ./control.sh dcompose <ARGS>
+    ```
+
 ## Rebuild/Refresh local docker image in dev
 
 ```sh
