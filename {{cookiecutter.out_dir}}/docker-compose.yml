@@ -27,7 +27,7 @@ x-images:
       && /init.sh
     volumes:
       {%- if not cookiecutter.remove_cron %}
-      - ./crontab:/code/sys/etc/cron.d/{{cookiecutter.app_type}}.frep
+      - ./sys/etc/cron.d:/code/sys/etc/cron.d/
       {%- endif %}
       - ./src/{{cookiecutter.django_settings.replace('.', '/')}}/instances:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/instances
       - mediafiles:/code/public/media
