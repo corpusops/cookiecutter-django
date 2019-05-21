@@ -10,6 +10,4 @@ services:
 {%- if not cookiecutter.remove_cron %}
   cron:
     <<: [ *{{cookiecutter.app_type}} ]
-    environment:
-      <<: [ *{{cookiecutter.app_type}}_env ]
 {% endif %}

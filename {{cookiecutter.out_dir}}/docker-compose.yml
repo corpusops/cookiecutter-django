@@ -18,10 +18,11 @@ x-images:
     - setup-{{db_tag}}
     working_dir: /code/src
     command:
-    - /bin/sh
+    - /bin/bash
     - '-c'
     - >-
-      POSTGRES_STARTUP_TIMEOUT=$${POSTGRES_STARTUP_TIMEOUT:-45s}
+      : \
+      && POSTGRES_STARTUP_TIMEOUT=$${POSTGRES_STARTUP_TIMEOUT:-45s}
       && dockerize -wait http://setup-{{db_tag}} -timeout $${POSTGRES_STARTUP_TIMEOUT}
       && /init.sh
     volumes:
@@ -151,7 +152,7 @@ services:
       && ( while true;do if ( \
         echo "{% if 'gis' in cookiecutter.db_mode%}select 1 from spatial_ref_sys limit 1;select postgis_version();{%else%}select 1{%endif%}"\
         | psql -v ON_ERROR_STOP=1 \
-          "postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@db/$$POSTGRES_DB"\
+          "postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@$$POSTGRES_HOST:$$POSTGRES_PORT/$$POSTGRES_DB"\
       );then touch $$flag && break;fi;done )&
       set -x \
       && dockerize -wait file://$$flag -timeout $${POSTGRES_STARTUP_TIMEOUT} \

@@ -87,6 +87,6 @@
     "settings_csrf_cookie_httponly": "y",
     "no_lib": "",
     "gunicorn_class": "gevent",
-    "dbsmartbackup_image": "{% if cookiecutter.db_mode == 'postgis' %}{% set pref=cookiecutter.postgis_image.replace('postgis', 'postgres').split('-')[0]%}{% elif cookiecutter.db_mode == 'postgresql' %}{% set pref=cookiecutter.postgresql_image%}{% elif cookiecutter.db_mode == 'mysql' %}{% set pref=cookiecutter.mysql_image%}{% endif %}{{pref.replace(':', '::').replace('/', '/dbsmartbackup:').replace('::', '-')}}",
+    "dbsmartbackup_image": "{% if cookiecutter.db_mode == 'postgis' %}{% set pref=cookiecutter.postgis_image.replace('postgis', 'postgres').split('-')[0]%}{% elif 'postgres' in cookiecutter.db_mode %}{% set pref=cookiecutter.postgresql_image%}{% elif cookiecutter.db_mode == 'mysql' %}{% set pref=cookiecutter.mysql_image%}{% endif %}{{pref.replace(':', '::').replace('/', '/dbsmartbackup:').replace('::', '-')}}",
     "no_private": ""
 }
