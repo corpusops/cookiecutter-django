@@ -94,13 +94,13 @@ _shell() {
     fi
     if [[ "$run_mode" == "dexec" ]];then
         set -- dvv docker exec -ti \
-            -e TERM=$TERM -e COLUMNS=$COLUMNS -e LINES=$LINES \
+            -e TERM=$TERM -e COLUMNS=${COLUMNS:-80} -e LINES=${LINES:-40} \
             -e SHELL_USER=${SHELL_USER} \
             $container $bargs
     else
         set -- dvv $DC \
             $run_mode $run_mode_args \
-            -e TERM=$TERM -e COLUMNS=$COLUMNS -e LINES=$LINES \
+            -e TERM=$TERM -e COLUMNS=${COLUMNS:-80} -e LINES=${LINES:-40} \
             -e SHELL_USER=${SHELL_USER} \
             $container $initsh $bargs
     fi
@@ -371,10 +371,53 @@ do_open_perms_valve() {
         && setfacl -R -m $OPENVALVE_ACL /openvalve'
 }
 
+
+
+#  get_container_code: refresh local/code with parts of the container files to help IDEs to do their completion job
+do_get_container_code() {
+    dvv $DC run --no-deps --rm \
+        -v $W/local/code:/output \
+        --entrypoint bash $APP_CONTAINER \
+        -ec '\
+        log() { echo "$@">&2;}
+        vv() { log "$@";"$@"; }
+        if ! ( rsync --version &>/dev/null) ;then vv apt install -y rsync;fi
+        for i in venv;do \
+            vv rsync -ArptgoD -L --numeric-ids --delete --force --ignore-errors \
+                /code/$i/ /output/$(basename $i)/
+        done'
+    OPENVALVE_SOURCE="$W/local/code" do_open_perms_valve
+}
+
+
+#  vscode: launch vscode with current python path
+do_vscode() {
+    VSCODE_ARGS="${@:-$W}"
+    get_container_code=
+    if [ ! -e local/code/venv ];then
+        get_container_code=1
+    fi
+    if [[ -n ${FORCE_CODE_REFRESH-} ]];then
+        get_container_code=1
+    fi
+    if [[ -n ${get_container_code-} ]];then
+        do_get_container_code
+    fi
+    sp=$(ls -d "$W/local/code/venv/lib/"python*"/site-packages")
+    if [[ -n $PYTHONPATH ]];then
+        export PYTHONPATH="$PYTHONPATH:$sp"
+    else
+        export PYTHONPATH="$sp"
+    fi
+    code $VSCODE_ARGS
+}
+
+
 do_main() {
     local args=${@:-usage}
-    local actions="up_corpusops|shell|usage|install_docker|setup_corpusops|open_perms_valve"
+    local actions="up_corpusops|shell|usage|install_docker|setup_corpusops|open_perms_valve|get_container_code|vscode"
     actions="$actions|yamldump|stop|usershell|exec|userexec|dexec|duserexec|dcompose"
+
     actions="$actions|init|up|fg|pull|build|buildimages|down|rm|run"
     actions_{{cookiecutter.app_type}}="runserver|tests|test|coverage|linting|manage|python{% if cookiecutter.with_celery%}|celery_beat_fg|celery_worker_fg{%endif%}"
     actions="@($actions|$actions_{{cookiecutter.app_type}})"

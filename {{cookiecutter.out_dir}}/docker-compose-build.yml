@@ -5,6 +5,11 @@ x-images:
       context: "."
       args:
         PY_VER: "${DJANGO_PY_VER:-{{cookiecutter.py_ver}}}"
+        WITH_VSCODE: "${WITH_VSCODE:-0}"
+        VSCODE_VERSION: "${VSCODE_VERSION-}"
+        WITH_PYCHARM: "${WITH_PYCHARM:-0}"
+        PYCHARM_VERSION: "${PYCHARM_VERSION-}"
+        BASE: "${PLONE_BASE_IMAGE:-corpusops/ubuntu-bare:bionic}"
 services:
   {%- if not cookiecutter.remove_cron %}
   cron: {<<: [ *{{cookiecutter.app_type}} ]}
