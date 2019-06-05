@@ -293,7 +293,7 @@ Additionnaly, adding this to ``.vscode/settings.json`` would help to give you a 
 
 #### Debugging with VSCode
 - [vendor documentation link](https://code.visualstudio.com/docs/python/debugging#_remote-debugging)
-- The docker container will connect to your running VSCode process, using a network tcp connection, eg on port ``5678``.
+- The VSCode process will connect to your running docker container, using a network tcp connection, eg on port ``5678``.
 - ``5678`` can be changed but of course adapt the commands, this port must be reachable from within the container and in the ``docker-compose-dev.yml`` file.
 - Ensure you added ``WITH_VSCODE`` in your ``.env`` and that ``VSCODE_VERSION`` is tied to your VSCODE installation and start from a fresh build if it was not (pip will mess to update it correctly, sorry).
 - Wherever you have the need to break, insert in your code the following snippet after imports (and certainly before wherever you want your import):
