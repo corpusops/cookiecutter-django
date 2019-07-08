@@ -29,7 +29,7 @@ variables:
   POSTGRES_PASSWORD: password
   POSTGRES_HOST: db
   # services launched during tests
-  DOCKER_SERVICES: "db redis mailcatcher"
+  DOCKER_SERVICES: "db{% if cookiecutter.cache_system%} {{cookiecutter.cache_system}}{%endif%} mailcatcher"
   # Those services underlying images will be built
   DOCKER_BUILT_SERVICES: "{{cookiecutter.app_type}}"
   # Main image

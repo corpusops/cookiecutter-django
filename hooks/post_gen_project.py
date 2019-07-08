@@ -139,7 +139,11 @@ set -x
 {% if not cookiecutter.with_celery %}
 find src -name celery.py -delete
 {% endif %}
-        """
+# strip whitespaces from compose
+sed -i -re 's/\s+$//g' docker-compose*.yml
+sed -i -r '/^\s*$/d' docker-compose*.yml
+{% if not cookiecutter.with_apptest%}find src -name apptest |xargs rm -rf{%endif%}
+"""
 
 MOTD = '''
 After reviewing all changes

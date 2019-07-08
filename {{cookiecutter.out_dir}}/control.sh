@@ -116,7 +116,7 @@ do_dcompose() {
 #  ----
 #  [services_ports=1] usershell $user [$args]: open shell inside $CONTAINER as $APP_USER using docker-compose run
 #       APP_USER=django ./control.sh usershell ls /
-#       APP_USER=root CONTAINER=redis ./control.sh usershell ls /
+#       APP_USER=root CONTAINER={{cookiecutter.cache_system}} ./control.sh usershell ls /
 #       if services_ports is set, network alias will be set (--services-ports docker-compose run flag)
 do_usershell() { _shell "${CONTAINER:-$APP_CONTAINER}" "$APP_USER" run $@;}
 
@@ -132,7 +132,7 @@ _exec() {
 
 #  userexec [$args]: exec command or make an interactive shell as $user inside running $CONTAINER using docker-compose exec
 #       APP_USER=django ./control.sh userexec ls /
-#       APP_USER=root APP_CONTAINER=redis ./control.sh userexec ls /
+#       APP_USER=root APP_CONTAINER={{cookiecutter.cache_system}} ./control.sh userexec ls /
 do_userexec() { _exec "${CONTAINER:-$APP_CONTAINER}" "$APP_USER" $@;}
 
 #  exec [$args]: exec command or shell as root inside running \$CONTAINER using docker-compose exec

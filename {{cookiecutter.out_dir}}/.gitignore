@@ -11,6 +11,8 @@ __pycache__
 /.env
 /docker.env
 /netrc
+.cache  
+CACHE
 
 # IDE settings
 .vscode
@@ -19,6 +21,7 @@ __pycache__
 !.vscode/launch.json
 !.vscode/extensions.json
 .idea
+*.iml
 .~lock*
 .project
 .classpath
@@ -33,8 +36,9 @@ __pycache__
 /angular/**/*.json
 !/angular/**/tsconfig.*.json
 /angular/**/*.map
+docs/_build/
 
-# dependencies
+# dependeDB Files
 /node_modules
 
 # Virtualenv
@@ -71,3 +75,6 @@ yarn-error.log
 
 #system files
 .ds_store
+
+# DB Files
+*.sqlite3

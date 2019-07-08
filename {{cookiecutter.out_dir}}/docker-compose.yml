@@ -14,7 +14,7 @@ x-images:
       DJANGO_CELERY_HOST: "${DJANGO_CELERY_HOST:-celery-broker}"
 {% endif %}    depends_on:
     - db
-    - redis
+{% if cookiecutter.cache_system%}    - "{{cookiecutter.cache_system}}"{%endif%}
     - setup-{{db_tag}}
     working_dir: /code/src
     command:
@@ -56,12 +56,15 @@ services:
         && pw=$$(MH_AUTH_FILE="" MailHog bcrypt "$${MAILCATCHER_PASSWORD:-mailcatcher}")
         && echo "$${MAILCATCHER_USER:-mailcatcher}:$$pw" > $$MH_AUTH_FILE
         && su mailhog -p -c MailHog
-  redis:
+{% if cookiecutter.cache_system%}  {{cookiecutter.cache_system}}:
     <<: [ *env ]
-    image: "{{cookiecutter.redis_image}}"
-    hostname: redis
+    image: "{{cookiecutter.cache_image}}"
+    hostname: {{cookiecutter.cache_system}}
+		{% if cookiecutter.cache_system in ['redis'] %}
     volumes:
       - 'redis:/data'
+		{% endif %}
+{%endif %}
   db:
     <<: [ *env ]
     image: "{{cookiecutter["{0}_image".format(cookiecutter.db_mode)]}}"
@@ -110,12 +113,6 @@ services:
     depends_on:
     - {{cookiecutter.app_type}}
   {%-endif%}
-  backup:
-    <<: [ *env ]
-    image: "{{cookiecutter.dbsmartbackup_image}}"
-    volumes:
-      - backupdb-dumps:/var/db_smart_backup/
-      - backupdb-logs:/var/db_smart_backup/logs/
 {% if cookiecutter.with_celery %}  celery-broker:
     <<: [ *env ]
     image: "{{cookiecutter['{0}_image'.format(cookiecutter.celery_broker)]}}"
@@ -159,10 +156,8 @@ services:
       && while true;do printf "HTTP/1.1 200 OK\n\nstarted"| ( nc -l -p 80 || /bin/true);done
 {% endif %}
 volumes:
-  backupdb-logs:
-  backupdb-dumps:
   postgresql:
-  redis:
+{% if cookiecutter.cache_system in ['redis']%}  {{cookiecutter.cache_system}}:{%endif%}
   nginx-certs:
   mediafiles:
   statics:

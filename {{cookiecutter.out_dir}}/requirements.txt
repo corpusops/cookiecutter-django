@@ -1,8 +1,8 @@
 Django>={{cookiecutter.django_ver_1|float}},<{{cookiecutter.django_ver_1|float+0.1}}
 
 # core
-django-redis>=4.9,<4.10
-psycopg2>=2.7,<2.8 --no-binary psycopg2
+{% if cookiecutter.cache_system == 'redis'%}django-redis>=4.9,<4.10{%endif%}
+{% if cookiecutter.cache_system == 'memcache'%}python-memcached{%endif%}
 djangorestframework>=3.7,<3.8
 djangorestframework-gis==0.12
 djangorestframework-jwt>=1.11,<1.12
@@ -18,6 +18,7 @@ django-storages>=1.7,<1.8
 django-versatileimagefield>=1.10,<2.0
 boto3>=1.9,<=1.10
 deepmerge<=1.0
+psycopg2{{cookiecutter.psycopg_req}}
 
 # SIG
 mercantile>=1.0,<1.1

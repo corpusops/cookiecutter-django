@@ -48,7 +48,6 @@ services:
   {{nginxc}}  - 80:80
   {{nginxc}}  {% if not nginxc%}{{nginxsslc}}{%endif %}- 443:443
   {{nginxc}}  environment: {NO_SSL: "0"}
-  backup: {<<: [ *bypass ]}
   {{cookiecutter.app_type}}:
     <<: [ *django ]
     environment:

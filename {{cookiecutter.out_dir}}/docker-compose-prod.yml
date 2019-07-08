@@ -19,16 +19,20 @@ services:
     <<: [ *{{cookiecutter.app_type}} ]
     restart: unless-stopped
   {%- endif%}
-  backup:
-    restart: unless-stopped
   mailcatcher:
     restart: unless-stopped
-  redis:
+{% if cookiecutter.cache_system%}  {{cookiecutter.cache_system}}:
     restart: unless-stopped
+{%endif%}
   db:
     restart: unless-stopped
   backup:
     restart: unless-stopped
+    env: {env_file: [.env, docker.env]}
+    image: "{{cookiecutter.dbsmartbackup_image}}"
+    volumes:
+      - backupdb-dumps:/var/db_smart_backup/
+      - backupdb-logs:/var/db_smart_backup/logs/
 {% if cookiecutter.with_celery %}  celery-broker:
     restart: unless-stopped
   celery-beat: &celery
@@ -41,3 +45,6 @@ services:
 {% if cookiecutter.db_mode == 'postgres' %}  setup-postgres:
     restart: unless-stopped
 {% endif %}
+volumes:
+  backupdb-logs:
+  backupdb-dumps:

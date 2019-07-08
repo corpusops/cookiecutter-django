@@ -22,6 +22,12 @@ import six
 from django.utils.log import DEFAULT_LOGGING
 
 
+try:
+    import raven  # noqa
+    HAS_SENTRY = True
+except ImportError:
+    HAS_SENTRY = False
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 {{cookiecutter.lname.upper()}}_DIR = PROJECT_DIR
@@ -199,15 +205,19 @@ LOGGING = copy.deepcopy(DEFAULT_LOGGING)
 # Cache settings
 CACHES = {
     "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://redis:6379/1",
-        "OPTIONS": {
+        "BACKEND": "{% if cookiecutter.cache_system == 'redis'%}django_redis.cache.RedisCache{% elif cookiecutter.cache_system=='memcache'%}django.core.cache.backends.memcached.MemcachedCache{%endif%}",
+        "LOCATION": {% if cookiecutter.cache_system == 'redis'%}"redis://redis:6379/1"{% elif cookiecutter.cache_system=='memcache'%}'{}:{}'.format(os.getenv('MEMCACHED_HOST', '127.0.0.1'),
+                                   os.getenv('MEMCACHED_PORT', '11211')){%endif%},
+        {% if cookiecutter.cache_system == 'redis'%}"OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        },{%endif%}
+        {% if cookiecutter.cache_system == 'memcache'%}"KEY_PREFIX": '{{cookiecutter.memcache_key_prefix}}',{%endif%}
     }
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+SESSION_ENGINE = "{{cookiecutter.session_engine_base}}"
 
 # Mail
 EMAIL_HOST = 'mailcatcher'
@@ -381,15 +391,15 @@ def post_process_settings(globs=None):
             continue
         _locals[setting] = func(_locals[setting], **fkwargs)
     try:
-        redis_url = _locals['REDIS_URL']
-        _locals['CACHES']['default']['LOCATION'] = redis_url
+        cache_url = _locals['{{cookiecutter.cache_system.upper()}}_URL']
+        _locals['CACHES']['default']['LOCATION'] = cache_url
     except KeyError:
         pass
     {% if cookiecutter.with_sentry -%}SENTRY_DSN = _locals.setdefault('SENTRY_DSN', '')
     SENTRY_RELEASE = _locals.setdefault('SENTRY_RELEASE', 'prod')
     INSTALLED_APPS = _locals.setdefault('INSTALLED_APPS', tuple())
     SENTRY_TAGS = _locals.pop('SENTRY_TAGS', None)
-    if SENTRY_DSN:
+    if SENTRY_DSN or HAS_SENTRY:
         if 'raven.contrib.django.raven_compat' not in INSTALLED_APPS:
             # type is used to handle both INSTALLED_APPS setted as a tuple or a list
             _locals['INSTALLED_APPS'] = (

@@ -16,6 +16,7 @@ ACCOUNT_DEFAULT_HTTP_PROTOCOL = '{{cookiecutter.settings_account_default_http_pr
 SECURE_SSL_REDIRECT = {% if cookiecutter.settings_secure_ssl_redirect%}True{%else%}False{%endif%}
 
 MEDIA_ACCEL_REDIRECT = False
+SESSION_ENGINE = "{{cookiecutter.session_engine_prod}}"
 
 locs_, globs_, env = post_process_settings(locals())
 globals().update(globs_)

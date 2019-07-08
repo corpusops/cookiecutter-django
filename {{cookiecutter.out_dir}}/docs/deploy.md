@@ -202,7 +202,7 @@ The high level infrastructure:
             |
             +--- pgsql
             |
-            +--- redis
+            +--- {{cookiecutter.cache_system}}
             |
             +--- backup
             +--- ...
