@@ -1,13 +1,16 @@
 image: corpusops/ubuntu:18.04
 {% set devhostdeploycomment = (not cookiecutter.dev_host) and '#  ' or '' %}
+{% set jscomment = (not cookiecutter.with_bundled_js) and '#  ' or '' %}
 stages:
   - manual_jobs
+{{jscomment}}  - js_build
   - build
   - tests
   - flag_success
   - release
   - teardown
   - deploy
+
 
 services: ["docker:dind"]
 
@@ -47,7 +50,8 @@ variables:
   IMAGES_TARBALL: "/cache/$CI_PROJECT_PATH_SLUG/docker-images/build-${CI_PIPELINE_IID}.gz"
   REFERENCE_IMAGES_TARBALL: "/cache/$CI_PROJECT_PATH_SLUG/docker-images/${CI_COMMIT_REF_NAME}.gz"
   REFERENCE_MASTER_IMAGES_TARBALL: "/cache/$CI_PROJECT_PATH_SLUG/docker-images/$MASTER_BRANCH.gz"
-  PRELOAD_TARBALLS: "1"
+  {% if cookiecutter.with_bundled_js%}STATICS_TARBALL: "/cache/$CI_PROJECT_PATH_SLUG/statics/build-${CI_PIPELINE_IID}.gz"
+  {%endif%}PRELOAD_TARBALLS: "1"
   # To speed up all builds we may cache in Controls which branch is used to generate image cache tarball
   CACHE_BUILD_FOR_BRANCH_REGEX: "^(master)$"
   MASTER_BRANCH: master
@@ -87,7 +91,8 @@ before_script: &top_before_script
 {%endif%}
 - for i in
     /cache/$CI_PROJECT_PATH_SLUG/docker-images
-    /cache/$CI_PROJECT_PATH_SLUG/apt
+    {% if cookiecutter.with_bundled_js%}/cache/$CI_PROJECT_PATH_SLUG/statics
+    {%endif%}/cache/$CI_PROJECT_PATH_SLUG/apt
   ;do if [ ! -e "$i" ];then mkdir -p "$i";fi;done
 - rm -rf /var/cache/apt
 - ln -s /cache/$CI_PROJECT_PATH_SLUG/apt /var/cache/apt
@@ -124,7 +129,13 @@ before_script: &top_before_script
             ( echo \"docker pull \$i\" && docker pull \$i || /bin/true )&
           done;wait;
          fi"
-
+{%if cookiecutter.with_bundled_js%}
+- &unpack_statics bash -ec "if [ \"x${PRELOAD_TARBALLS}\" != \"x\" ];then
+  if [ -e \"\$STATICS_TARBALL\" ];then
+     echo \"Warming statics cache from \$STATICS_TARBALL\" >&2;
+     tar xzvf \"\$STATICS_TARBALL\";
+  fi;fi"
+{%endif%}
 .manual_job_tpl: &manual_job_tpl
   tags: ["{{cookiecutter.runner_tag}}"]
   allow_failure: true
@@ -138,7 +149,7 @@ cleanup_all_expired_build_artefacts_from_cache:
   script:
   - &cleanup_all_expired_build_artefacts_from_cache |-
     bash -ec 'while read f;do rm -fv "$f";done \
-    < <( find /cache/$CI_PROJECT_PATH_SLUG/docker-images/build-* \
+    < <( find /cache/$CI_PROJECT_PATH_SLUG/docker-images/build-*{% if cookiecutter.with_bundled_js%} /cache/$CI_PROJECT_PATH_SLUG/statics{%endif%} \
          -type f -mtime +$CACHE_DAYS )'
 
 cleanup_all_expired_docker_images_from_cache:
@@ -147,7 +158,7 @@ cleanup_all_expired_docker_images_from_cache:
   script:
   - &cleanup_all_expired_docker_images |-
     bash -ec 'while read f;do rm -fv "$f";done \
-    < <( find /cache/$CI_PROJECT_PATH_SLUG/docker-images -type f )'
+    < <( find /cache/$CI_PROJECT_PATH_SLUG/docker-images{% if cookiecutter.with_bundled_js%} /cache/$CI_PROJECT_PATH_SLUG/statics{%endif%} -type f )'
 
 cleanup_all_project_cache:
   <<: [ *manual_job_tpl ]
@@ -269,7 +280,7 @@ teardown_env: &teardown_env
       fi;
     fi
   # cleanup pipeline image & pending artefacts
-  - &teardown_step3 rm -fv ${IMAGES_TARBALL}* "${SUCCESS_FLAG}"
+  - &teardown_step3 rm -fv ${IMAGES_TARBALL}* "${SUCCESS_FLAG}"{% if cookiecutter.with_bundled_js%} "${STATICS_TARBALL}"{%endif%}
   - *cleanup_all_expired_build_artefacts_from_cache
 
 .deploy_tpl: &deploy_tpl
@@ -412,3 +423,35 @@ manual_deploy_staging:
 {% endif -%}
 manual_deploy_prod:
   <<: [ *manual_job_tpl, *deploy_prod ]
+
+{{jscomment}}# BUILTIN Js APP support
+{{jscomment}}.js_job: &js_job
+{{jscomment}}  tags: ["{{cookiecutter.runner_tag}}"]
+{{jscomment}}  image: "{{cookiecutter.node_image}}"
+{{jscomment}}  variables: &js_job_vars
+{{jscomment}}    PRELOAD_TARBALLS: ""
+{{jscomment}}  script:
+{{jscomment}}  - &js_setup >-
+{{jscomment}}      sh -exc '
+{{jscomment}}      :
+{{jscomment}}      && npm config set puppeteer_skip_chromium_download true
+{{jscomment}}      && npm ci
+{{jscomment}}      '
+{{jscomment}}
+{{jscomment}}do_js_build:
+{{jscomment}}  <<: [ *js_job]
+{{jscomment}}  stage: js_build
+{{jscomment}}  variables:
+{{jscomment}}    <<: [ *js_job_vars ]
+{{jscomment}}    NODE_ENV: production
+{{jscomment}}  script:
+{{jscomment}}  - *js_setup
+{{jscomment}}  - npm run build
+{{jscomment}}  - tar czvf ${STATICS_TARBALL} src/*/static
+{{jscomment}}
+{{jscomment}}eslint:
+{{jscomment}}  <<: [ *js_job]
+{{jscomment}}  stage: tests
+{{jscomment}}  script:
+{{jscomment}}  - *js_setup
+{{jscomment}}  - npm run lint

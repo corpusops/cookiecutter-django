@@ -142,6 +142,7 @@ find src -name celery.py -delete
 # strip whitespaces from compose
 sed -i -re 's/\s+$//g' docker-compose*.yml
 sed -i -r '/^\s*$/d' docker-compose*.yml
+{% if not cookiecutter.with_bundled_js%}rm -f .nvmrc{%endif%}
 {% if not cookiecutter.with_apptest%}find src -name apptest |xargs rm -rf{%endif%}
 """
 

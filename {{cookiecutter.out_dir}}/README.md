@@ -186,7 +186,7 @@ docker volume ls  # hint: |grep \$app
 docker volume rm $id
 ```
 
-## Reuning a precached image in dev to accelerate rebuilds
+## Reusing a precached image in dev to accelerate rebuilds
 Once you have build once your image, you have two options to reuse your image as a base to future builds, mainly to accelerate buildout successive runs.
 
 - Solution1: Use the current image as an incremental build: Put in your .env
