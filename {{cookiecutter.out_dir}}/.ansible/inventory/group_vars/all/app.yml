@@ -1,6 +1,7 @@
 ---
 {{cookiecutter.app_type}}_servers: {{cookiecutter.lname}}_servers
 cops_{{cookiecutter.app_type}}_name: "{{cookiecutter.lname}}"
+cops_django_project_module_name: "{{cookiecutter.django_project_name}}"
 cops_{{cookiecutter.app_type}}_tld_domain: "{{cookiecutter.tld_domain}}"
 cops_{{cookiecutter.app_type}}_mail_domain: "{{ cookiecutter.mail_domain }}"
 cops_{{cookiecutter.app_type}}_docker_image: "{{cookiecutter.docker_image}}"
