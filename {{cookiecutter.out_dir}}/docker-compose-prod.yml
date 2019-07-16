@@ -28,7 +28,7 @@ services:
     restart: unless-stopped
   backup:
     restart: unless-stopped
-    env: {env_file: [.env, docker.env]}
+    env_file: [.env, docker.env]
     image: "{{cookiecutter.dbsmartbackup_image}}"
     volumes:
       - backupdb-dumps:/var/db_smart_backup/
