@@ -204,7 +204,7 @@ Once you have build once your image, you have two options to reuse your image as
 
 ## Integrating an IDE
 - <strong>DO NOT START YET YOUR IDE</strong>
-- Add to your .env and re-run ``./control.sh build plone``
+- Add to your .env and re-run ``./control.sh build {{cookiecutter.app_type}}``
 
     ```sh
     WITH VISUALCODE=1
@@ -218,7 +218,7 @@ Once you have build once your image, you have two options to reuse your image as
 
     ```sh
     ./control.sh up
-    ./control.sh down plone
+    ./control.sh down {{cookiecutter.app_type}}
     ```
 
 
@@ -257,7 +257,7 @@ Once you have build once your image, you have two options to reuse your image as
     - do:
 
         ```sh
-        ./control.sh down plone
+        ./control.sh down {{cookiecutter.app_type}}
         services_ports=1 ./control.sh usershell
         apt install -y vim
         vim ../venv/*/*/*/foo/__init__.py
@@ -307,7 +307,7 @@ Additionnaly, adding this to ``.vscode/settings.json`` would help to give you a 
     - do:
 
         ```sh
-        ./control.sh down plone
+        ./control.sh down {{cookiecutter.app_type}}
         services_ports=1 ./control.sh usershell
         apt install -y vim
         vim ../venv/*/*/*/foo/__init__.py
