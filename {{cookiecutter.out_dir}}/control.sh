@@ -36,14 +36,22 @@ CONTROL_COMPOSE_FILES="${CONTROL_COMPOSE_FILES:-docker-compose.yml docker-compos
 COMPOSE_COMMAND=${COMPOSE_COMMAND:-docker-compose}
 ENV_FILES="${ENV_FILES:-.env docker.env}"
 
+join_by() { local IFS="$1"; shift; echo "$*"; }
+
 source_envs() {
     set -o allexport
     for i in $ENV_FILES;do
         if [ -e "$i" ];then
-            eval "$(cat $i\
-                | egrep "^([^#=]+)=" \
-                | sed   's/^\([^=]\+\)=\(.*\)$/export \1=\"\2\"/g' \
-                )"
+            while read vardef;do
+                var="$(echo "$vardef" | awk -F= '{print $1}')"
+                val="$(echo "$vardef" | sed "s/^[^=]\+=//g")"
+                if ( echo "$val" | egrep -q "'" )  || ! ( echo "$val" | egrep '"' ) ;then
+                    eval "$var=\"$val\""
+                else
+                    eval "$var='$val'"
+                fi
+            done < <( \
+                cat $i| egrep -v "^\s*#" | egrep "^([a-zA-Z0-9_]+)=" )
         fi
     done
     set +o allexport
@@ -332,8 +340,7 @@ do_coverage() { do_test coverage; }
 {% if cookiecutter.with_celery -%}
 #  celery_beat_fg: launch celery app container in foreground (using entrypoint)
 do_celery_beat_fg() {
-    (   source_envs \
-        && CONTAINER=celery-beat \
+    (   CONTAINER=celery-beat \
         && stop_containers $CONTAINER \
         && services_ports=1 do_usershell \
         celery beat -A \$DJANGO_CELERY -l \$CELERY_LOGLEVEL $@ )
@@ -341,8 +348,7 @@ do_celery_beat_fg() {
 
 #  celery_worker_fg: launch celery beat container in foreground (using entrypoint)
 do_celery_worker_fg() {
-    (   source_envs \
-        && CONTAINER=celery-worker \
+    (   CONTAINER=celery-worker \
         && stop_containers celery-worker \
         && services_ports=1 do_usershell \
         celery worker -A \$DJANGO_CELERY -l \$CELERY_LOGLEVEL -B $@ )
@@ -422,6 +428,7 @@ do_main() {
     actions_{{cookiecutter.app_type}}="runserver|tests|test|coverage|linting|manage|python{% if cookiecutter.with_celery%}|celery_beat_fg|celery_worker_fg{%endif%}"
     actions="@($actions|$actions_{{cookiecutter.app_type}})"
     action=${1-}
+    source_envs
     if [[ -n $@ ]];then shift;fi
     set_dc
     case $action in
