@@ -175,7 +175,7 @@ do_dexec() {
     _dexec "${container}" root      $@;
 }
 
-#  install_docker: install docker and docker-compose on ubuntu
+#  install_docker: install docker and docker-compose on ubuntu
 do_install_docker() {
     vv .ansible/scripts/download_corpusops.sh
     vv .ansible/scripts/setup_corpusops.sh
@@ -183,9 +183,17 @@ do_install_docker() {
         local/*/*/corpusops.roles/services_virt_docker/role.yml
 }
 
-#  pull [$args]: pull stack container images
+#  pull [$args]: pull stack container images
 do_pull() {
     vv $DC pull $@
+}
+
+
+#  ps [$args]: ps
+do_ps() {
+    local bargs=$@
+    set -- vv $DC ps
+    $@ $bargs
 }
 
 #  up [$args]: start stack
@@ -196,12 +204,6 @@ do_up() {
     $@ $bargs
 }
 
-#  down [$args]: down stack
-do_down() {
-    local bargs=$@
-    set -- vv $DC down
-    $@ $bargs
-}
 
 #  run [$args]: run stack
 do_run() {
@@ -214,6 +216,13 @@ do_run() {
 do_rm() {
     local bargs=$@
     set -- vv $DC rm
+    $@ $bargs
+}
+
+#  down [$args]: down stack
+do_down() {
+    local bargs=$@
+    set -- vv $DC down
     $@ $bargs
 }
 
