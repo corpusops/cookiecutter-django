@@ -93,7 +93,7 @@
 	"cache_image": "{{cookiecutter['{0}_image'.format(cookiecutter.cache_system)]}}",
     "psycopg_req": "==2.8.*",
 	"session_engine_base": "django.contrib.sessions.backends.db",
-	"session_engine_prod": "{{cookiecutter.sesion_engine_base}}",
+	"session_engine_prod": "{{cookiecutter.session_engine_base}}",
 	"memcache_key_prefix": "{{cookiecutter.lname}}",
 	"with_apptest": "y",
 	"with_bundled_js": "",
