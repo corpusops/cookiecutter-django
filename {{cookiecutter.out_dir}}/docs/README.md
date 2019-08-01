@@ -275,5 +275,5 @@ docker-compose -f "docker-compose.yml" -f docker-compose-prod.yml -p "mixity" $A
 ### via control.sh
 ```sh
 cd /srv/docker/{{cookiecutter.lname}}  # where your project folder is
-export CONTROL_COMPOSE_FILES="docker-compose.yml docker-compose-prod.yml"
+# if this is not already in ./.env: export CONTROL_COMPOSE_FILES="docker-compose.yml docker-compose-prod.yml"
 ./control.sh $args
