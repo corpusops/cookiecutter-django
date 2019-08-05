@@ -35,6 +35,7 @@ services:
       - backupdb-logs:/var/db_smart_backup/logs/
     restart: unless-stopped
 {% if cookiecutter.with_celery %}  celery-broker:
+    restart: unless-stopped
   celery-beat: &celery
     <<: [ *{{cookiecutter.app_type}} ]
     restart: unless-stopped

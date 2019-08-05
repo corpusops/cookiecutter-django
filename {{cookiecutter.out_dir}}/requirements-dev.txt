@@ -1,11 +1,11 @@
 # development
+coverage
 {% if cookiecutter.with_toolbar %}django-debug-toolbar>=1.9,<1.10{% endif %}
 {% if cookiecutter.with_djextensions %}django-extensions>=2.0,<2.1{% endif %}
-tox
-coverage
+eradicate
 isort
+pdb_clone
 pylama
 tblib
-eradicate
+tox
 xlrd
-pdb_clone

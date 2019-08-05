@@ -41,8 +41,9 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     jstrans,
 ]
+{% if cookiecutter.with_apptest%}
 
-{% if cookiecutter.with_apptest%}if 'apptest' in settings.INSTALLED_APPS:  # pragma: nobranch
+if 'apptest' in settings.INSTALLED_APPS:  # pragma: nobranch
     urlpatterns += [
         url(r'^test', include('apptest.urls')),
     ]

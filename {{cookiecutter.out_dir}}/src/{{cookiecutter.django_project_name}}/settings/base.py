@@ -21,7 +21,6 @@ import django
 import six
 from django.utils.log import DEFAULT_LOGGING
 
-
 try:
     import raven  # noqa
     HAS_SENTRY = True
