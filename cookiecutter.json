@@ -40,7 +40,7 @@
     "git_scheme": "https",
     "git_user": "",
 
-    "test_tests": "y",
+    "test_tests": "",
     "test_linting": "y",
     "haproxy": "",
     "git_url": "{{cookiecutter.git_scheme}}://{%if cookiecutter.git_user%}{{cookiecutter.git_user}}@{%endif%}{{cookiecutter.git_project_server}}",
@@ -95,7 +95,7 @@
 	"session_engine_base": "django.contrib.sessions.backends.db",
 	"session_engine_prod": "{{cookiecutter.session_engine_base}}",
 	"memcache_key_prefix": "{{cookiecutter.lname}}",
-	"with_apptest": "y",
+	"with_apptest": "",
 	"with_bundled_js": "",
 	"node_version": "10.16.0",
 	"node_image": "corpusops/node:{{'.'.join(cookiecutter.node_version.split('.')[:2])}}",
