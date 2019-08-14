@@ -42,10 +42,11 @@ urlpatterns = [
     jstrans,
 ]
 
-if 'apptest' in settings.INSTALLED_APPS:  # pragma: nobranch
+{% if cookiecutter.with_apptest%}if 'apptest' in settings.INSTALLED_APPS:  # pragma: nobranch
     urlpatterns += [
         url(r'^test', include('apptest.urls')),
     ]
+{%endif%}
 
 if settings.DEBUG and 'debug_toolbar' in settings.INSTALLED_APPS:
     import debug_toolbar

@@ -60,8 +60,9 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     {% if cookiecutter.with_celery -%}'django_celery_beat',
     'django_celery_results',{%- endif %}
-    #
+    #{% if cookiecutter.with_apptest %}
     'apptest'
+{%endif%}
 )
 
 MIDDLEWARE = (

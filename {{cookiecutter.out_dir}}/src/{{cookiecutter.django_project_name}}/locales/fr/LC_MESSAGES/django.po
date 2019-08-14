@@ -17,7 +17,8 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-
+ 
+{% if cookiecutter.with_apptest%}
 #: apptest/templates/apptest/test.html:6
 msgid "AppTest template est utilisé !"
 msgstr ""
@@ -29,3 +30,4 @@ msgstr ""
 #: apptest/views.py:7
 msgid "Salut"
 msgstr ""
+{% endif %}

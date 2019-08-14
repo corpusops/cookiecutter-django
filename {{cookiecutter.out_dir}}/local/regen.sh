@@ -30,6 +30,14 @@ vv cookiecutter --no-input -o "$out" -f "$u" \
         i not in ['_template']%}{{i}}="{{val.replace('$', '\$')}}" \
     {%endif%}{%endfor %} "$@"
 
+{% if not cookiecutter.no_lib %}
+if  [ ! -e lib ];then
+    mkdir lib
+    touch lib/.empty
+fi
+{% endif %}
+
+
 # to finish template loop
 # sync the gen in a second folder for intermediate regenerations
 dvv rsync -aA \

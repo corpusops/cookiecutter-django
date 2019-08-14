@@ -16,6 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+{% if cookiecutter.with_apptest%}
 #: apptest/templates/apptest/test.html:6
 msgid "AppTest template est utilisé !"
 msgstr "AppTest template is used!"
@@ -27,3 +28,4 @@ msgstr "You should be able to see the debug toolbar on the right no?"
 #: apptest/views.py:7
 msgid "Salut"
 msgstr "Hello"
+{% endif %}
