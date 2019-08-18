@@ -29,3 +29,6 @@ cops_django_restarted_services: "{{'{{'}}cops_django_restarted_services_default.
 {% endif %}
 cops_django_http_protect_user: "root"
 cops_django_http_protect_password: "rootroot"
+{% set jscomment = (not cookiecutter.with_bundled_front) and '#  ' or '' %}
+{{jscomment}}# cops_django_code_sync_theme_contents: "{{'{{'}}cops_django_code_sync_theme_contents_front}}"
+{{jscomment}}cops_django_code_sync_theme_contents: "{{'{{'}}cops_django_code_sync_theme_contents_webpack}}"
