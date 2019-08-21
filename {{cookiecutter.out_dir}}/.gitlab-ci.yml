@@ -425,13 +425,13 @@ manual_deploy_prod:
   <<: [ *manual_job_tpl, *deploy_prod ]
 
 {{jscomment}}# BUILTIN Js APP support
-{{jscomment}}.js_job: &js_job
+{{jscomment}}.front_job: &front_job
 {{jscomment}}  tags: ["{{cookiecutter.runner_tag}}"]
 {{jscomment}}  image: "{{cookiecutter.node_image}}"
-{{jscomment}}  variables: &js_job_vars
+{{jscomment}}  variables: &front_job_vars
 {{jscomment}}    PRELOAD_TARBALLS: ""
 {{jscomment}}  script:
-{{jscomment}}  - &js_setup >-
+{{jscomment}}  - &front_setup >-
 {{jscomment}}      sh -exc '
 {{jscomment}}      :
 {{jscomment}}      && npm config set puppeteer_skip_chromium_download true
@@ -439,19 +439,19 @@ manual_deploy_prod:
 {{jscomment}}      '
 {{jscomment}}
 {{jscomment}}do_front_build:
-{{jscomment}}  <<: [ *js_job]
+{{jscomment}}  <<: [ *front_job]
 {{jscomment}}  stage: front_build
 {{jscomment}}  variables:
-{{jscomment}}    <<: [ *js_job_vars ]
+{{jscomment}}    <<: [ *front_job_vars ]
 {{jscomment}}    NODE_ENV: production
 {{jscomment}}  script:
-{{jscomment}}  - *js_setup
+{{jscomment}}  - *front_setup
 {{jscomment}}  - npm run build
 {{jscomment}}  - tar czvf ${STATICS_TARBALL} src/*/static
 {{jscomment}}
 {{jscomment}}eslint:
-{{jscomment}}  <<: [ *js_job]
+{{jscomment}}  <<: [ *front_job]
 {{jscomment}}  stage: tests
 {{jscomment}}  script:
-{{jscomment}}  - *js_setup
+{{jscomment}}  - *front_setup
 {{jscomment}}  - npm run lint
