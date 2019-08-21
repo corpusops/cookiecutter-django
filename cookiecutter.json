@@ -98,7 +98,7 @@
 	"with_apptest": "",
 	"with_drf": "y",
 	"with_ia_libs": "y",
-	"with_bundled_js": "",
+	"with_bundled_front": "",
 	"node_version": "10.16.0",
 	"node_image": "corpusops/node:{{'.'.join(cookiecutter.node_version.split('.')[:2])}}",
     "no_private": ""
