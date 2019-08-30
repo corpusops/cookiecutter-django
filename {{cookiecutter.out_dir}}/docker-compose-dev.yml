@@ -46,7 +46,7 @@ services:
     # uncomment to activate in dev
 {%-endif%}
   {{nginxc}}  ports:
-  {{nginxc}}  - 80:80
+  {{nginxc}}  - "${DJANGO__HTTP_PORT:-80}:80"
   {{nginxc}}  {% if not nginxc%}{{nginxsslc}}{%endif %}- 443:443
   {{nginxc}}  environment: {NO_SSL: "0"}
   {{cookiecutter.app_type}}:
@@ -55,8 +55,11 @@ services:
       <<: [ *django_env ]
       IMAGE_MODE: fg
     ports:
-      - "8000:8000"
-      - "5678:5678"
+    - "${DJANGO__API_LISTEN:-0.0.0.0}:${DJANGO__API_PORT:-8000}:8000"
+    - "${DJANGO__VSCODE_LISTEN:-0.0.0.0}:${DJANGO__VSCODE_PORT:-5678}:5678"
+  db:
+    ports:
+    - "${DJANGO__DB_OUT_LISTEN:-0.0.0.0}:${DJANGO__DB_OUT_PORT:-{{cookiecutter.db_out_port}}}:{{cookiecutter.db_out_port}}"
 {% if cookiecutter.with_celery %}
   celery-beat: &celery
     <<: [ *django ]

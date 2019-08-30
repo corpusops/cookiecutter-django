@@ -60,10 +60,10 @@ services:
     <<: [ *env ]
     image: "{{cookiecutter.cache_image}}"
     hostname: {{cookiecutter.cache_system}}
-		{% if cookiecutter.cache_system in ['redis'] %}
+    {% if cookiecutter.cache_system in ['redis'] %}
     volumes:
       - 'redis:/data'
-		{% endif %}
+        {% endif %}
 {%endif %}
   db:
     <<: [ *env ]

@@ -9,6 +9,6 @@ import sys
 
 cache_system = '{{ cookiecutter.cache_system }}'
 
-if cache_system not in ['redis', 'memcache', '', None]:
+if cache_system not in ['redis', 'memcached', '', None]:
     sys.exit(1)
 # vim:set et sts=4 ts=4 tw=80:

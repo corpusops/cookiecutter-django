@@ -19,7 +19,7 @@ psycopg2{{cookiecutter.psycopg_req}}
 {% if cookiecutter.cache_system == 'redis'-%}
 django-redis>=4.9,<4.10
 {%endif-%}
-{%- if cookiecutter.cache_system == 'memcache'%}
+{%- if cookiecutter.cache_system == 'memcached'%}
 python-memcached
 {%endif %}
 # SIG

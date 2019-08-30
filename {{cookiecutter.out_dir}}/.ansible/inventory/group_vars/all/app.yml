@@ -22,11 +22,11 @@ cops_{{cookiecutter.app_type}}_docker_env_extra: |-
   RABBITMQ_DEFAULT_PASS={{'{{'}}cops_{{cookiecutter.app_type}}_rabbitmq_password}}{% endif %}
   {%- endif %}
   {% if 'post' in cookiecutter.db_mode %}POSTGRES_STARTUP_TIMEOUT={{'{{'}}cops_{{cookiecutter.app_type}}_postgres_startup_timeout}}{% endif %}
-{% if cookiecutter.with_celery %}
-cops_django_restarted_services: "{{'{{'}}cops_django_restarted_services_default.replace(' django', ' django{%
-  if cookiecutter.with_celery%} celery-broker celery-beat celery-worker{%endif
-  %}{%if 'post' in cookiecutter.db_mode%} setup-postgres{%endif%}')}}"
-{% endif %}
+cops_django_restarted_services: "{{"{{"}}cops_django_restarted_services_default{% if cookiecutter.cache_system %}.replace(
+    'redis', '{{cookiecutter.cache_system}}'){%endif
+    %}.replace(' django', ' django{% 
+    if cookiecutter.with_celery%} celery-broker celery-beat celery-worker{%endif
+    %}{% if 'post' in cookiecutter.db_mode%} setup-postgres{%endif%}')}}"
 cops_django_http_protect_user: "root"
 cops_django_http_protect_password: "rootroot"
 {% set jscomment = (not cookiecutter.with_bundled_front) and '#  ' or '' %}

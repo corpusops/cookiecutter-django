@@ -8,12 +8,12 @@ services:
   nginx:
     restart: unless-stopped
     ports:
-    - 80:80
+    - "${DJANGO__HTTP_LISTEN:-0.0.0.0}:${DJANGO__HTTP_PORT:-80}:80"
   {{cookiecutter.app_type}}:
     restart: unless-stopped
     <<: [ *{{cookiecutter.app_type}} ]
     ports:
-    - "8000:8000"
+    - "${DJANGO__API_LISTEN:-127.0.0.1}:${DJANGO__API_PORT:-8000}:8000"
   {% if not cookiecutter.remove_cron %}
   cron:
     <<: [ *{{cookiecutter.app_type}} ]
