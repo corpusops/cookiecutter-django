@@ -448,12 +448,14 @@ def set_prod_settings(globs):
     Additional post processing of settings only ran on hosted environments
     '''
     _locals, env = locals_settings_update(locals(), globs)
-    SERVER_EMAIL = _locals.setdefault(
-        'SERVER_EMAIL',
-        '{env}-{{cookiecutter.lname}}@{{cookiecutter.tld_domain}}'.format(env=env))
+    default_mail = (
+        '{env}-{{cookiecutter.lname}}@{{cookiecutter.tld_domain}}'.format(
+            env=env))
+    DEFAULT_FROM_EMAIL = _locals.setdefault('DEFAULT_FROM_EMAIL', default_mail)
+    SERVER_EMAIL = _locals.setdefault('SERVER_EMAIL', default_mail)
     _locals.setdefault('ADMINS', [('root', SERVER_EMAIL)])
     _locals.setdefault('EMAIL_HOST', 'localhost')
-    _locals.setdefault('DEFAULT_FROM_EMAIL', SERVER_EMAIL)
+    _locals.setdefault('DEFAULT_FROM_EMAIL', DEFAULT_FROM_EMAIL)
     ALLOWED_HOSTS = _locals.setdefault('ALLOWED_HOSTS', [])
     CORS_ORIGIN_WHITELIST = _locals.setdefault(
         'CORS_ORIGIN_WHITELIST', tuple())
