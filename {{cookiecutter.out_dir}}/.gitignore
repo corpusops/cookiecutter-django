@@ -59,6 +59,7 @@ docs/_build/
 
 
 # misc
+/data
 /.sass-cache
 /connect.lock
 /coverage/*

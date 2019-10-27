@@ -32,6 +32,7 @@ PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 {{cookiecutter.lname.upper()}}_DIR = PROJECT_DIR
 SRC_DIR = os.path.dirname(PROJECT_DIR)
 BASE_DIR = os.path.dirname(SRC_DIR)
+DATA_DIR = os.path.join(DATA_DIR, 'data')
 PUBLIC_DIR = os.path.join(BASE_DIR, 'public')
 PRIVATE_DIR = os.path.join(BASE_DIR, 'private')
 PROJECT_NAME = os.path.basename(PROJECT_DIR)

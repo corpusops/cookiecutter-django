@@ -33,6 +33,7 @@ x-images:
       - mediafiles:/code/public/media
       - statics:/code/public/static
       - logs:/logs/
+      - ./data:/code/data
 services:
   mailcatcher:
     <<: [ *env ]
@@ -81,6 +82,7 @@ services:
       - statics:/code/public/static/
       - logs:/logs/
       - nginx-certs:/certs
+      - ./data:/code/data
       # retrocompat
       - mediafiles:/public/media/:ro
       - statics:/public/static/
