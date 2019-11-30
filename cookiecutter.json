@@ -18,7 +18,7 @@
     "prod_domain": "{{cookiecutter.lname}}.{{cookiecutter.tld_domain}}",
     "dev_alternate_domains": "www.{{cookiecutter.dev_domain}}",
     "qa_alternate_domains": "www.{{cookiecutter.qa_domain}}",
-    "staging_alternate_domains": "www.{{cookiecuttyer.staging_domain}}",
+    "staging_alternate_domains": "www.{{cookiecutter.staging_domain}}",
     "prod_alternate_domains": "www.{{cookiecutter.prod_domain}}",
 
     "staging_host": "{{cookiecutter.staging_domain.replace('-{0}.'.format(cookiecutter.lname), '-docker-{0}.'.format(cookiecutter.lname))}}",

@@ -47,7 +47,7 @@ services:
 {%-endif%}
   {{nginxc}}  ports:
   {{nginxc}}  - "${DJANGO__HTTP_PORT:-80}:80"
-  {{nginxc}}  {% if not nginxc%}{{nginxsslc}}{%endif %}- "${DJANGO__HTTPS_PORT:443}:443"
+  {{nginxc}}  {% if not nginxc%}{{nginxsslc}}{%endif %}- "${DJANGO__HTTPS_PORT:-443}:443"
   {{nginxc}}  environment: {NO_SSL: "0"}
   {{cookiecutter.app_type}}:
     <<: [ *django ]

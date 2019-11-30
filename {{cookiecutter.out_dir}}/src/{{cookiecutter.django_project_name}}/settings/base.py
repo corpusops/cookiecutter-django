@@ -205,6 +205,7 @@ LOGGING = copy.deepcopy(DEFAULT_LOGGING)
 # Cache settings
 CACHES = {
     "default": {
+{% if cookiecutter.cache_system %}
         "BACKEND": "{% if cookiecutter.cache_system == 'redis'%}django_redis.cache.RedisCache{% elif cookiecutter.cache_system=='memcached'%}django.core.cache.backends.memcached.MemcachedCache{%endif%}",
         "LOCATION": {% if cookiecutter.cache_system == 'redis'%}"redis://redis:6379/1"{% elif cookiecutter.cache_system=='memcached'%}os.getenv(
             'MEMCACHED_URL',
@@ -216,9 +217,12 @@ CACHES = {
         },{%endif%}
         {% if cookiecutter.cache_system == 'memcached'%}"KEY_PREFIX": '{{cookiecutter.memcached_key_prefix}}',{%endif%}
     }
+{% else %}
+    'default': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    }
+{%endif %}
 }
-
-CORS_ORIGIN_ALLOW_ALL = True
 
 SESSION_ENGINE = "{{cookiecutter.session_engine_base}}"
 

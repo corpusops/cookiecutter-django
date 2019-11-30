@@ -201,8 +201,8 @@ The high level infrastructure:
             |             nginx which serve the application statis & medias)
             |
             +--- pgsql
-            |
-            +--- {{cookiecutter.cache_system}}
+            |{%-if cookiecutter.cache_system%}
+            +--- {{cookiecutter.cache_system}}{%endif%}
             |
             +--- backup
             +--- ...
