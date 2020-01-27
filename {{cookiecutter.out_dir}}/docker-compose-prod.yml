@@ -43,7 +43,7 @@ services:
     <<: [ *{{cookiecutter.app_type}} ]
     restart: unless-stopped
 {% endif -%}
-{% if cookiecutter.db_mode == 'postgres' %}  setup-postgres:
+{% if cookiecutter.db_mode.startswith('post') %}  setup-postgres:
     restart: unless-stopped
 {% endif %}
 volumes:
