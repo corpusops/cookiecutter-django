@@ -33,7 +33,6 @@ services:
     volumes:
       - backupdb-dumps:/var/db_smart_backup/
       - backupdb-logs:/var/db_smart_backup/logs/
-    restart: unless-stopped
 {% if cookiecutter.with_celery %}  celery-broker:
     restart: unless-stopped
   celery-beat: &celery
