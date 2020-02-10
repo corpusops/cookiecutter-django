@@ -28,9 +28,9 @@ Fiona>=1.7,<1.8
 
 {% if cookiecutter.with_drf -%}
 # DRF
-djangorestframework>=3.7,<3.8
+djangorestframework>=3.11,<3.12
 djangorestframework-gis==0.12
-djangorestframework-jwt>=1.11,<1.12
+djangorestframework-simplejwt>=4.4,<4.5
 drf-yasg>=1.9,<2.0
 {% endif -%}
 {% if cookiecutter.with_ia_libs -%}
