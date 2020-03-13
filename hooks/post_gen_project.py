@@ -33,6 +33,7 @@ SYMLINKS_FILES = {
     ".ansible/scripts/print_env.sh": "call_ansible.sh",  #noqa
     ".ansible/scripts/setup_ansible.sh": "cops_wrapper.sh",  #noqa
     ".ansible/playbooks/ping.yml": "../../{{cookiecutter.deploy_project_dir}}/.ansible/playbooks/ping.yml",  #noqa
+    ".ansible/playbooks/app.yml": "../../{{cookiecutter.deploy_project_dir}}/.ansible/playbooks/teleport.yml",  #noqa
     ".ansible/playbooks/app.yml": "../../{{cookiecutter.deploy_project_dir}}/.ansible/playbooks/app.yml",  #noqa
     ".ansible/playbooks/deploy_key_setup.yml":
     "../../{{cookiecutter.deploy_project_dir}}/.ansible/playbooks/deploy_key_setup.yml",  #noqa
@@ -206,4 +207,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-# vim:set et sts=4 ts=4 tw=80:
+# vim:set et sts=4 ts=4 tw=0:

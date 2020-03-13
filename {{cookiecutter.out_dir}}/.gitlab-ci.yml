@@ -1,6 +1,7 @@
 image: corpusops/ubuntu:18.04
 {% set devhostdeploycomment = (not cookiecutter.dev_host) and '#  ' or '' %}
 {% set jscomment = (not cookiecutter.with_bundled_front) and '#  ' or '' %}
+{% set resetcomment = (not cookiecutter.with_reset_stagingprod_jobs) and '#  ' or '' %}
 stages:
   - manual_jobs
 {{jscomment}}  - front_build
@@ -423,6 +424,42 @@ manual_deploy_staging:
 {% endif -%}
 manual_deploy_prod:
   <<: [ *manual_job_tpl, *deploy_prod ]
+
+# reset environments from others
+{{resetcomment}}.reset_env: &reset_env
+{{resetcomment}}  <<: [ *deploy_tpl ]
+{{resetcomment}}  allow_failure: true
+{{resetcomment}}  only: [tags, master, deploy]
+{{resetcomment}}  stage: manual_jobs
+{{resetcomment}}  variables:  &reset_env_vars
+{{resetcomment}}    <<: [ *deploy_vars_tpl ]
+{{resetcomment}}    orig: ""
+{{resetcomment}}    dest: ""
+{{resetcomment}}    A_ENV_NAME: teleport
+{{resetcomment}}  script:
+{{resetcomment}}  - test -n "$dest"
+{{resetcomment}}  - test -n "$orig"
+{{resetcomment}}  - >-
+{{resetcomment}}    : .ansible/scripts/call_ansible.sh -vv .ansible/playbooks/teleport.yml
+{{resetcomment}}    -e '{teleport_destination: "$dest", teleport_origin: "$orig"}'
+{{resetcomment}}  # OR
+{{resetcomment}}  - >-
+{{resetcomment}}    : .ansible/scripts/call_ansible.sh -vv .ansible/playbooks/teleport.yml
+{{resetcomment}}    -e '{teleport_destination: "$dest", teleport_origin: "$orig", teleport_mode: makinastates}'
+{{resetcomment}}
+{{resetcomment}}reset_prod_from_oldprod:
+{{resetcomment}}  <<: [ *reset_env ]
+{{resetcomment}}  variables:
+{{resetcomment}}    <<: [ *reset_env_vars ]
+{{resetcomment}}    orig: old_prod
+{{resetcomment}}    dest: prod
+{{resetcomment}}
+{{resetcomment}}reset_staging_from_oldprod:
+{{resetcomment}}  <<: [ *reset_env ]
+{{resetcomment}}  variables:
+{{resetcomment}}    <<: [ *reset_env_vars ]
+{{resetcomment}}    orig: old_prod
+{{resetcomment}}    dest: staging
 
 {{jscomment}}# BUILTIN Js APP support
 {{jscomment}}.front_job: &front_job
