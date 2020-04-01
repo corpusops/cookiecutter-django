@@ -439,13 +439,13 @@ manual_deploy_prod:
 {{resetcomment}}  script:
 {{resetcomment}}  - test -n "$dest"
 {{resetcomment}}  - test -n "$orig"
-{{resetcomment}}  - >-
-{{resetcomment}}    : .ansible/scripts/call_ansible.sh -vv .ansible/playbooks/teleport.yml
-{{resetcomment}}    -e '{teleport_destination: "$dest", teleport_origin: "$orig"}'
+{{resetcomment}}  - |-
+{{resetcomment}}    bash -ec ".ansible/scripts/call_ansible.sh -vv .ansible/playbooks/teleport.yml \
+{{resetcomment}}    -e '{teleport_destination: "$dest", teleport_origin: "$orig", teleport_mode: "$teleport_mode"}'"
 {{resetcomment}}  # OR
-{{resetcomment}}  - >-
-{{resetcomment}}    : .ansible/scripts/call_ansible.sh -vv .ansible/playbooks/teleport.yml
-{{resetcomment}}    -e '{teleport_destination: "$dest", teleport_origin: "$orig", teleport_mode: makinastates}'
+{{resetcomment}}  - |-
+{{resetcomment}}    bash -ec ".ansible/scripts/call_ansible.sh -vv .ansible/playbooks/teleport.yml \
+{{resetcomment}}    -e '{teleport_destination: "$dest", teleport_origin: "$orig", teleport_mode: makinastates}'"
 {{resetcomment}}
 {{resetcomment}}reset_prod_from_oldprod:
 {{resetcomment}}  <<: [ *reset_env ]
