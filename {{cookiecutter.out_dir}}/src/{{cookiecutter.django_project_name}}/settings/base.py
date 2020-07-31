@@ -383,7 +383,7 @@ def post_process_settings(globs=None):
         - tranforming vars which can come from system environment as strings
           in their final values as django settings
     '''
-    _locals, env = locals_settings_update(locals(), globs)
+    _locals, env = locals_settings_update(locals().copy(), globs)
     check_explicit_settings(_locals)
     for setting, func, fkwargs in (
         ('DEBUG', as_bool, {}),
