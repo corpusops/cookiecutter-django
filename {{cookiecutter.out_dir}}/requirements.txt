@@ -1,6 +1,6 @@
 # core
 Django>={{cookiecutter.django_ver_1|float}},<{{cookiecutter.django_ver_1|float+0.1}}
-django-cors-headers>=2.2,<2.3
+django-cors-headers>=3.5.0
 
 # libs
 boto3>=1.9,<=1.10

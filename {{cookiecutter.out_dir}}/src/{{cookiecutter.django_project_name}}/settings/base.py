@@ -14,6 +14,7 @@ from __future__ import absolute_import, division, print_function
 
 import copy
 import os
+import re
 from datetime import timedelta
 from importlib import import_module
 
@@ -391,6 +392,7 @@ def post_process_settings(globs=None):
         ('EMAIL_USE_TLS', as_bool, {}),
         ('CORS_ORIGIN_ALLOW_ALL', as_bool, {}),
         ('CORS_ORIGIN_WHITELIST', as_col, {'final_type': tuple}),
+        ('COPS_ALL_HOSTNAMES', as_col, {'final_type': tuple}),
         ('ALLOWED_HOSTS', as_col, {}),
     ):
         try:
@@ -462,13 +464,32 @@ def set_prod_settings(globs):
     _locals.setdefault('EMAIL_HOST', 'localhost')
     _locals.setdefault('DEFAULT_FROM_EMAIL', DEFAULT_FROM_EMAIL)
     ALLOWED_HOSTS = _locals.setdefault('ALLOWED_HOSTS', [])
+    COPS_ALL_HOSTNAMES = _locals.setdefault(
+        'COPS_ALL_HOSTNAMES', tuple())
     CORS_ORIGIN_WHITELIST = _locals.setdefault(
         'CORS_ORIGIN_WHITELIST', tuple())
+    CORS_ALLOWED_ORIGIN_REGEXES = _locals.setdefault(
+        'CORS_ALLOWED_ORIGIN_REGEXES', tuple())
+    schemes = ('http://', 'https://')
+    if COPS_ALL_HOSTNAMES:
+        CORS_ORIGIN_WHITELIST = _locals['CORS_ORIGIN_WHITELIST'] = tuple()
+        CORS_ALLOWED_ORIGIN_REGEXES = tuple()
+        for i in COPS_ALL_HOSTNAMES:
+            if not i.startswith(schemes):
+                i = re.sub('^\.', '.*.', i)
+                i = tuple(['{0}{1}'.format(scheme, i) for scheme in schemes])
+            else:
+                i = (i,)
+            CORS_ALLOWED_ORIGIN_REGEXES += i
+        _locals['CORS_ALLOWED_ORIGIN_REGEXES'] = CORS_ALLOWED_ORIGIN_REGEXES
+
     # those settings by default are empty, we need to handle this case
-    if not CORS_ORIGIN_WHITELIST:
-        _locals['CORS_ORIGIN_WHITELIST'] = (
-            '{env}-{{cookiecutter.lname}}.{{cookiecutter.tld_domain}}'.format(env=env),  #noqa
-            '.{{cookiecutter.tld_domain}}')
+    if not (CORS_ORIGIN_WHITELIST or CORS_ALLOWED_ORIGIN_REGEXES):
+        _locals['CORS_ALLOWED_ORIGIN_REGEXES'] = (
+            r'http://{env}-{{cookiecutter.lname}}\.{{cookiecutter.tld_domain}}'.format(env=env),  #noqa
+            r'https://{env}-{{cookiecutter.lname}}\.{{cookiecutter.tld_domain}}'.format(env=env),  #noqa
+            r'http://.*\.?{{cookiecutter.tld_domain}}',
+            r'https://.*\.?{{cookiecutter.tld_domain}}')
     if not ALLOWED_HOSTS:
         _locals['ALLOWED_HOSTS'] = [
             '{env}-{{cookiecutter.lname}}.{{cookiecutter.tld_domain}}'.format(env=env),  # noqa
