@@ -1,3 +1,5 @@
 PATH=/code/venv/bin:/code/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
 MAILTO=""
-{%if not cookiecutter.enable_cron%}#{%endif%}0 7 * * * {{cookiecutter.app_type}} /bin/bash -c "/code/venv/bin/python /code/src/manage.py execute_action --action=EVERY_DAY &> /logs/cron_action_every_day.log"
+
+{{'{{'}} (((.Env.crons_mysupercron | default "false" )| lower ) | eq  "true" ) | ternary "" "#" -}}
+0 7 5 * * django /bin/bash -c "/code/venv/bin/python /code/src/manage.py mysupercron &> /code/data/crons_mysupercron.log"

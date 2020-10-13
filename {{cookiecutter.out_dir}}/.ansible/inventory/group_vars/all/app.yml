@@ -22,6 +22,7 @@ cops_{{cookiecutter.app_type}}_docker_env_extra: |-
   RABBITMQ_DEFAULT_PASS={{'{{'}}cops_{{cookiecutter.app_type}}_rabbitmq_password}}{% endif %}
   {%- endif %}
   {% if 'post' in cookiecutter.db_mode %}POSTGRES_STARTUP_TIMEOUT={{'{{'}}cops_{{cookiecutter.app_type}}_postgres_startup_timeout}}{% endif %}
+  crons_mysupercron={{"{{"}}cops_django_crons_mysupercron}}
 cops_django_restarted_services: "{{"{{"}}cops_django_restarted_services_default{% if cookiecutter.cache_system %}.replace(
     'redis', '{{cookiecutter.cache_system}}'){%endif
     %}.replace(' django', ' django{% 
@@ -32,3 +33,4 @@ cops_django_http_protect_password: "rootroot"
 {% set jscomment = (not cookiecutter.with_bundled_front) and '#  ' or '' %}
 {{jscomment}}# cops_django_code_sync_theme_contents: "{{'{{'}}cops_django_code_sync_theme_contents_front}}"
 {{jscomment}}cops_django_code_sync_theme_contents: "{{'{{'}}cops_django_code_sync_theme_contents_webpack}}"
+cops_django_crons_mysupercron: false

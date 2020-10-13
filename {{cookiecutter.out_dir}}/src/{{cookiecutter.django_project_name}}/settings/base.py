@@ -446,6 +446,14 @@ def post_process_settings(globs=None):
         if 'DEPLOY_ENV' in _locals:
             _locals['RAVEN_CONFIG']['environment'] = _locals['DEPLOY_ENV']
     {%- endif %}
+    default_mail = (
+        '{env}-{{cookiecutter.lname}}@{{cookiecutter.tld_domain}}'.format(
+            env=env))
+    DEFAULT_FROM_EMAIL = _locals.setdefault('DEFAULT_FROM_EMAIL', default_mail)
+    SERVER_EMAIL = _locals.setdefault('SERVER_EMAIL', default_mail)
+    _locals.setdefault('ADMINS', [('root', SERVER_EMAIL)])
+    _locals.setdefault('EMAIL_HOST', 'localhost')
+    _locals.setdefault('DEFAULT_FROM_EMAIL', DEFAULT_FROM_EMAIL)
     globals().update(_locals)
     return _locals, filter_globals(), env
 
@@ -455,14 +463,6 @@ def set_prod_settings(globs):
     Additional post processing of settings only ran on hosted environments
     '''
     _locals, env = locals_settings_update(locals(), globs)
-    default_mail = (
-        '{env}-{{cookiecutter.lname}}@{{cookiecutter.tld_domain}}'.format(
-            env=env))
-    DEFAULT_FROM_EMAIL = _locals.setdefault('DEFAULT_FROM_EMAIL', default_mail)
-    SERVER_EMAIL = _locals.setdefault('SERVER_EMAIL', default_mail)
-    _locals.setdefault('ADMINS', [('root', SERVER_EMAIL)])
-    _locals.setdefault('EMAIL_HOST', 'localhost')
-    _locals.setdefault('DEFAULT_FROM_EMAIL', DEFAULT_FROM_EMAIL)
     ALLOWED_HOSTS = _locals.setdefault('ALLOWED_HOSTS', [])
     COPS_ALL_HOSTNAMES = _locals.setdefault(
         'COPS_ALL_HOSTNAMES', tuple())
