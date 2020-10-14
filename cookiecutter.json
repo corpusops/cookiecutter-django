@@ -104,5 +104,6 @@
     "node_version": "10.16.0",
     "node_image": "corpusops/node:{{'.'.join(cookiecutter.node_version.split('.')[:2])}}",
     "no_private": "",
+    "base_image": "corpusops/ubuntu-bare:focal",
     "db_out_port": "{% if 'post' in cookiecutter.db_mode or 'pg' in cookiecutter.db_mode%}5436{% elif cookiecutter.db_mode == 'mysql' %}3310{% endif %}"
 }

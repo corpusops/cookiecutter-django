@@ -409,20 +409,20 @@ reconfigure_prod_haproxy_and_fw:
 {% endif %}
 # Allow to immediatly trigger a deploy without waiting for the full pipeline to complete
 # eg: redeploying after only issuing a deploy code or configuration change.
-{{devhostdeploycomment}}manual_deploy_dev:
+{{devhostdeploycomment}}manual_deploy_dev: &manual_deploy_dev
 {{devhostdeploycomment}}  <<: [ *manual_job_tpl, *deploy_dev ]
 
 {% if cookiecutter.qa_host -%}
-manual_deploy_qa:
+manual_deploy_qa: &manual_deploy_qa
   <<: [ *manual_job_tpl, *deploy_qa ]
 
 {% endif -%}
 {%- if cookiecutter.staging_host -%}
-manual_deploy_staging:
+manual_deploy_staging: &manual_deploy_staging
   <<: [ *manual_job_tpl, *deploy_staging ]
 
 {% endif -%}
-manual_deploy_prod:
+manual_deploy_prod: &manual_deploy_prod
   <<: [ *manual_job_tpl, *deploy_prod ]
 
 # reset environments from others

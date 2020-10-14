@@ -9,7 +9,7 @@ x-images:
         VSCODE_VERSION: "${VSCODE_VERSION-}"
         WITH_PYCHARM: "${WITH_PYCHARM:-0}"
         PYCHARM_VERSION: "${PYCHARM_VERSION-}"
-        BASE: "${DJANGO_BASE_IMAGE:-corpusops/ubuntu-bare:bionic}"
+        BASE: "${DJANGO_BASE_IMAGE:-{{cookiecutter.base_image}}}"
 services:
   {%- if not cookiecutter.remove_cron %}
   cron: {<<: [ *{{cookiecutter.app_type}} ]}
