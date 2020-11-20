@@ -8,7 +8,7 @@
 {%- set _ = envbranchs.append(cookiecutter[i+'_branch']) %}
 {%- endif %}{%endfor %}
 {%- set masterenvstrs = (['master']+envbranchs)|join(', ') %}
-{%- set mastertagsenvstrs = (['master','tags']+envbranchs)|join(', ') %}
+{%- set mastertagsenvstrs = (['master','tags']+envbranchs)|join(', ') -%}
 # To setup the pipeline you need to configure:
 # those CICD Variables:
 # - CORPUSOPS_VAULT_PASSWORD if deploying with ansible
