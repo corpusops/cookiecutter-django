@@ -33,8 +33,18 @@ BUILD_CONTAINERS="$APP_CONTAINER{%-if not cookiecutter.remove_cron%} cron{%endif
 EDITOR=${EDITOR:-vim}
 DIST_FILES_FOLDERS=". src/*/settings"
 CONTROL_COMPOSE_FILES="${CONTROL_COMPOSE_FILES:-docker-compose.yml docker-compose-dev.yml}"
+export DOCKER_BUILDKIT="${DOCKER_BUILDKIT-1}"
+export COMPOSE_DOCKER_CLI_BUILD="${COMPOSE_DOCKER_CLI_BUILD-1}"
+export BUILDKIT_PROGRESS="${BUILDKIT_PROGRESS-plain}"
+export BUILDKIT_INLINE_CACHE="${BUILDKIT_INLINE_CACHE-1}"
 COMPOSE_COMMAND=${COMPOSE_COMMAND:-docker-compose}
 ENV_FILES="${ENV_FILES:-.env docker.env}"
+USE_TOX_DIRECT=${USE_TOX_DIRECT-1}
+NO_SITE_PACKAGES=${NO_SITE_PACKAGES-1}
+TOX_ARGS="${TOX_ARGS-}"
+if [[ -n $NO_SITE_PACKAGES ]];then
+    TOX_ARGS="$TOX_ARGS --sitepackages"
+fi
 
 join_by() { local IFS="$1"; shift; echo "$*"; }
 
@@ -251,7 +261,10 @@ do_fg() {
 do_build() {
     local bargs="$@" bp=""
     if [[ -n $BUILD_PARALLEL ]];then
-        bp="--parallel"
+        bp="${bp} --parallel"
+    fi
+    if [[ -n $BUILDKIT_INLINE_CACHE ]];then
+        bp="${bp} --build-arg BUILDKIT_INLINE_CACHE=\"${BUILDKIT_INLINE_CACHE}\""
     fi
     set -- vv $DCB build $bp
     if [[ -z "$bargs" ]];then
@@ -334,11 +347,17 @@ do_run_server() { do_runserver $@; }
 #  tests [$tests]: run tests
 do_test() {
     local bargs=${@:-tests}
+    TOX_ARGS="$TOX_ARGS -c ../tox.ini -e $bargs"
     stop_containers
-    set -- vv do_shell \
-        "if [ -e ../.tox ];then chown {{cookiecutter.app_type}} ../.tox;fi
-        && gosu {{cookiecutter.app_type}} $VENV/bin/tox -c ../tox.ini -e $bargs"
-    "$@"
+    cat | vv do_dcompose run -e TOX_ARGS="$TOX_ARGS" --rm {{cookiecutter.app_type}} bash -e <<EOF
+if [ -e ../.tox ];then chown django ../.tox;fi
+gosu django bash -ec "
+. $VENV/bin/activate
+if [ \"x$USE_TOX_DIRECT\" = \"x1\" ] && ( tox --help | grep -q -- --direct );then
+   TOX_ARGS=\"--direct-yolo \$TOX_ARGS\"
+fi
+tox \\\$TOX_ARGS"
+EOF
 }
 
 do_tests() { do_test $@; }
