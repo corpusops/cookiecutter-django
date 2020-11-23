@@ -1,7 +1,7 @@
 # development
 coverage
-{% if cookiecutter.with_toolbar %}django-debug-toolbar>=1.9,<1.10{% endif %}
-{% if cookiecutter.with_djextensions %}django-extensions>=2.0,<2.1{% endif %}
+{% if cookiecutter.with_toolbar %}django-debug-toolbar>=3.0,<4.0{% endif %}
+{% if cookiecutter.with_djextensions %}django-extensions>=3.0,<4.0{% endif %}
 eradicate
 isort
 pdb_clone
