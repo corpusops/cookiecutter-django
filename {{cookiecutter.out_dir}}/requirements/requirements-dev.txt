@@ -8,5 +8,6 @@ pdb_clone
 pylama
 tblib
 tox
+tox-direct
 xlrd
 remote-pdb
