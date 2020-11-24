@@ -1,31 +1,48 @@
-apt-utils
-software-properties-common
-sudo
+# for teleport, do not remove
+openssh-client
+rsync
+# runtime dependencies
 {%- if cookiecutter.py_ver.startswith('3') %}
 python3
-python3-dev
-python3-venv
 {%- else %}
 python
-python-dev
-python-venv
 {% endif %}
 python{{cookiecutter.py_ver}}
-python{{cookiecutter.py_ver}}-dev
-python{{cookiecutter.py_ver}}-venv
-less
-nano
-wget
-curl
-gpg
-git
-build-essential
-ca-certificates
-gettext
+python{{cookiecutter.py_ver}}-distutils
+python{{cookiecutter.py_ver}}-lib2to3
 binutils
-libproj-dev
+ca-certificates
+curl
 gdal-bin
 gettext
+git
+less
+libllvm10
+libsoup2.4-1
+llvm-10
+lsb-release
+postgresql-client
+sudo
 tzdata
-{% if 'post' in cookiecutter.db_mode %}postgresql-server-dev-all
-postgresql-client{% endif %}
+wget
+{% if 'post' in cookiecutter.db_mode %}postgresql-client{% endif %}
+# dev dependencies (after this line, all packages will be removed after build)
+apt-utils
+build-essential
+gpg
+libgcc-9-dev
+libproj-dev
+libstdc++-9-dev
+llvm-10-dev
+postgresql-server-dev-all
+{% if 'post' in cookiecutter.db_mode %}postgresql-server-dev-all{% endif %}
+python{{cookiecutter.py_ver}}-dev
+python{{cookiecutter.py_ver}}-venv
+{%- if cookiecutter.py_ver.startswith('3') %}
+python3-dev
+python3-virtualenv
+{%- else %}
+python-dev
+python-virtualenv
+{% endif %}
+software-properties-common
