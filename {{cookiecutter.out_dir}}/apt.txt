@@ -10,6 +10,7 @@ python
 python{{cookiecutter.py_ver}}
 python{{cookiecutter.py_ver}}-distutils
 python{{cookiecutter.py_ver}}-lib2to3
+libpython{{cookiecutter.py_ver}}
 binutils
 ca-certificates
 curl
@@ -25,7 +26,6 @@ postgresql-client
 sudo
 tzdata
 wget
-{% if 'post' in cookiecutter.db_mode %}postgresql-client{% endif %}
 # dev dependencies (after this line, all packages will be removed after build)
 apt-utils
 build-essential
@@ -34,7 +34,7 @@ libgcc-9-dev
 libproj-dev
 libstdc++-9-dev
 llvm-10-dev
-postgresql-server-dev-all
+{% if 'post' in cookiecutter.db_mode %}postgresql-client{% endif %}
 {% if 'post' in cookiecutter.db_mode %}postgresql-server-dev-all{% endif %}
 python{{cookiecutter.py_ver}}-dev
 python{{cookiecutter.py_ver}}-venv

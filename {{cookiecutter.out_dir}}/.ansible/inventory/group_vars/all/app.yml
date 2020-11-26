@@ -23,14 +23,77 @@ cops_{{cookiecutter.app_type}}_docker_env_extra: |-
   {%- endif %}
   {% if 'post' in cookiecutter.db_mode %}POSTGRES_STARTUP_TIMEOUT={{'{{'}}cops_{{cookiecutter.app_type}}_postgres_startup_timeout}}{% endif %}
   crons_mysupercron={{"{{"}}cops_django_crons_mysupercron}}
+cops_{{cookiecutter.app_type}}_dotenv_extra: |-
+  #
+{% if cookiecutter.with_ftp %}
+  DJANGO__FTP_PUBLICHOST={{'{{'}}cops_django_ftp_ip}}
+  DJANGO__FTP_INTERNAL_PUBLICHOST={{'{{'}}cops_django_ftp_internal_publichost}}
+  DJANGO__FTP_LISTEN={{'{{'}}cops_django_ftp_listen}}
+  DJANGO__FTP_PASSWORD={{'{{'}}cops_django_ftp_password}}
+  DJANGO__FTP_PORT_RANGE={{'{{'}}cops_django_ftp_port_range.replace(' ', ':')}}
+  DJANGO__FTP_ROOT={{'{{'}}cops_django_ftp_root}}
+  DJANGO__FTP_USER={{'{{'}}cops_django_ftp_user}}
+  DJANGO__USER_UID={{'{{'}}cops_django_user_uid}}
+{% endif %}
 cops_django_restarted_services: "{{"{{"}}cops_django_restarted_services_default{% if cookiecutter.cache_system %}.replace(
     'redis', '{{cookiecutter.cache_system}}'){%endif
-    %}.replace(' django', ' django{% 
+    %}.replace(' django', ' django{%
     if cookiecutter.with_celery%} celery-broker celery-beat celery-worker{%endif
-    %}{% if 'post' in cookiecutter.db_mode%} setup-postgres{%endif%}')}}"
+    %}{% if 'post' in cookiecutter.db_mode%} setup-postgres{%endif
+    %}{% if cookiecutter.with_ftp %} ftp ftp-int{%endif%}')}}"
 cops_django_http_protect_user: "root"
 cops_django_http_protect_password: "rootroot"
 {% set jscomment = (not cookiecutter.with_bundled_front) and '#  ' or '' %}
 {{jscomment}}# cops_django_code_sync_theme_contents: "{{'{{'}}cops_django_code_sync_theme_contents_front}}"
 {{jscomment}}cops_django_code_sync_theme_contents: "{{'{{'}}cops_django_code_sync_theme_contents_webpack}}"
 cops_django_crons_mysupercron: false
+{% if cookiecutter.with_ftp %}
+cops_django_ftp_host: "{{'{{'}}cops_django_ftp_int_host}}"
+cops_django_ftp_int_host: ftp-int
+cops_django_ftp_port: {{cookiecutter.ftp_port}}
+cops_django_ftp_int_port: {{cookiecutter.ftp_port}}
+cops_django_ftp_ip: "{{'{{'}}corpusops_network_live_ext_ip|default('')}}"
+cops_django_ftp_internal_publichost: ""
+cops_django_ftp_port_range_start: {{cookiecutter.ftp_port_range_start}}
+cops_django_ftp_port_range_len: {{cookiecutter.ftp_port_len}}
+cops_django_ftp_port_range_end: "{{'{{'}}(cops_django_ftp_port_range_start|int) + (cops_django_ftp_port_range_len|int)}}"
+cops_django_ftp_port_range: "{{'{{'}}cops_django_ftp_port_range_start}} {{'{{'}}cops_django_ftp_port_range_end}}"
+cops_django_ftp_listen: 0.0.0.0
+cops_django_ftp_user: django
+cops_django_has_ftp: true
+cops_django_ftp_root: {{cookiecutter.ftp_root}}
+{% endif%}
+cops_django_user_uid: 1000
+cops_django_generic_db_mode: {{cookiecutter.generic_db_mode}}
+cops_django_db_mode: {{cookiecutter.db_mode}}
+
+# teleport adds example
+# {{'{{'}}cookiecutter.lname}}_paths_makinastates:
+#   datadir1: "/srv/projects/{{'{{'}}teleport_ms_project}}/data/datadir1"
+# {{'{{'}}cookiecutter.lname}}_paths_default:
+#   datadir1: "{{'{{'}}teleport_wd}}/data/datadir1"
+# {{'{{'}}cookiecutter.lname}}_paths: "{{'{{'}}lookup('vars', '{{'{{'}}cookiecutter.lname}}_paths_'+_teleport_mode)}}"
+# {{'{{'}}cookiecutter.lname}}_sync_files_extra:
+#   datajson:
+#     origin_path: "{{'{{'}}{{'{{'}}cookiecutter.lname}}_paths.datajson}}"
+#     container: "{{'{{'}}teleport_app_container}}"
+#     container_path: /code/public/static/
+#     rsync_args: "-azv"
+#   datadir1:
+#     container: "{{'{{'}}teleport_app_container}}"
+#     origin_path: "{{'{{'}}{{'{{'}}cookiecutter.lname}}_paths.datadir1}}/"
+#     container_path: /code/data/datadir1/
+#
+# teleport_sync_files: |-
+#   {{'{%'}}- set ret = {} %}
+#   {{'{%'}}- set _ = ret.update(teleport_sync_files_default) %}
+#   {{'{%'}}- set _ = ret.update({{'{{'}}cookiecutter.lname}}_sync_files_extra) %}
+#   {{'{{'}}- ret|to_json}}
+# teleport_post_reset_script: |-
+#   {{'{{'}}teleport_post_reset_script_default}}
+#   cat|COMPOSE_INTERACTIVE_NO_CLI= {{'{{'}}teleport_dc}} \
+#   run -u django --no-deps --rm django sh -ex - <<EOF
+#   /code/sys/scripts/mysuperscript.sh
+#   EOF
+# teleport_ms_project: {{'{{'}}cookiecutter.lname}}
+

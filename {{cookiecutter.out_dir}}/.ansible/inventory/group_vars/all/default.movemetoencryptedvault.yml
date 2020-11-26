@@ -15,3 +15,6 @@ cops_{{cookiecutter.app_type}}_registries:
   password: "superpwd"
 # cops_{{cookiecutter.app_type}}_sentry_dsn: ""
 # cops_{{cookiecutter.app_type}}_mailcatcher_password: ""
+{% if cookiecutter.with_ftp %}
+cops_{{cookiecutter.app_type}}_ftp_password: secrettS6oU6sX5bI5wJ3y
+{% endif %}

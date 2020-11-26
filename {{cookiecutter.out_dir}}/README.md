@@ -399,3 +399,14 @@ In the other, launch one worker
 
 
 {% endif %}
+
+
+# Teleport (load one env from one another)
+init your vault (see [`docs/deploy.md`](./docs/README.md#docs#generate-vault-password-file))
+
+```sh
+CORPUSOPS_VAULT_PASSWORD="xxx" .ansible/scripts/setup_vaults.sh
+```
+
+## Load a production database from old prod (makinastates)
+

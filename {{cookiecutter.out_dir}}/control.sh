@@ -45,6 +45,7 @@ TOX_ARGS="${TOX_ARGS-}"
 if [[ -n $NO_SITE_PACKAGES ]];then
     TOX_ARGS="$TOX_ARGS --sitepackages"
 fi
+NO_DEVELOP=${NO_DEVELOP-}
 
 join_by() { local IFS="$1"; shift; echo "$*"; }
 
@@ -349,14 +350,19 @@ do_test() {
     local bargs=${@:-tests}
     TOX_ARGS="$TOX_ARGS -c ../tox.ini -e $bargs"
     stop_containers
-    cat | vv do_dcompose run -e TOX_ARGS="$TOX_ARGS" --rm {{cookiecutter.app_type}} bash -e <<EOF
+    cat | do_dcompose run -e VENV=$VENV -e USE_TOX_DIRECT=$USE_TOX_DIRECT -e NO_DEVELOP=$NO_DEVELOP -e TOX_ARGS="$TOX_ARGS" \
+    --rm django bash -e <<'EOF'
 if [ -e ../.tox ];then chown django ../.tox;fi
-gosu django bash -ec "
+gosu django bash -ec '
 . $VENV/bin/activate
-if [ \"x$USE_TOX_DIRECT\" = \"x1\" ] && ( tox --help | grep -q -- --direct );then
-   TOX_ARGS=\"--direct-yolo \$TOX_ARGS\"
+TOX_ARGS=${TOX_ARGS-}
+if [ "x$USE_TOX_DIRECT" = "x1" ] && ( tox --help | grep -q -- --direct );then
+   TOX_ARGS="--direct-yolo $TOX_ARGS"
 fi
-tox \\\$TOX_ARGS"
+if [ -e /code/setup.py ] && [ -z "$NO_DEVELOP" ];then
+    TOX_ARGS="--develop $TOX_ARGS"
+fi
+tox $TOX_ARGS'
 EOF
 }
 

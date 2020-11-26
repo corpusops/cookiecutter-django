@@ -37,8 +37,7 @@ x-images:
 {%- endif%}
       - ./tox.ini:/code/tox.ini
       - ./.tox:/code/.tox
-      - ./requirements.txt:/code/requirements.txt
-      - ./requirements-dev.txt:/code/requirements-dev.txt
+      - ./requirements:/code/requirements
 services:
   {{nginxc}}nginx:
 {% if nginxc -%}
@@ -60,7 +59,7 @@ services:
   db:
     ports:
     - "${DJANGO__DB_OUT_LISTEN:-0.0.0.0}:${DJANGO__DB_OUT_PORT:-{{cookiecutter.db_out_port}}}:{{cookiecutter.db_out_port}}"
-{% if cookiecutter.with_celery %}
+{% if cookiecutter.with_celery -%}
   celery-beat: &celery
     <<: [ *django ]
     environment:
@@ -71,7 +70,7 @@ services:
     environment:
       <<: [ *django_env ]
       IMAGE_MODE: celery_worker
-{% endif -%}
+{%- endif %}
   mailcatcher:
     ports:
     - "${DJANGO__MAILCATCHER_LISTEN:-0.0.0.0}:${DJANGO__MAILCATCHER:-8025}:8025"

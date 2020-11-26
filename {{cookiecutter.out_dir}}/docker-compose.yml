@@ -26,6 +26,7 @@ x-images:
       && dockerize -wait http://setup-{{db_tag}} -timeout $${POSTGRES_STARTUP_TIMEOUT}
       && /init.sh
     volumes:
+      - ./sys/scripts:/code/sys/scripts
       {%- if not cookiecutter.remove_cron %}
       - ./sys/etc/cron.d:/code/sys/etc/cron.d/
       {%- endif %}
@@ -34,7 +35,49 @@ x-images:
       - statics:/code/public/static
       - logs:/logs/
       - ./data:/code/data
+{% if cookiecutter.with_ftp %}      - "ftp-root:${DJANGO__FTP_ROOT:-/ftp}"{% endif %}
+{% if cookiecutter.with_ftp %}
+  ftp: &ftp
+    <<: [ *env ]
+    image: corpusops/pureftpd
+    environment: &ftp_env
+      FTP_USER_HOME: "${DJANGO__FTP_ROOT:-/ftp}"
+      FTP_USER_UID: "${DJANGO__USER_UID:-1000}"
+      FTP_USER_PASS: "${DJANGO__FTP_PASSWORD:-secret1324510}"
+      FTP_USER_NAME: "${DJANGO__FTP_USER:-ftp}"
+      ADDED_FLAGS: "-O w3c:/var/log/pure-ftpd/transfer.log"
+      FTP_MAX_CONNECTIONS: 50
+      FTP_MAX_CLIENTS: 50
+{% endif %}
 services:
+{% if cookiecutter.with_ftp -%}
+# has only to be reachable from within the docker network (no passive mode !)
+  ftp-int:
+    <<: [ *ftp ]
+    environment:
+      <<: [ *ftp_env ]
+      PUBLICHOST: "${DJANGO__FTP_INTERNAL_PUBLICHOST-}"
+      NO_PASSIVE_MODE: "1"
+    volumes:
+    - "ftp-root:${DJANGO__FTP_ROOT:-/ftp}"
+    - ftp-pw:/etc/pure-ftpd/passwd
+    - ftp-ssl:/etc/ssl/private
+    - ftp-log-int:/var/log/pure-ftpd
+  ftp:
+    <<: [ *ftp ]
+    environment:
+      <<: [ *ftp_env ]
+      FTP_PASSIVE_PORTS: "${DJANGO__FTP_PORT_RANGE:-{{cookiecutter.ftp_port_range}}}"
+      PUBLICHOST: "${DJANGO__FTP_PUBLICHOST-}"
+    ports:
+    - "${DJANGO__FTP_LISTEN:-0.0.0.0}:${DJANGO__FTP_PORT:-21}:21"
+    - "${DJANGO__FTP_LISTEN:-0.0.0.0}:${DJANGO__FTP_PORT_RANGE:-{{cookiecutter.ftp_port_range}}}:${DJANGO__FTP_PORT_RANGE:-{{cookiecutter.ftp_port_range}}}"
+    volumes:
+    - "ftp-root:${DJANGO__FTP_ROOT:-/ftp}"
+    - ftp-pw:/etc/pure-ftpd/passwd
+    - ftp-ssl:/etc/ssl/private
+    - ftp-log:/var/log/pure-ftpd
+{%- endif %}
   mailcatcher:
     <<: [ *env ]
     image: corpusops/mailhog
@@ -149,7 +192,7 @@ services:
       if [ -e "$$flag" ];then rm -f "$$flag";fi
       echo "Try connection to pgsql: $$POSTGRES_DB & wait for db init" >&2 \
       && ( while true;do if ( \
-        echo "{% if 'gis' in cookiecutter.db_mode%}select 1 from spatial_ref_sys limit 1;select postgis_version();{%else%}select 1{%endif%}"\
+        echo "{% if cookiecutter.with_postgist_test and 'gis' in cookiecutter.db_mode%}select 1 from spatial_ref_sys limit 1;select postgis_version();{%else%}select 1{%endif%}"\
         | psql -v ON_ERROR_STOP=1 \
           "postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@$$POSTGRES_HOST:$$POSTGRES_PORT/$$POSTGRES_DB"\
       );then touch $$flag && break;fi;done )&
@@ -168,4 +211,10 @@ volumes:
   logs:
   mails:
   {%if cookiecutter.with_celery%}celery{{cookiecutter.celery_broker}}:{%endif%}
-
+{% if cookiecutter.with_ftp %}
+  ftp-root:
+  ftp-log:
+  ftp-log-int:
+  ftp-pw:
+  ftp-ssl:
+{% endif -%}

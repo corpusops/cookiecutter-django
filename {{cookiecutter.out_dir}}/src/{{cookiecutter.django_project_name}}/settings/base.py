@@ -19,7 +19,10 @@ from datetime import timedelta
 from importlib import import_module
 
 import django
-import six
+try:
+    from django.utils import six
+except ImportError:
+    import six
 from django.utils.log import DEFAULT_LOGGING
 
 try:
@@ -242,7 +245,6 @@ CELERY_RESULT_BACKEND = 'django-db'
 CELERY_TASK_SERIALIZER = 'json'
 {% endif %}
 
-DEBUG = False
 CORS_ORIGIN_ALLOW_ALL = False
 
 ###############################################################################

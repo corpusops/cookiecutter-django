@@ -48,7 +48,7 @@ docs/_build/
 # corpusops & ansible
 *.retry
 /.ansible/scripts/ansible_deploy_env
-/local/
+/local/*
 !/local/regen.sh
 
 {% if cookiecutter.with_celery %}
@@ -56,8 +56,6 @@ docs/_build/
 /src/celerybeat-schedule.db
 /src/celerybeat.pid
 {% endif %}
-
-
 # misc
 /data
 /.sass-cache
@@ -69,6 +67,7 @@ testem.log
 yarn-error.log
 /typings
 *~
+/src/project/static/dist/
 
 # e2e
 /e2e/*.js
