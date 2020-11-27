@@ -125,6 +125,7 @@ services:
       - statics:/code/public/static/
       - logs:/logs/
       - nginx-certs:/certs
+      - nginx-htpasswd:/etc/htpasswd
       - ./data:/code/data
       # retrocompat
       - mediafiles:/public/media/:ro
@@ -135,8 +136,10 @@ services:
       - |-
         export DJANGO__HTTP_PROTECT_USER=$${DJANGO__HTTP_PROTECT_USER:-root}
         export DJANGO__HTTP_PROTECT_PASSWORD=$${DJANGO__HTTP_PROTECT_PASSWORD-}
-        touch /etc/htpasswd-protect
-        chmod 644 /etc/htpasswd-protect
+        : retrocompat
+        for i in $$(find /etc/htpasswd -type f -maxdepth 1);do ln -sfv $$i /etc/htpasswd-$$(basename $$i);done
+        touch /etc/htpasswd/protect
+        chmod 644 /etc/htpasswd/protect
         if [ "x$$DJANGO__HTTP_PROTECT_PASSWORD" != "x" ];then
           echo "/ htpasswd:">&2
           echo "$$DJANGO__HTTP_PROTECT_PASSWORD"\
@@ -203,6 +206,7 @@ services:
 volumes:
   postgresql:
 {% if cookiecutter.cache_system in ['redis']%}  {{cookiecutter.cache_system}}:{%endif%}
+  nginx-htpasswd:
   nginx-certs:
   mediafiles:
   statics:
