@@ -56,6 +56,7 @@ USE_X_FORWARDED_HOST = {% if cookiecutter.settings_use_x_forwarded_host%}True{%e
 # Application definition
 
 INSTALLED_APPS = (
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -70,6 +71,7 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE = (
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

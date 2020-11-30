@@ -20,6 +20,7 @@ INSTALLED_APPS += tuple([  # noqa
 ])
 SECRET_KEY = os.environ.get('SECRET_KEY', 'secretkey-superhot-12345678')
 ALLOWED_HOSTS = ['*']
+CORS_ORIGIN_ALLOW_ALL = True
 # INTERNAL_IPS = ('127.0.0.1',)  # Used by app debug_toolbar
 DEBUG = True
 
