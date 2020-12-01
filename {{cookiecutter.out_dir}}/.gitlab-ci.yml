@@ -551,7 +551,7 @@ build_images: &build_images
 {{testsc}}  variables:
 {{testsc}}    <<: [ *test_vars_tpl ]
 {{testsc}}    STATUS_FLAG: ${TESTS_STATUS_FLAG}
-{{testsc}}  coverage: /TOTAL.+ ([0-9]{1,3}%)/
+{{testsc}}  coverage: /TOTAL.+ ([0-9.]+%)/
 {{testsc}}  script:
 {{testsc}}  - *definefuncs
 {{testsc}}  - *launch_test_stack
