@@ -30,7 +30,7 @@ cops_{{cookiecutter.app_type}}_dotenv_extra: |-
   DJANGO__FTP_INTERNAL_PUBLICHOST={{'{{'}}cops_django_ftp_internal_publichost}}
   DJANGO__FTP_LISTEN={{'{{'}}cops_django_ftp_listen}}
   DJANGO__FTP_PASSWORD={{'{{'}}cops_django_ftp_password}}
-  DJANGO__FTP_PORT_RANGE={{'{{'}}cops_django_ftp_port_range.replace(' ', ':')}}
+  DJANGO__FTP_PORT_RANGE={{'{{'}}cops_django_ftp_port_range.replace(' ', '-')}}
   DJANGO__FTP_ROOT={{'{{'}}cops_django_ftp_root}}
   DJANGO__FTP_USER={{'{{'}}cops_django_ftp_user}}
   DJANGO__USER_UID={{'{{'}}cops_django_user_uid}}
