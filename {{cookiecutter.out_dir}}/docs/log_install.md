@@ -135,11 +135,11 @@
     # [[runners]]
     # builds_dir = "/srv/nobackup/gitlabrunner/builds"
     # cache_dir = "/cache"
-    # pre_clone_script = "umask 0022"
+    # pre_clone@sa_script = "umask 0022"
     # [runners.docker]
     # privileged: true
     # disable_cache: false
-    # volumes = ["/cache:/cache", "/run/docker.sock:/host-docker-socket/docker.sock"]
+    # volumes = ["/cache:/cache", "/srv/nobackup/gitlabrunner/builds:/srv/nobackup/gitlabrunner/builds", "/run/docker.sock:/host-docker-socket/docker.sock"]
     mkdir /srv/nobackup/gitlabrunner/builds /cache -p
     service gitlab-runner restart
     ```
