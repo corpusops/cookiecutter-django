@@ -71,7 +71,7 @@ services:
       PUBLICHOST: "${DJANGO__FTP_PUBLICHOST-}"
     ports:
     - "${DJANGO__FTP_LISTEN:-0.0.0.0}:${DJANGO__FTP_PORT:-21}:21"
-    - "${DJANGO__FTP_LISTEN:-0.0.0.0}:${DJANGO__FTP_PORT_RANGE:-{{cookiecutter.ftp_port_range}}}:${DJANGO__FTP_PORT_RANGE:-{{cookiecutter.ftp_port_range}}}"
+    - "${DJANGO__FTP_LISTEN:-0.0.0.0}:${DJANGO__FTP_PORT_RANGE:-{{cookiecutter.ftp_port_range.replace(':', '-')}}}:${DJANGO__FTP_PORT_RANGE:-{{cookiecutter.ftp_port_range.replace(':', '-')}}}"
     volumes:
     - "ftp-root:${DJANGO__FTP_ROOT:-/ftp}"
     - ftp-pw:/etc/pure-ftpd/passwd
