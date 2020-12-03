@@ -57,6 +57,10 @@ services:
     ports:
     - "${DJANGO__API_LISTEN:-0.0.0.0}:${DJANGO__API_PORT:-8000}:8000"
     - "${DJANGO__VSCODE_LISTEN:-0.0.0.0}:${DJANGO__VSCODE_PORT:-5678}:5678"
+  cron:
+    <<: [ *django ]
+    environment:
+      <<: [ *django_env ]
   db:
     ports:
     - "${DJANGO__DB_OUT_LISTEN:-0.0.0.0}:${DJANGO__DB_OUT_PORT:-{{cookiecutter.db_out_port}}}:5432"

@@ -103,7 +103,7 @@ variables:
   AFTER_STATUS_TIMEOUT: "1800"
   PRELOAD_BUILDCACHE_IMAGES: ${BUILDCACHE_REF_DOCKER_IMAGE}-nosquash $BUILDCACHE_CURRENT_DOCKER_IMAGE $BUILDCACHE_REF_DOCKER_IMAGE $BUILDCACHE_LATEST_DOCKER_IMAGE
   PRELOAD_RELEASED_IMAGES: $REF_DOCKER_IMAGE $LATEST_DOCKER_IMAGE
-  TAGGUABLE_IMAGE_BRANCH: "^(master|dev|qa|newstaging|prod)$"
+  TAGGUABLE_IMAGE_BRANCH: "^(master|dev|qa|staging|prod)$"
   # To speed up all builds we may cache in Controls which branch is used to generate image cache tarball
   CACHE_DAYS: "7"
   # {{cookiecutter.lname}} settings
@@ -707,7 +707,7 @@ deploy_{{i}}: &deploy_{{i}}
   variables: &deploy_{{i}}_vars
     <<: [ *deploy_vars_tpl ]
     A_ENV_NAME: {{i}}
-  when: {{ i in ['dev'] and 'always' or 'manual' }}
+  when: {{ i in ['dev'] and 'on_success' or 'manual' }}
   environment:
     name: {{i}}
     url: https://{{cookiecutter[i+'_domain']}}
