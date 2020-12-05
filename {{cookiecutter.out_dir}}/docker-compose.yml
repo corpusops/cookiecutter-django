@@ -9,6 +9,9 @@ x-images:
     image: "${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE}:${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE_VERSION}-dev"
     environment: &django_env
       DJANGO_WSGI: "${DJANGO_WSGI:-{{cookiecutter.django_project_name}}.wsgi}"
+      EXTRA_USER_DIRS: ""
+      GUNICORN_CLASS: "${GUNICORN_CLASS:-{{cookiecutter.gunicorn_class}}}"
+      SECRET_KEY: "${SECRET_KEY:-ChangeThatSuperSecret}"
 {% if cookiecutter.with_celery %}      DJANGO_CELERY: "${DJANGO_CELERY:-{{cookiecutter.django_project_name}}.celery:app}"
       DJANGO_CELERY_BROKER: "${DJANGO_CELERY_BROKER:-{{cookiecutter.celery_broker}}}"
       DJANGO_CELERY_HOST: "${DJANGO_CELERY_HOST:-celery-broker}"

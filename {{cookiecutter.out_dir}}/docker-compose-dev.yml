@@ -14,7 +14,7 @@ x-images:
        NO_STATICS: "1"
     volumes: &django_volumes
       {%-if cookiecutter.use_submodule_for_deploy_code %}
-      - ./{{cookiecutter.deploy_project_dir}}/sys/sudoer:/etc/sudoers.d/$APP_TYPE
+      - ./{{cookiecutter.deploy_project_dir}}/sys/sudoer:/etc/sudoers.d/${APP_TYPE:-django}
       - ./{{cookiecutter.deploy_project_dir}}/sys/init.sh:/code/sys/init.sh
       - ./{{cookiecutter.deploy_project_dir}}/sys/init.sh:/code/init/init.sh
       - ./{{cookiecutter.deploy_project_dir}}/sys/etc/supervisor.d:/code/sys/etc/supervisor.d
@@ -37,7 +37,7 @@ x-images:
 {%- endif%}
       - ./tox.ini:/code/tox.ini
       - ./.tox:/code/.tox
-      - ./local/medias:/code/public/medias
+      - ./local/medias:/code/public/media
       - ./requirements:/code/requirements
 services:
   {{nginxc}}nginx:
