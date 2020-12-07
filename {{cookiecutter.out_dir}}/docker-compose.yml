@@ -160,6 +160,17 @@ services:
       IMAGE_MODE: cron
     depends_on:
     - {{cookiecutter.app_type}}
+    volumes:
+    - ./sys/scripts:/code/sys/scripts
+    {%- if not cookiecutter.remove_cron %}
+    - ./sys/etc/cron.d:/code/sys/etc/cron.d/
+    {%- endif %}
+    - ./src/{{cookiecutter.django_settings.replace('.', '/')}}/instances:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/instances
+    - mediafiles:/code/public/media
+    - statics:/code/public/static
+    - logs:/logs/
+    - cronlogs:/var/log
+    - ./data:/code/data
   {%-endif%}
 {% if cookiecutter.with_celery %}  celery-broker:
     <<: [ *env ]
@@ -214,6 +225,7 @@ volumes:
     external: false
   logs:
   mails:
+  cronlogs:
   {%if cookiecutter.with_celery%}celery{{cookiecutter.celery_broker}}:{%endif%}
 {% if cookiecutter.with_ftp %}
   ftp-root:

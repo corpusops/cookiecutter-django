@@ -37,6 +37,7 @@ x-images:
 {%- endif%}
       - ./tox.ini:/code/tox.ini
       - ./.tox:/code/.tox
+      - ./local/medias:/code/public/medias
       - ./requirements:/code/requirements
 services:
   {{nginxc}}nginx:
@@ -58,7 +59,7 @@ services:
     - "${DJANGO__VSCODE_LISTEN:-0.0.0.0}:${DJANGO__VSCODE_PORT:-5678}:5678"
   db:
     ports:
-    - "${DJANGO__DB_OUT_LISTEN:-0.0.0.0}:${DJANGO__DB_OUT_PORT:-{{cookiecutter.db_out_port}}}:{{cookiecutter.db_out_port}}"
+    - "${DJANGO__DB_OUT_LISTEN:-0.0.0.0}:${DJANGO__DB_OUT_PORT:-{{cookiecutter.db_out_port}}}:5432"
 {% if cookiecutter.with_celery -%}
   celery-beat: &celery
     <<: [ *django ]

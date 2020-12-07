@@ -313,21 +313,21 @@ services: &services_tpl
   only: [{{mastertagsenvstrs}}]
   except: []
 
-cleanup_all_expired_build_artefacts_from_cache:
-  <<: [ *manual_job_tpl ]
-  before_script: []
-  script:
-  - &cleanup_all_expired_build_artefacts_from_cache \
-    todel=$(mktemp)
-    {% if cookiecutter.with_bundled_front%}&& find ${STATICS_DIRECTORY} -type f -mtime +$CACHE_DAYS>${todel} && while read f;do rm -fv "$f";done<${todel}{%endif%}
-
-cleanup_all_build_artefacts_from_cache:
-  <<: [ *manual_job_tpl ]
-  before_script: []
-  script:
-  - &cleanup_all_build_artefacts_from_cache \
-    todel=$(mktemp)
-    {% if cookiecutter.with_bundled_front%}&& find ${STATICS_DIRECTORY} -type f>${todel} && while read f;do rm -fv "$f";done<${todel}{% endif%}
+{{jscomment}}cleanup_all_expired_build_artefacts_from_cache:
+{{jscomment}}  <<: [ *manual_job_tpl ]
+{{jscomment}}  before_script: []
+{{jscomment}}  script:
+{{jscomment}}  - &cleanup_all_expired_build_artefacts_from_cache \
+{{jscomment}}    todel=$(mktemp)
+{{jscomment}}    && find ${STATICS_DIRECTORY} -type f -mtime +$CACHE_DAYS>${todel} && while read f;do rm -fv "$f";done<${todel}
+{{jscomment}}
+{{jscomment}}cleanup_all_build_artefacts_from_cache:
+{{jscomment}}  <<: [ *manual_job_tpl ]
+{{jscomment}}  before_script: []
+{{jscomment}}  script:
+{{jscomment}}  - &cleanup_all_build_artefacts_from_cache \
+{{jscomment}}    todel=$(mktemp)
+{{jscomment}}    && find ${STATICS_DIRECTORY} -type f>${todel} && while read f;do rm -fv "$f";done<${todel}
 
 cleanup_all_project_cache:
   <<: [ *manual_job_tpl ]
@@ -430,7 +430,7 @@ build_images: &build_images
     UPGRADE_DOCKER: "1"
     STATICS_LOAD: "1"
     STATUS_FLAG: ${BUILD_STATUS_FLAG}
-    BEFORE_STATUS_FLAGS: ${SERVICES_TOWER_FLAG} ${JSBUILD_STATUS_FLAG}
+    BEFORE_STATUS_FLAGS: ${SERVICES_TOWER_FLAG}{%if cookiecutter.with_bundled_front%} ${JSBUILD_STATUS_FLAG}{%endif%}
   script:
   - *definefuncs
   - &build_step1 |-
@@ -577,10 +577,7 @@ build_images: &build_images
   # one for release on the tag branch and one for latest when master branch
   - &release_tags |-
     export f=${CI_PROJECT_DIR}/releasedimgs
-    set -e;cat>${f}<<EOF
-    ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-dev ${REF_DOCKER_IMAGE}-dev
-    ${BUILDCACHE_CURRENT_DOCKER_IMAGE}     ${REF_DOCKER_IMAGE}
-    EOF
+    set -e
     if [ "x${CI_COMMIT_REF_NAME}" = "x${LATEST_BRANCH}" ];then cat>>${f}<<EOF
     ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-dev ${BUILDCACHE_LATEST_DOCKER_IMAGE}-dev
     ${BUILDCACHE_CURRENT_DOCKER_IMAGE}     ${BUILDCACHE_LATEST_DOCKER_IMAGE}
@@ -592,13 +589,13 @@ build_images: &build_images
     EOF
     fi
     #
-    if ( echo ${CI_COMMIT_REF_NAME} egrep -q "$TAGGUABLE_IMAGE_BRANCH" );then cat>>${f}<<EOF
-      ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-dev ${REF_DOCKER_IMAGE}-dev
-      ${BUILDCACHE_CURRENT_DOCKER_IMAGE}     ${REF_DOCKER_IMAGE}
+    if ( echo ${CI_COMMIT_REF_NAME} | egrep -q "$TAGGUABLE_IMAGE_BRANCH" );then cat>>${f}<<EOF
+    ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-dev ${REF_DOCKER_IMAGE}-dev
+    ${BUILDCACHE_CURRENT_DOCKER_IMAGE}     ${REF_DOCKER_IMAGE}
     EOF
       if [ "x${CI_COMMIT_REF_NAME}" = "x${LATEST_BRANCH}" ];then cat>>${f}<<EOF
-      ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-dev ${LATEST_DOCKER_IMAGE}-dev
-      ${BUILDCACHE_CURRENT_DOCKER_IMAGE}     ${LATEST_DOCKER_IMAGE}
+    ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-dev ${LATEST_DOCKER_IMAGE}-dev
+    ${BUILDCACHE_CURRENT_DOCKER_IMAGE}     ${LATEST_DOCKER_IMAGE}
     EOF
       fi
     fi
@@ -617,7 +614,7 @@ build_images: &build_images
     wait
     log "END push:"
     cat ${ret}
-    if !( egrep ^0 ${ret} );then exit 1;fi'
+    if !( egrep -q ^0 ${ret} );then exit 1;fi'
   - *writeokstatus
   - *waitafterjobs
   variables: &release_vars
@@ -733,7 +730,7 @@ manual_deploy_{{i}}: &manual_deploy_{{i}}
     REF_DOCKER_IMAGE: ${FORCED_DOCKER_IMAGE}
     LATEST_DOCKER_IMAGE: ${FORCED_DOCKER_IMAGE}
     A_ENV_NAME: ${CI_COMMIT_REF_NAME}
-    BEFORE_STATUS_FLAGS: ${JSBUILD_STATUS_FLAG}
+    BEFORE_STATUS_FLAGS: "{%if cookiecutter.with_bundled_front%}${JSBUILD_STATUS_FLAG}{% endif %}"
     BEFORE_ALLOW_FAILURE_STATUS_FLAGS: ""
     AFTER_STATUS_FLAGS: ""
     AFTER_ALLOW_FAILURE_STATUS_FLAGS: ""
@@ -742,7 +739,7 @@ manual_deploy_{{i}}: &manual_deploy_{{i}}
   script:
   - *waitbeforejobs
   - *definefuncs
-  - *warm_statics_tarball
+  {% if cookiecutter.with_bundled_front%}- *warm_statics_tarball{% else %}#{%endif%}
   - *build_step1
   - *release_step1
   - *release_tags

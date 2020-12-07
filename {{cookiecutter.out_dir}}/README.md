@@ -34,11 +34,11 @@ local/*/bin/cops_apply_role --become \
 
 ## Update corpusops
 You may have to update corpusops time to time with
-￼
+
 ```
 ./control.sh up_corpusops
 ```
-￼
+
 ## Configuration
 
 Use the wrapper to init configuration files from their ``.dist`` counterpart
@@ -132,7 +132,7 @@ After a last verification of the files, to run with docker, just type:
 ## Rebuild/Refresh local docker image in dev
 
 ```sh
-control.sh buildimages
+./control.sh buildimages
 ```
 
 ## Running heavy session
@@ -408,5 +408,16 @@ init your vault (see [`docs/deploy.md`](./docs/README.md#docs#generate-vault-pas
 CORPUSOPS_VAULT_PASSWORD="xxx" .ansible/scripts/setup_vaults.sh
 ```
 
-## Load a production database from old prod (makinastates)
+
+## Load a production database from old prod (standard modes)
+```sh
+.ansible/scripts/call_ansible.sh -vvvv .ansible/playbooks/teleport.yml \
+    -e "{teleport_mode: standard, teleport_destination: controller, teleport_origin: oldprod}"
+```
+
+## Load a production database from old prod (makinastates modes)
+```sh
+.ansible/scripts/call_ansible.sh -vvvv .ansible/playbooks/teleport.yml \
+    -e "{teleport_mode: makinastates, teleport_destination: controller, teleport_origin: oldprod}"
+```
 

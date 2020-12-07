@@ -127,5 +127,6 @@
     "gitlabci_envs": "{% set r = [] %}{% for i in ['dev', 'qa', 'staging', 'prod']%}{% if cookiecutter[i+'_host'] %}{% set _ = r.append(i)%}{%endif%}{%endfor%}{{r|join(' ')}}",
     "gitlabci_image": "{{cookiecutter.compose_image}}",
     "corpusops_image": "corpusops/ubuntu:20.04",
+    "with_pil": "y",
     "db_out_port": "{% if 'post' in cookiecutter.db_mode or 'pg' in cookiecutter.db_mode%}5436{% elif cookiecutter.db_mode == 'mysql' %}3310{% endif %}"
 }

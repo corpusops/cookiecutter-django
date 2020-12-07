@@ -26,6 +26,21 @@ postgresql-client
 sudo
 tzdata
 wget
+{% if cookiecutter.with_pil %}
+# pillow
+libtiff5
+libjpeg8
+libopenjp2-7
+zlib1g
+libfreetype6
+liblcms2-2
+libwebp6
+tcl8.6
+tk8.6
+libharfbuzz0b
+libfribidi0
+libxcb1
+{% endif %}
 # dev dependencies (after this line, all packages will be removed after build)
 apt-utils
 build-essential
@@ -46,3 +61,18 @@ python-dev
 python-virtualenv
 {% endif %}
 software-properties-common
+{% if cookiecutter.with_pil %}
+# pillow
+libtiff5-dev
+libjpeg8-dev
+libopenjp2-7-dev
+zlib1g-dev
+libfreetype6-dev
+liblcms2-dev
+libwebp-dev
+tcl8.6-dev
+tk8.6-dev
+libharfbuzz-dev
+libfribidi-dev
+libxcb1-dev
+{% endif %}
