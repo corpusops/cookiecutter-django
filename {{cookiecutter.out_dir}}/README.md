@@ -16,13 +16,16 @@ If your user is ``sudoer`` but is asking for you to input a password before elav
 you will need to add ``--ask-sudo-pass`` and maybe ``--become`` to any of the following ``ansible alike`` commands.
 
 
-## Install docker and docker compose
-
-if you are under debian/ubuntu/mint/centos you can do the following:
-
+## Install corpusops
+If you want to use ansible, or ansible vault (see passwords) or install docker via automated script
 ```sh
 .ansible/scripts/download_corpusops.sh
 .ansible/scripts/setup_corpusops.sh
+```
+
+## Install docker and docker compose
+if you are under debian/ubuntu/mint/centos you can do the following:
+```sh
 local/*/bin/cops_apply_role --become \
     local/*/*/corpusops.roles/services_virt_docker/role.yml
 ```
