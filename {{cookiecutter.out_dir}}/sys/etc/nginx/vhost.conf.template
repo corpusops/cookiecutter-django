@@ -194,6 +194,7 @@ server {
     }
 
     location ~ ^/mailcatcher/ {
+        auth_basic off;
         proxy_pass http://mailcatcher:8025;
     }
     {{'{{'}} end }}
