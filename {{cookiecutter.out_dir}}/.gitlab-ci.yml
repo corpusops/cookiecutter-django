@@ -498,13 +498,21 @@ build_images: &build_images
       || ( echo "BUILD ERROR(${cfgs}): ${service}" >> /docker_images_errors )
       vv docker inspect ${simg} >/dev/null 2>&1||die "failed building ${simg}"
       # squash images as docker-compose does not support it nativly
+      # and as it is a slow and consuming operation, only do it for releasable pipelines
+      if ! ( echo ${CI_COMMIT_REF_NAME} | egrep -q "$TAGGUABLE_IMAGE_BRANCH" );then
+        NO_SQUASH=${FORCE_NO_SQUASH-1};fi
       if [ "x${NO_SQUASH-}" = "x" ];then
-        # for now buildkit does not squash correctly, use legacy builder for that
+        # for now buildkit does not squash correctly, use legacy squasher for that
         # See https://github.com/moby/moby/issues/38903
-        if !(printf "FROM ${simg}\nRUN touch /.squashed\n" \
-              |(DOCKER_BUILDKIT="" vv docker build --squash -t ${cimg} -));then
-          exit 1
-        fi
+        apk add python3
+        if [ ! -e local/docker-squash-venv ];then mkdir -p local/docker-squash-venv;fi
+        if [ ! -e local/docker-squash-venv/virtualenv.pyz ];then
+          wget https://bootstrap.pypa.io/virtualenv/virtualenv.pyz -O local/docker-squash-venv/virtualenv.pyz;fi
+        if [ ! -e local/docker-squash-venv/bin ];then
+          python3 local/docker-squash-venv/virtualenv.pyz local/docker-squash-venv;fi
+        if [ ! -e local/docker-squash-venv/bin/docker-squash ];then
+          local/docker-squash-venv/bin/pip install https://github.com/goldmann/docker-squash/archive/master.zip;fi
+        if !(vv local/docker-squash-venv/bin/docker-squash -t ${cimg} ${simg});then exit 1;fi
       else
         vv docker tag ${simg} ${cimg}
       fi
@@ -525,6 +533,7 @@ build_images: &build_images
     fi
   - *writeokstatus
   - *waitafterjobs
+  cache: {paths: ["local/docker-squash-venv"]}
 
 .tests_tpl: &tests_tpl
   <<: [ *build_tpl ]
