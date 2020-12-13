@@ -147,6 +147,13 @@ before_script: &top_before_script
 - &createdirs for i in ${WORKSPACE} ${STATICS_DIRECTORY} ${PROJECT_CACHE_ROOT}/apt;do if [ ! -e "$i" ];then mkdir -pv "$i";fi;done
 - &definefuncs |-
    set -e;if [ ! -e "${WORKSPACE}/funcs" ];then cat>"${WORKSPACE}/funcs"<<'EOF'
+   to_squash() {
+    # as squashing is a slow and consuming operation, only do it for releasable pipelines
+    if ! ( echo ${CI_COMMIT_REF_NAME} | egrep -q "$TAGGUABLE_IMAGE_BRANCH" );then NO_SQUASH=1;fi;
+    # but let users have the FORCE_NO_SQUASH env var to force it (set it to everything but 1)
+    export NO_SQUASH=${FORCE_NO_SQUASH-${NO_SQUASH-}};
+    test "x${NO_SQUASH}" != "x1"
+   }
    log() { echo "$@">&2; }
    die() { log "$@";exit 1; }
    vv() { log "$@";"$@"; }
@@ -472,9 +479,9 @@ build_images: &build_images
           if [ "x${DC_LOCAL_CACHE_ONLY-}" = "x" ];then
             dcadd=1
           elif ( echo ${img}|grep -q "$BUILDCACHE_REGISTRY" );then
-            if [ "x${NO_SQUASH}" != "x" ]  && ( echo ${img} | grep -vq nosquash );then
+            if !(to_squash) && ( echo ${img} | grep -vq nosquash );then
               dcadd=1
-            elif [ "x${NO_SQUASH}" = "x" ] && ( echo ${img} | grep  -q nosquash );then
+            elif (to_squash) && ( echo ${img} | grep  -q nosquash );then
               dcadd=1
             else
               dcadd=
@@ -498,21 +505,12 @@ build_images: &build_images
       || ( echo "BUILD ERROR(${cfgs}): ${service}" >> /docker_images_errors )
       vv docker inspect ${simg} >/dev/null 2>&1||die "failed building ${simg}"
       # squash images as docker-compose does not support it nativly
-      # and as it is a slow and consuming operation, only do it for releasable pipelines
-      if ! ( echo ${CI_COMMIT_REF_NAME} | egrep -q "$TAGGUABLE_IMAGE_BRANCH" );then
-        NO_SQUASH=${FORCE_NO_SQUASH-1};fi
-      if [ "x${NO_SQUASH-}" = "x" ];then
-        # for now buildkit does not squash correctly, use legacy squasher for that
-        # See https://github.com/moby/moby/issues/38903
-        apk add python3
-        if [ ! -e local/docker-squash-venv ];then mkdir -p local/docker-squash-venv;fi
-        if [ ! -e local/docker-squash-venv/virtualenv.pyz ];then
-          wget https://bootstrap.pypa.io/virtualenv/virtualenv.pyz -O local/docker-squash-venv/virtualenv.pyz;fi
-        if [ ! -e local/docker-squash-venv/bin ];then
-          python3 local/docker-squash-venv/virtualenv.pyz local/docker-squash-venv;fi
-        if [ ! -e local/docker-squash-venv/bin/docker-squash ];then
-          local/docker-squash-venv/bin/pip install https://github.com/goldmann/docker-squash/archive/master.zip;fi
-        if !(vv local/docker-squash-venv/bin/docker-squash -t ${cimg} ${simg});then exit 1;fi
+      if (to_squash);then
+        # compute the docker-compose service build: args back to docker CLI build-args
+        buildargs=$($dc config\
+            |docker run -i --rm mikefarah/yq yq r - services.${service}.build.args -j\
+            |docker run -i --rm imega/jq ".|to_entries[]|\" --build-arg \(.key)=\(.value)\"" -j)
+        if !(vv docker build --squash -t ${cimg} . $buildargs);then exit 1;fi
       else
         vv docker tag ${simg} ${cimg}
       fi
@@ -527,13 +525,12 @@ build_images: &build_images
     set -e
     vv docker inspect ${BUILDCACHE_CURRENT_DOCKER_IMAGE}     >/dev/null
     vv docker inspect ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-dev >/dev/null
-    if [ "x${NO_SQUASH-}" = "x" ];then
+    if (to_squash);then
      vv docker inspect ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-nosquash     >/dev/null
      vv docker inspect ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-nosquash-dev >/dev/null
     fi
   - *writeokstatus
   - *waitafterjobs
-  cache: {paths: ["local/docker-squash-venv"]}
 
 .tests_tpl: &tests_tpl
   <<: [ *build_tpl ]
@@ -592,7 +589,7 @@ build_images: &build_images
     ${BUILDCACHE_CURRENT_DOCKER_IMAGE}     ${BUILDCACHE_LATEST_DOCKER_IMAGE}
     EOF
     fi
-    if [ "x${NO_SQUASH}" = "x" ];then cat>>${f}<<EOF
+    if (to_squash);then cat>>${f}<<EOF
     ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-nosquash-dev ${BUILDCACHE_REF_DOCKER_IMAGE}-nosquash-dev
     ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-nosquash     ${BUILDCACHE_REF_DOCKER_IMAGE}-nosquash
     EOF
