@@ -161,6 +161,7 @@ services:
     depends_on:
     - {{cookiecutter.app_type}}
     volumes:
+{% if cookiecutter.with_ftp %}     - "ftp-root:${DJANGO__FTP_ROOT:-/ftp}"{% endif %}
     - ./sys/scripts:/code/sys/scripts
     {%- if not cookiecutter.remove_cron %}
     - ./sys/etc/cron.d:/code/sys/etc/cron.d/
