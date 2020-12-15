@@ -6,8 +6,10 @@ eradicate
 isort
 pdb_clone
 pylama
+pycodestyle
 tblib
 tox
 tox-direct
+{% if cookiecutter.with_black %}black{% endif %}
 xlrd
 remote-pdb
