@@ -584,17 +584,16 @@ build_images: &build_images
   - &release_tags |-
     export f=${CI_PROJECT_DIR}/releasedimgs
     set -e
+    cat>${f}<<EOF
+    ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-nosquash-dev ${BUILDCACHE_REF_DOCKER_IMAGE}-nosquash-dev
+    ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-nosquash     ${BUILDCACHE_REF_DOCKER_IMAGE}-nosquash
+    EOF
+    #
     if [ "x${CI_COMMIT_REF_NAME}" = "x${LATEST_BRANCH}" ];then cat>>${f}<<EOF
     ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-dev ${BUILDCACHE_LATEST_DOCKER_IMAGE}-dev
     ${BUILDCACHE_CURRENT_DOCKER_IMAGE}     ${BUILDCACHE_LATEST_DOCKER_IMAGE}
     EOF
     fi
-    if (to_squash);then cat>>${f}<<EOF
-    ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-nosquash-dev ${BUILDCACHE_REF_DOCKER_IMAGE}-nosquash-dev
-    ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-nosquash     ${BUILDCACHE_REF_DOCKER_IMAGE}-nosquash
-    EOF
-    fi
-    #
     if ( echo ${CI_COMMIT_REF_NAME} | egrep -q "$TAGGUABLE_IMAGE_BRANCH" );then cat>>${f}<<EOF
     ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-dev ${REF_DOCKER_IMAGE}-dev
     ${BUILDCACHE_CURRENT_DOCKER_IMAGE}     ${REF_DOCKER_IMAGE}
