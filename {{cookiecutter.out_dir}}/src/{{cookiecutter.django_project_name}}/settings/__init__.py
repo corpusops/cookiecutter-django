@@ -2,6 +2,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from .base import *  # noqa
+from .prod import *  # noqa
 
 # vim:set et sts=4 ts=4 tw=80:
