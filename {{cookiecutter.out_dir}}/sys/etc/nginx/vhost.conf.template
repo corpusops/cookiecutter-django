@@ -83,7 +83,7 @@ server {
     server_name {{'{{'}} $v.server_name }}{{'{{'}}if $v.server_aliases }}{{'{{'}}$v.server_aliases}}{{'{{'}}end}};
     server_name_in_redirect {{'{{'}} $v.server_name_in_redirect }};
 
-    error_log  /logs/django-error.log  {{'{{'}}.log_level}};
+    error_log  /logs/django-error.log  {{'{{'}}$v.log_level}};
     access_log /logs/django-access.log custom_combined if=$method_loggable;
 
     {{'{{'}} define "vhost" }}
@@ -217,7 +217,7 @@ server {
     ssl_session_timeout 10m;
     ssl_prefer_server_ciphers on;
     ssl_dhparam {{'{{'}} $v.diffie }};
-    error_log  /logs/ssl-django-error.log  {{'{{'}}.log_level}};
+    error_log  /logs/ssl-django-error.log  {{'{{'}}$v.log_level}};
     access_log /logs/ssl-django-access.log custom_combined if=$method_loggable;
     {{'{{'}} template "vhost" $v }}
 }
