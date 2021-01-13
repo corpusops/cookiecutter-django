@@ -677,6 +677,7 @@ manual_teardown_images: &teardown_images_tpl
   tags: ["{{cookiecutter.runner_tag}}"]
   image: ${CORPUSPOS_IMAGE}
   stage: post_release
+  services: []
   when: manual
   # allow further jobs to be executed in //
   variables: &deploy_vars_tpl
