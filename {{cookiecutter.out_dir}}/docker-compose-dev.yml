@@ -37,7 +37,7 @@ x-images:
 {%- endif%}
       - ./tox.ini:/code/tox.ini
       - ./.tox:/code/.tox
-      - ./local/medias:/code/public/media
+      - ./local/media:/code/public/media
       - ./requirements:/code/requirements
 services:
   {{nginxc}}nginx:
