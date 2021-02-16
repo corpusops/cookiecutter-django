@@ -10,6 +10,11 @@ virtualenv --python=python3 ~/tools/cookiecutter
 ~/tools/cookiecutter/bin/pip install cookiecutter
 ```
 
+### For MacOS users
+
+Install gnu-sed with `brew install gsed` and use it as default with `export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"` for the focllowing commands.
+
+
 ## Create back project
 
 - create on gitlab your project
