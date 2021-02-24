@@ -14,9 +14,9 @@ cops_{{cookiecutter.app_type}}_postgres_startup_timeout: 45s
 cops_{{cookiecutter.app_type}}_rabbitmq_user: rabbit
 cops_{{cookiecutter.app_type}}_rabbitmq_password: rabbitpw
 {%- endif%}
-cops_{{cookiecutter.app_type}}_docker_env_extra: |-
-  crons_mysupercron={{"{{"}}cops_django_crons_mysupercron}}
+cops_{{cookiecutter.app_type}}_docker_env_extra: ""
 cops_{{cookiecutter.app_type}}_dotenv_extra: |-
+  crons_mysupercron={{"{{"}}cops_django_crons_mysupercron}}
   # db
   {% if 'post' in cookiecutter.db_mode %}POSTGRES_STARTUP_TIMEOUT={{'{{'}}cops_{{cookiecutter.app_type}}_postgres_startup_timeout}}{% endif %}
   #
@@ -67,26 +67,26 @@ cops_django_generic_db_mode: {{cookiecutter.generic_db_mode}}
 cops_django_db_mode: {{cookiecutter.db_mode}}
 
 # teleport adds example
-# {{'{{'}}cookiecutter.lname}}_paths_makinastates:
+# {{cookiecutter.lname}}_paths_makinastates:
 #   datadir1: "/srv/projects/{{'{{'}}teleport_ms_project}}/data/datadir1"
-# {{'{{'}}cookiecutter.lname}}_paths_default:
+# {{cookiecutter.lname}}_paths_default:
 #   datadir1: "{{'{{'}}teleport_wd}}/data/datadir1"
-# {{'{{'}}cookiecutter.lname}}_paths: "{{'{{'}}lookup('vars', '{{'{{'}}cookiecutter.lname}}_paths_'+_teleport_mode)}}"
-# {{'{{'}}cookiecutter.lname}}_sync_files_extra:
+# {{cookiecutter.lname}}_paths: "{{'{{'}}lookup('vars', '{{cookiecutter.lname}}_paths_'+_teleport_mode)}}"
+# {{cookiecutter.lname}}_sync_files_extra:
 #   datajson:
-#     origin_path: "{{'{{'}}{{'{{'}}cookiecutter.lname}}_paths.datajson}}"
+#     origin_path: "{{'{{'}}{{cookiecutter.lname}}_paths.datajson}}"
 #     container: "{{'{{'}}teleport_app_container}}"
 #     container_path: /code/public/static/
 #     rsync_args: "-azv"
 #   datadir1:
 #     container: "{{'{{'}}teleport_app_container}}"
-#     origin_path: "{{'{{'}}{{'{{'}}cookiecutter.lname}}_paths.datadir1}}/"
+#     origin_path: "{{'{{'}}{{cookiecutter.lname}}_paths.datadir1}}/"
 #     container_path: /code/data/datadir1/
 #
 # teleport_sync_files: |-
 #   {{'{%'}}- set ret = {} %}
 #   {{'{%'}}- set _ = ret.update(teleport_sync_files_default) %}
-#   {{'{%'}}- set _ = ret.update({{'{{'}}cookiecutter.lname}}_sync_files_extra) %}
+#   {{'{%'}}- set _ = ret.update({{cookiecutter.lname}}_sync_files_extra) %}
 #   {{'{{'}}- ret|to_json}}
 # teleport_post_reset_script: |-
 #   {{'{{'}}teleport_post_reset_script_default}}
@@ -94,5 +94,5 @@ cops_django_db_mode: {{cookiecutter.db_mode}}
 #   run -u django --no-deps --rm django sh -ex - <<EOF
 #   /code/sys/scripts/mysuperscript.sh
 #   EOF
-# teleport_ms_project: {{'{{'}}cookiecutter.lname}}
+# teleport_ms_project: {{cookiecutter.lname}}
 

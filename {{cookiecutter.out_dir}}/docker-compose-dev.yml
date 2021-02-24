@@ -64,7 +64,7 @@ services:
   db:
     ports:
     - "${DJANGO__DB_OUT_LISTEN:-0.0.0.0}:${DJANGO__DB_OUT_PORT:-{{cookiecutter.db_out_port}}}:5432"
-{% if cookiecutter.with_celery -%}
+{% if cookiecutter.with_celery %}
   celery-beat: &celery
     <<: [ *django ]
     environment:

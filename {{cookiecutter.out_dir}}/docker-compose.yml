@@ -12,7 +12,7 @@ x-images:
       {%- endif %}{%if cookiecutter.cache_system%}
       {% if cookiecutter.cache_system == 'redis' %}REDIS_URL: "${REDIS_URL:-redis://redis:6379/1}"
       {% elif cookiecutter.cache_system == 'memcached' %}MEMCACHED_URL: "${MEMCACHED_URL:-memcached:11211}"
-      {% else %}{{cookiecutter.cache_system.upper()}}_URL: "${{{cookiecutter.cache_system.upper()}}_URL:-{{cookiecutter.cache_system}}}"{% endif%}{%endif%}
+      {% else %}{{cookiecutter.cache_system.upper()}}_URL: "${{'{'}}{{cookiecutter.cache_system.upper()}}_URL:-{{cookiecutter.cache_system}}{{'}'}}"{% endif%}{%endif%}
       {% if 'post' in cookiecutter.db_mode %}
       POSTGRES_STARTUP_TIMEOUT: "${POSTGRES_STARTUP_TIMEOUT:-45s}"
       POSTGRES_HOST: "${POSTGRES_HOST:-db}"
@@ -188,10 +188,11 @@ services:
       - |-
         sed -i -re "s/user\s+.*;/user root;/g" /etc/nginx/nginx.conf
         export DJANGO__HTTP_PROTECT_USER=$${DJANGO__HTTP_PROTECT_USER:-root}
+        export DJANGO__HTTP_PROTECT_USER=$${DJANGO__HTTP_PROTECT_USER:-root}
         export DJANGO__HTTP_PROTECT_PASSWORD=$${DJANGO__HTTP_PROTECT_PASSWORD-}
         : retrocompat
-        for i in $$(find /etc/htpasswd -type f -maxdepth 1);do ln -sfv $$i /etc/htpasswd-$$(basename $$i);done
         touch /etc/htpasswd/protect
+        for i in $$(find /etc/htpasswd -type f -maxdepth 1);do ln -sfv $$i /etc/htpasswd-$$(basename $$i);done
         chmod 644 /etc/htpasswd/protect
         if [ "x$$DJANGO__HTTP_PROTECT_PASSWORD" != "x" ];then
           echo "/ htpasswd:">&2
