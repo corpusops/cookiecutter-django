@@ -46,10 +46,11 @@ begins
 {% endif -%}
 {%- if cookiecutter.with_celery %}
 # celery
-django_celery_results>={{cookiecutter.celery_results_version}}
-celery=={{cookiecutter.celery_version}}
-django-celery-beat>=1.5.0
+django_celery_results{{cookiecutter.celery_results_version}}
+celery{{cookiecutter.celery_version}}
+django-celery-beato{cookiecutter.celery_beat_version}}
 {% endif -%}
+
 {%- if cookiecutter.with_sentry %}
 # sentry (need requests)
 raven==6.10.0
