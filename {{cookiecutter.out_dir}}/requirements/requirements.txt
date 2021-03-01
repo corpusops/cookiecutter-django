@@ -26,7 +26,6 @@ python-memcached
 mercantile>=1.0,<1.1
 Fiona>=1.7,<1.8
 
-
 {% if cookiecutter.with_pil %}
 pillow
 {% endif %}
@@ -58,3 +57,7 @@ raven==6.10.0
 requests>=2.25.0
 # webserver
 gunicorn{%if cookiecutter.gunicorn_class not in ['gaiohttp', 'sync']%}[{{cookiecutter.gunicorn_class}}]{%endif%}>=19.9
+
+# leave those tools to let debug in hosted envs
+remote-pdb
+pdb_clone
