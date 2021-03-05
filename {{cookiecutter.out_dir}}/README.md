@@ -235,28 +235,32 @@ Once you have build once your image, you have two options to reuse your image as
 
 ### Get the completion and the code resolving for bundled dependencies wich are inside the container
 
-- Whenever you rebuild the image, you need to refresh the files for your IDE to complete bundle dependencies
-
-    ```sh
-    ./control.sh get_container_code
-    ```
 ### Using pycharm
 - Only now launch pycharm and configure a project on this working directory
-- Whenever you open your pycharm project:
-    - **remember to exclude the local source folders inside the local/code/venv**
-    - Add local/code/venv/lib/python*/site-packages to sources
 
 #### Make a break, insert a PDB and attach the session on Pycharm
-- The docker container will connect to your running pycharm process, using a network tcp connection, eg on port ``12345``.
-- ``12345`` can be changed but of course adapt the commands, this port must be reachable from within the container.
-- Linux only: This iptables rule can be more restrictive if you know and you want to but as the following it will allow unfiltered connections on port ``12345``.
+- Tips and tricks to know:
+    - the python interpreter (or wrapper in our case) the pycharm glue needs should be named `python.*`
+    - Paths mappings are needed, unless pycharm will execute in its own folder under `/opt` totally messing the setup
+    - you should have the latest (2020-01-19) code of the common glue for this to work
+- Goto settings (CTRL-ALT-S)
+    - Create a `docker-compose` python interpreter:
+        - compose files: `docker-compose.yml`, `docker-compose-dev.yml`
+        - python interpreter: `/code/sys/python-pycharm`
+        - service: `django`
+        - On project python interpreter settings page, set:
+            - Path Mapping: Add with browsing your local:`src` , remote: `/code/src` <br/>
+              (you should then see `<Project root>/src→/code/src`)
+    - on language/frameworks → django
+        - enable django support
+        - set project root to `src` folder
+        - set manage script to `manage.py`
+        - browse to your `dev.py` settings file
+    - Add a debug configuration
+        - host: `0.0.0.0`
 
-    ```sh
-    iptables -I INPUT  -p tcp -m tcp --dport 12345 -j ACCEPT
-    ```
 
-- Ensure you added ``WITH_PYCHARM`` in your ``.env`` and that ``PYCHARM_VERSION`` is tied to your PYCHARM installation and start from a fresh build if it was not (pip will mess to update it correctly, sorry).
-- Wherever you have the need to break, insert in your code the following snippet:
+### Using VSCode
 
     ```python
     import pydevd_pycharm;pydevd_pycharm.settrace('host.docker.internal', port=12345, stdoutToServer=True, stderrToServer=True)
@@ -267,18 +271,6 @@ Once you have build once your image, you have two options to reuse your image as
     - <strong>DO NOT DO IT in ``local/code/venv/*/*/*/foo/__init__.py`` </strong>
     - do:
 
-        ```sh
-        ./control.sh down {{cookiecutter.app_type}}
-        services_ports=1 ./control.sh usershell
-        apt install -y vim
-        vim ../venv/*/*/*/foo/__init__.py
-        # insert: import pydevd_pycharm;pydevd_pycharm.settrace('host.docker.internal', port=12345, stdoutToServer=True, stderrToServer=True)
-        ./manage.py runserver 0.0.0.0:8000
-        ```
-    - With pycharm and your configured debugging session, attach to the session
-
-
-### Using VSCode
 - You must launch VSCode using ``./control.sh vscode`` as vscode needs to have the ``PYTHONPATH`` variable preset to make linters work
 
     ```sh
