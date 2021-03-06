@@ -1,4 +1,5 @@
 # Initialise your development environment
+- Only now launch pycharm and configure a project on this working directory
 
 All following commands must be run only once at project installation.
 
@@ -232,13 +233,8 @@ Once you have build once your image, you have two options to reuse your image as
     ./control.sh down {{cookiecutter.app_type}}
     ```
 
-
-### Get the completion and the code resolving for bundled dependencies wich are inside the container
-
 ### Using pycharm
-- Only now launch pycharm and configure a project on this working directory
 
-#### Make a break, insert a PDB and attach the session on Pycharm
 - Tips and tricks to know:
     - the python interpreter (or wrapper in our case) the pycharm glue needs should be named `python.*`
     - Paths mappings are needed, unless pycharm will execute in its own folder under `/opt` totally messing the setup
@@ -258,6 +254,14 @@ Once you have build once your image, you have two options to reuse your image as
         - browse to your `dev.py` settings file
     - Add a debug configuration
         - host: `0.0.0.0`
+
+
+### Get the completion and the code resolving for bundled dependencies wich are inside the container
+- Whenever you rebuild the image, you need to refresh the files for your IDE to complete bundle dependencies
+
+    ```sh
+    ./control.sh get_container_code
+    ```
 
 
 ### Using VSCode
