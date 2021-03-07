@@ -238,7 +238,7 @@ Once you have build once your image, you have two options to reuse your image as
 - Tips and tricks to know:
     - the python interpreter (or wrapper in our case) the pycharm glue needs should be named `python.*`
     - Paths mappings are needed, unless pycharm will execute in its own folder under `/opt` totally messing the setup
-    - you should have the latest (2020-01-19) code of the common glue for this to work
+    - you should have the latest (2021-01-19) code of the common glue (`local/django-deploy-common`) for this to work
 - Goto settings (CTRL-ALT-S)
     - Create a `docker-compose` python interpreter:
         - compose files: `docker-compose.yml`, `docker-compose-dev.yml`
