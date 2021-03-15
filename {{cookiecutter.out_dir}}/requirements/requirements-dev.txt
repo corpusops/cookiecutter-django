@@ -13,3 +13,4 @@ tox-direct
 {% if cookiecutter.with_black %}black{% endif %}
 xlrd
 remote-pdb
+ipython

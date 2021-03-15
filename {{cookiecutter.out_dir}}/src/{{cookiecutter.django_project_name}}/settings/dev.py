@@ -50,6 +50,7 @@ except NameError:
         }
     }
 {% endif %}
+USE_DJANGO_EXTENSIONS = True
 
 locs_, globs_, env = post_process_settings(locals())
 globals().update(globs_)

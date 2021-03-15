@@ -248,6 +248,7 @@ CELERY_TASK_SERIALIZER = 'json'
 {% endif %}
 
 CORS_ORIGIN_ALLOW_ALL = False
+USE_DJANGO_EXTENSIONS = False
 
 
 
@@ -798,6 +799,12 @@ def post_process_settings(globs=None):
         if 'DEPLOY_ENV' in _locals:
             _locals['RAVEN_CONFIG']['environment'] = _locals['DEPLOY_ENV']
     {%- endif %}
+    if (
+        _locals['USE_DJANGO_EXTENSIONS'] and
+        ('django_extensions' not in _locals['INSTALLED_APPS'])
+    ):
+        _locals['INSTALLED_APPS'] += ('django_extensions', )
+
     default_mail = (
         '{env}-{{cookiecutter.lname}}@{{cookiecutter.tld_domain}}'.format(
             env=env))

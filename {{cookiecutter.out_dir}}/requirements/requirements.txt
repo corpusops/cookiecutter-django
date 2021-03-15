@@ -12,6 +12,7 @@ django-storages>=1.7,<1.8
 Pillow>=5.3.0,<6.0.0
 python-magic>=0.4,<0.5
 simpleeval>=0.9,<1.0
+django_extensions>=3.0.3
 
 # connectors
 psycopg2{{cookiecutter.psycopg_req}}
