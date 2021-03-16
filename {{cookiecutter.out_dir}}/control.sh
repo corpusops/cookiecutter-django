@@ -56,7 +56,7 @@ source_envs() {
             while read vardef;do
                 var="$(echo "$vardef" | awk -F= '{print $1}')"
                 val="$(echo "$vardef" | awk '{gsub(/^[^=]+=/, "");print;}')"
-                if ( echo "$val" | egrep -q "'" )  || ! ( echo "$val" | egrep '"' ) ;then
+                if ( echo "$val" | egrep -q "'" )  || ! ( echo "$val" | egrep -q '"' ) ;then
                     eval "$var=\"$val\""
                 else
                     eval "$var='$val'"
