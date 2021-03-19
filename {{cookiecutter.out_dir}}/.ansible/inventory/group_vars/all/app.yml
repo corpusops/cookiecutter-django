@@ -104,4 +104,4 @@ cops_django_db_mode: {{cookiecutter.db_mode}}
 #   print('helloworld')
 #   EOF
 # teleport_ms_project: {{cookiecutter.lname}}
-
+cops_django_py_ver: "{{cookiecutter.py_ver}}
