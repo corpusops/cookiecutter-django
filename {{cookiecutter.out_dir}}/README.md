@@ -356,7 +356,7 @@ If you get the same problem with the django docker env :
 
 ```bash
 docker-compose -f docker-compose.yml -f docker-compose-dev.yml stop django db
-docker volume rm oppm-postgresql # check with docker volume ls
+docker volume rm {{cookiecutter.lname}}-postgresql # check with docker volume ls
 docker-compose -f docker-compose.yml -f docker-compose-dev.yml up -d db
 # wait fot postgis to be installed
 docker-compose -f docker-compose.yml -f docker-compose-dev.yml up django
