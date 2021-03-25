@@ -6,4 +6,6 @@
 # SERVER_EMAIL = ''
 # ADMINS = ()
 # SECRET_KEY = 'super-hot-secret-123456789'
+# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# INSTANCE_HEADER = 'LOCAL'
 # vim:set ft=python:

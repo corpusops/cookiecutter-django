@@ -84,6 +84,7 @@ MIDDLEWARE = (
 {%- endif %}
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    '{{cookiecutter.django_project_name}}.middleware.ShowInstanceHeaderMiddleware',
 )
 
 ROOT_URLCONF = PROJECT_NAME + '.urls'
@@ -250,6 +251,9 @@ CELERY_TASK_SERIALIZER = 'json'
 
 CORS_ORIGIN_ALLOW_ALL = False
 USE_DJANGO_EXTENSIONS = False
+
+INSTANCE_HEADER = None
+INSTANCE_COLOR = '#ffe767'
 
 ###############################################################################
 # Environment settings routines, compliant with 12Factor: https://12factor.net/
@@ -459,6 +463,8 @@ def post_process_settings(globs=None):
         ('django_extensions' not in _locals['INSTALLED_APPS'])
     ):
         _locals['INSTALLED_APPS'] += ('django_extensions', )
+    if env != 'prod':
+        _locals["INSTANCE_HEADER"] = env.upper()
 
     default_mail = (
         '{env}-{{cookiecutter.lname}}@{{cookiecutter.tld_domain}}'.format(
