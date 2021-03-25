@@ -65,10 +65,11 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     {% if cookiecutter.with_celery -%}'django_celery_beat',
-    'django_celery_results',{%- endif %}
-    #{% if cookiecutter.with_apptest %}
-    'apptest'
-{%endif%}
+    'django_celery_results',
+{%- endif %}#{% if cookiecutter.with_apptest %}
+    'apptest',
+{% endif %}{% if cookiecutter.with_bundled_front %}'manifest_loader',
+{% endif %}
 )
 
 MIDDLEWARE = (
@@ -206,6 +207,15 @@ STATICFILES_DIRS = (
 STATIC_ROOT = os.path.join(PUBLIC_DIR, 'static')
 MEDIA_URL = '{{cookiecutter.media_uri}}/'
 MEDIA_ROOT = os.path.join(PUBLIC_DIR, 'media')
+
+{% if cookiecutter.with_bundled_front %}
+from {{cookiecutter.django_project_name}}.manifest_loader import CustomLoader
+
+MANIFEST_LOADER = {
+    "manifest_file": "dist/manifest.json",
+    "loader": CustomLoader,
+}
+{% endif %}
 
 # Just to be easily override by children conf files.
 LOGGING = copy.deepcopy(DEFAULT_LOGGING)

@@ -148,7 +148,6 @@ find src -name celery.py -delete
 # strip whitespaces from compose
 $sed -i -re 's/\s+$//g' docker-compose*.yml
 $sed -i -r '/^\s*$/d' docker-compose*.yml
-{% if not cookiecutter.with_bundled_front%}rm -f .nvmrc{%endif%}
 {% if not cookiecutter.with_apptest%}find src -name apptest |xargs rm -rf{%endif%}
 """
 
@@ -157,6 +156,15 @@ After reviewing all changes
 do not forget to commit and push your new/regenerated project
 '''
 
+use_bundled_front = bool(
+    '{{cookiecutter.with_bundled_front}}'.strip())
+REMOVE_PATHS = [
+    '.nvmrc',
+    'frontend',
+    'src/{{cookiecutter.django_project_name}}/manifest_loader.py',
+    'package.json',
+    'webpack.config.js',
+]
 
 def remove_path(i):
     if os.path.exists(i) or os.path.islink(i):
@@ -205,6 +213,9 @@ def main():
         s += ('\nsed -i -re '
               '"s/ cron//g" .ansible/playbooks/roles/*/*/*l' )
         {% endif %}
+    if not use_bundled_front:
+        for i in REMOVE_PATHS:
+            remove_path(i)
     s += EGITSCRIPT
     subprocess.check_call(["bash", "-c", s.format(template=TEMPLATE)])
     print(MOTD)
