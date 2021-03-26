@@ -6,4 +6,5 @@
 # SERVER_EMAIL = ''
 # ADMINS = ()
 # SECRET_KEY = 'super-hot-secret-123456789'
+# INSTANCE_HEADER = 'LOCAL'
 # vim:set ft=python:
