@@ -10,6 +10,7 @@ deepmerge<=1.0
 {% endif %}
 django-url-filter>=0.3,<0.4
 {% if cookiecutter.with_djextensions %}django-extensions>=3.0,<4.0{% endif %}
+{% if cookiecutter.with_bundled_front %}django-manifest-loader>=1.0.0,<2.0{% endif %}
 
 # connectors
 psycopg2{{cookiecutter.psycopg_req}}

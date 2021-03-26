@@ -68,7 +68,7 @@ testem.log
 yarn-error.log
 /typings
 *~
-/src/project/static/dist/
+/src/{{cookiecutter.django_project_name}}/static/dist/
 
 # e2e
 /e2e/*.js
