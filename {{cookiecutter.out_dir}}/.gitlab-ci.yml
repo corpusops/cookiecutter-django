@@ -219,11 +219,10 @@ before_script: &top_before_script
 - &nonfaildockerlogin /docker_login || /bin/true
 # workaround as docker-compose doesn't support default shell variable substitution in .env
 - &gendotenv set -e;if ! ( envsubst --version >/dev/null 2>&1 );then apk update;apk add gettext;fi;
-  cat .env.dist | envsubst | sed -r
+  for env in .env docker.env;do cat ${env}.dist | envsubst | sed -r
   -e "s/^([^=]+_IMAGE_VERSION=.*)latest/\\1build-${CI_PIPELINE_IID}/g"
   -e "s|$DOCKER_REGISTRY|$BUILDCACHE_REGISTRY|g"
-  -e "s/^(CI_COMMIT_SHA=).*/\\1${CI_COMMIT_SHA}/g" > .env;
-  envsubst < docker.env.dist > docker.env
+  -e "s/^(CI_COMMIT_SHA=).*/\\1${CI_COMMIT_SHA}/g" > $env;done;
 {%if cookiecutter.with_bundled_front%}
 - &warm_statics_tarball
   sh -ec "if [ -n ${STATICS_LOAD-} ] && [ -e \"\$STATICS_TARBALL\" ];then
