@@ -15,15 +15,15 @@ cops_{{cookiecutter.app_type}}_rabbitmq_user: rabbit
 cops_{{cookiecutter.app_type}}_rabbitmq_password: rabbitpw
 {%- endif%}
 cops_{{cookiecutter.app_type}}_docker_env_extra: |-
+  crons_mysupercron={{"{{"}}cops_django_crons_mysupercron}}
+cops_{{cookiecutter.app_type}}_dotenv_extra: |-
   # db
+  {% if 'post' in cookiecutter.db_mode %}POSTGRES_STARTUP_TIMEOUT={{'{{'}}cops_{{cookiecutter.app_type}}_postgres_startup_timeout}}{% endif %}
+  #
   {% if cookiecutter.with_celery -%}
   {% if cookiecutter.celery_broker == 'rabbitmq' %}RABBITMQ_DEFAULT_USER={{'{{'}}cops_{{cookiecutter.app_type}}_rabbitmq_user}}
   RABBITMQ_DEFAULT_PASS={{'{{'}}cops_{{cookiecutter.app_type}}_rabbitmq_password}}{% endif %}
   {%- endif %}
-  {% if 'post' in cookiecutter.db_mode %}POSTGRES_STARTUP_TIMEOUT={{'{{'}}cops_{{cookiecutter.app_type}}_postgres_startup_timeout}}{% endif %}
-  crons_mysupercron={{"{{"}}cops_django_crons_mysupercron}}
-cops_{{cookiecutter.app_type}}_dotenv_extra: |-
-  #
 {% if cookiecutter.with_ftp %}
   DJANGO__FTP_PUBLICHOST={{'{{'}}cops_django_ftp_ip}}
   DJANGO__FTP_INTERNAL_PUBLICHOST={{'{{'}}cops_django_ftp_internal_publichost}}
