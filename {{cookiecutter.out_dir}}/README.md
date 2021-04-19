@@ -179,6 +179,14 @@ user to use files in your working directory
 ./control.sh open_perms_valve
 ```
 
+## Refresh Pipenv.lock
+
+- Use
+
+    ```
+    ./control.sh usershell "cd requirements && pipenv lock"
+    ```
+
 ## Docker volumes
 
 Your application extensivly use docker volumes. From times to times you may
@@ -405,17 +413,19 @@ In the other, launch one worker
 
 
 # Teleport (load one env from one another)
-init your vault (see [`docs/deploy.md`](./docs/README.md#docs#generate-vault-password-file))
+init your vault (see [`docs/README.md`](./docs/README.md#docs#generate-vault-password-file))
 
 ```sh
 CORPUSOPS_VAULT_PASSWORD="xxx" .ansible/scripts/setup_vaults.sh
+.ansible/scripts/call_ansible.sh .ansible/playbooks/deploy_key_setup.yml
 ```
 
 
 ## Load a production database from old prod (standard modes)
 ```sh
 .ansible/scripts/call_ansible.sh -vvvv .ansible/playbooks/teleport.yml \
-    -e "{teleport_mode: standard, teleport_destination: controller, teleport_origin: oldprod}"
+    -e "{teleport_mode: standard, teleport_destination: controller, teleport_origin: prod}"
+.ansible/scripts/call_ansible.sh .ansible/playbooks/deploy_key_setup.yml
 ```
 
 ## Load a production database from old prod (makinastates modes)
@@ -423,4 +433,3 @@ CORPUSOPS_VAULT_PASSWORD="xxx" .ansible/scripts/setup_vaults.sh
 .ansible/scripts/call_ansible.sh -vvvv .ansible/playbooks/teleport.yml \
     -e "{teleport_mode: makinastates, teleport_destination: controller, teleport_origin: oldprod}"
 ```
-
