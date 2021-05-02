@@ -184,7 +184,7 @@ user to use files in your working directory
 - Use
 
     ```
-    ./control.sh usershell "cd requirements && pipenv lock"
+    ./control.sh usershell sh -ec "cd requirements && pipenv lock"
     ```
 
 ## Docker volumes
