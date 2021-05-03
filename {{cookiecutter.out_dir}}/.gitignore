@@ -53,8 +53,8 @@ docs/_build/
 
 {% if cookiecutter.with_celery %}
 # celery
-/src/celerybeat-schedule.db
-/src/celerybeat.pid
+/**/celerybeat-schedule.db
+/**/celerybeat.pid
 {% endif %}
 # misc
 /data

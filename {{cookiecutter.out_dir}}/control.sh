@@ -383,7 +383,7 @@ do_celery_beat_fg() {
     (   CONTAINER=celery-beat \
         && stop_containers $CONTAINER \
         && services_ports=1 do_usershell \
-        celery beat -A \$DJANGO_CELERY -l \$CELERY_LOGLEVEL $@ )
+        "celery -A \$DJANGO_CELERY beat -l \$CELERY_LOGLEVEL $@" )
 }
 
 #  celery_worker_fg: launch celery beat container in foreground (using entrypoint)
@@ -391,7 +391,7 @@ do_celery_worker_fg() {
     (   CONTAINER=celery-worker \
         && stop_containers celery-worker \
         && services_ports=1 do_usershell \
-        celery worker -A \$DJANGO_CELERY -l \$CELERY_LOGLEVEL -B $@ )
+        "celery -A \$DJANGO_CELERY worker -l \$CELERY_LOGLEVEL -B $@" )
 }
 
 {% endif -%}
