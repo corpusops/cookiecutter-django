@@ -15,6 +15,7 @@ binutils
 ca-certificates
 curl
 gdal-bin
+libgdal26
 gettext
 git
 less
@@ -42,6 +43,7 @@ libxcb1
 {% endif %}
 {% if 'post' in cookiecutter.db_mode %}postgresql-client{% endif %}
 # dev dependencies (after this line, all packages will be removed after build)
+libgdal-dev
 apt-utils
 build-essential
 gpg
@@ -61,12 +63,12 @@ python-dev
 python-virtualenv
 {% endif %}
 software-properties-common
+zlib1g-dev
 {% if cookiecutter.with_pil %}
 # pillow
 libtiff5-dev
 libjpeg8-dev
 libopenjp2-7-dev
-zlib1g-dev
 libfreetype6-dev
 liblcms2-dev
 libwebp-dev
