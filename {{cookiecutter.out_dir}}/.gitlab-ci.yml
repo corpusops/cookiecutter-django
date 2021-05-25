@@ -82,7 +82,7 @@ variables:
   D_COMPOSE: docker-compose --verbose
   COMPOSE_PROD_CONFIGS: docker-compose.yml docker-compose-prod.yml docker-compose-build.yml
   COMPOSE_DEV_CONFIGS:  docker-compose.yml docker-compose-dev.yml  docker-compose-build.yml docker-compose-build-dev.yml
-  DEPLOY_PLAYBOOK: .ansible/playbooks/app.yml
+  DEPLOY_PLAYBOOK: "{{cookiecutter.deploy_playbook}}"
   PROJECT_CACHE_ROOT:       /cache/$CI_PROJECT_PATH_SLUG
   BUILDCACHE_ROOTDIRECTORY: /cache/$CI_PROJECT_PATH_SLUG/dockercache
   STATICS_DIRECTORY:        /cache/$CI_PROJECT_PATH_SLUG/statics
@@ -624,9 +624,9 @@ build_images: &build_images
   variables: &release_vars
     GIT_SUBMODULE_STRATEGY: none
     STATUS_FLAG: ${RELEASE_STATUS_FLAG}
-    BEFORE_STATUS_FLAGS: ${TESTS_STATUS_FLAG}
+    BEFORE_STATUS_FLAGS: "{% if cookiecutter.test_tests %}${TESTS_STATUS_FLAG}{%endif%}"
     # move lint to ${BEFORE_STATUS_FLAGS} if you want it to block release
-    BEFORE_ALLOW_FAILURE_STATUS_FLAGS: ${LINT_STATUS_FLAG}
+    BEFORE_ALLOW_FAILURE_STATUS_FLAGS: "{%if cookiecutter.test_linting%}${LINT_STATUS_FLAG}{%endif%}"
 
 release_image: &release_taggued_image_tpl
   <<: [ *release_image_tpl ]
@@ -723,22 +723,23 @@ manual_deploy_{{i}}: &manual_deploy_{{i}}
 
 # As gitlab-ci does not support pipeline branching, for manual dev release, we need
 # to make a last and one-for-all deploy step for non-blocking pipelines when we do a merge request
-.manual_release_and_deploy: &manual_release_and_deploy_tpl
-  <<: [ *deploy_staging, *release_image_tpl ]
+{% for i in envs %}{%- if cookiecutter[i+'_host'] -%}
+manual_release_and_deploy_{{i}}: &manual_release_and_deploy_{{i}}_tpl
+  <<: [ *deploy_{{i}}, *release_image_tpl ]
+  variables:
+    <<: [ *build_images_vars, *release_vars, *deploy_{{i}}_vars ]
+    A_ENV_NAME: {{i}}
+    REF_DOCKER_IMAGE: ${FORCED_DOCKER_IMAGE}
+    LATEST_DOCKER_IMAGE: ${FORCED_DOCKER_IMAGE}
+    BEFORE_STATUS_FLAGS: "{%if cookiecutter.with_bundled_front%}${JSBUILD_STATUS_FLAG}{% endif %}"
+    BEFORE_ALLOW_FAILURE_STATUS_FLAGS: ""
+    AFTER_STATUS_FLAGS: ""
+    AFTER_ALLOW_FAILURE_STATUS_FLAGS: ""
   when: manual
   start_in: null
   image: ${CORPUSPOS_IMAGE}
   stage: manual_jobs
   allow_failure: true
-  variables: &manual_release_and_deploy_vars_tpl
-    <<: [ *build_images_vars, *release_vars, *deploy_staging_vars ]
-    REF_DOCKER_IMAGE: ${FORCED_DOCKER_IMAGE}
-    LATEST_DOCKER_IMAGE: ${FORCED_DOCKER_IMAGE}
-    A_ENV_NAME: ${CI_COMMIT_REF_NAME}
-    BEFORE_STATUS_FLAGS: "{%if cookiecutter.with_bundled_front%}${JSBUILD_STATUS_FLAG}{% endif %}"
-    BEFORE_ALLOW_FAILURE_STATUS_FLAGS: ""
-    AFTER_STATUS_FLAGS: ""
-    AFTER_ALLOW_FAILURE_STATUS_FLAGS: ""
   services: *services_tpl
   before_script: *full_before_script
   script:
@@ -755,13 +756,6 @@ manual_deploy_{{i}}: &manual_deploy_{{i}}
     set -e;.ansible/scripts/call_ansible.sh -vv -l $A_ENV_NAME \
     "${DEPLOY_PLAYBOOK}" -e "{cops_django_docker_tag: $(eval echo ${REF_DOCKER_IMAGE//*:})}"
   after_script: []
-
-{% for i in envs %}{%- if cookiecutter[i+'_host'] -%}
-manual_release_and_deploy_{{i}}: &manual_release_and_deploy_{{i}}_tpl
-  <<: [ *manual_release_and_deploy_tpl ]
-  variables:
-    <<: [ *manual_release_and_deploy_vars_tpl ]
-    A_ENV_NAME: {{i}}
 
 {%endif-%}{% endfor %}
 # reset environments from others
