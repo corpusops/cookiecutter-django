@@ -216,15 +216,6 @@ Once you have build once your image, you have two options to reuse your image as
 
 ## Integrating an IDE
 - <strong>DO NOT START YET YOUR IDE</strong>
-- Add to your .env and re-run ``./control.sh build {{cookiecutter.app_type}}``
-
-    ```sh
-    WITH VISUALCODE=1
-    #  or
-    WITH_PYCHARM=1
-    # note that you can also set the version to install (see .env.dist)
-    ```
-
 - Start the stack, but specially stop the app container as you will
   have to separatly launch it wired to your ide
 
@@ -256,20 +247,26 @@ Once you have build once your image, you have two options to reuse your image as
         - host: `0.0.0.0`
 
 
-### Get the completion and the code resolving for bundled dependencies wich are inside the container
+### Using VSCode
+
+#### Get the completion and the code resolving for bundled dependencies wich are inside the container
 - Whenever you rebuild the image, you need to refresh the files for your IDE to complete bundle dependencies
 
     ```sh
     ./control.sh get_container_code
     ```
+#### IDE settings
 
+- Add to your .env and re-run ``./control.sh build {{cookiecutter.app_type}}``
 
-### Using VSCode
+```sh
+WITH VISUALCODE=1
+```
 
-    ```python
-    import pydevd_pycharm;pydevd_pycharm.settrace('host.docker.internal', port=12345, stdoutToServer=True, stderrToServer=True)
-    ```
-    - if ``host.docker.internal`` does not work for you, you can replace it by the local IP of your machine.
+```python
+import pydevd_pycharm;pydevd_pycharm.settrace('host.docker.internal', port=12345, stdoutToServer=True, stderrToServer=True)
+```
+- if ``host.docker.internal`` does not work for you, you can replace it by the local IP of your machine.
 - Remember this rules to insert your breakpoint:  If the file reside on your host, you can directly insert it, but on the other side, you will need to run a usershell session and debug from there.<br/>
   Eg: if  you want to put a pdb in ``../venv/*/*/*/foo/__init__.py``
     - <strong>DO NOT DO IT in ``local/code/venv/*/*/*/foo/__init__.py`` </strong>
