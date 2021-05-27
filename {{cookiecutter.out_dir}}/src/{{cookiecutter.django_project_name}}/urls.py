@@ -12,13 +12,13 @@ The `urlpatterns` list routes URLs to views. For more information please see:
 Examples:
 Function views
     1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+    2. Add a URL to urlpatterns:  path("", views.home, name="home")
 Class-based views
     1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+    2. Add a URL to urlpatterns:  path("", Home.as_view(), name="home")
 Including another URLconf
     1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+    2. Add a URL to urlpatterns:  path("blog/", include("blog.urls"))
 """
 
 try:
@@ -28,32 +28,35 @@ except ImportError:
 
 try:
     from django.views.i18n import javascript_catalog
-    jstrans = url(r'^jsi18n/$', javascript_catalog,
-                  name='javascript-catalog')
+
+    jstrans = url(r"^jsi18n/$", javascript_catalog, name="javascript-catalog")
 except ImportError:
     from django.views.i18n import JavaScriptCatalog
-    jstrans = path("jsi18n/",
-                   JavaScriptCatalog.as_view(packages=['socialhome']),
-                   name="javascript-catalog")
+
+    jstrans = path(
+        "jsi18n/",
+        JavaScriptCatalog.as_view(packages=["socialhome"]),
+        name="javascript-catalog",
+    )
 
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
+    url(r"^admin/", admin.site.urls),
     jstrans,
 ]
 {% if cookiecutter.with_apptest%}
 
-if 'apptest' in settings.INSTALLED_APPS:  # pragma: nobranch
+if "apptest" in settings.INSTALLED_APPS:  # pragma: nobranch
     urlpatterns += [
-        url(r'^test', include('apptest.urls')),
+        url(r"^test", include("apptest.urls")),
     ]
 {%endif%}
 
-if settings.DEBUG and 'debug_toolbar' in settings.INSTALLED_APPS:
+if settings.DEBUG and "debug_toolbar" in settings.INSTALLED_APPS:
     import debug_toolbar
 
     urlpatterns += [
-        url(r'^__debug__/', include(debug_toolbar.urls)),
+        url(r"^__debug__/", include(debug_toolbar.urls)),
     ]
 
-admin.site.site_header = '{{cookiecutter.django_project_name}}'
+admin.site.site_header = "{{cookiecutter.django_project_name}}"
