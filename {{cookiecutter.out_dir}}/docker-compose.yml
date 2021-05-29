@@ -1,13 +1,62 @@
 {%- set db_tag = 'post' in cookiecutter.db_mode and 'postgres' or cookiecutter.db_mode -%}
 version: '3.7'
 x-images:
-  env: &env {env_file: [.env, docker.env]}
+  env: &env
+    env_file: [.env, docker.env]
+    environment: &env_vars
+      {% if cookiecutter.with_celery -%}
+      {% if cookiecutter.celery_broker == 'rabbitmq' %}
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER:-admin}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS:-mypass}"
+      {% endif %}
+      {%- endif %}{%if cookiecutter.cache_system%}
+      {% if cookiecutter.cache_system == 'redis' %}REDIS_URL: "${REDIS_URL:-redis://redis:6379/1}"
+      {% elif cookiecutter.cache_system == 'memcached' %}MEMCACHED_URL: "${MEMCACHED_URL:-memcached:11211}"
+      {% else %}{{cookiecutter.cache_system.upper()}}_URL: "${{{cookiecutter.cache_system.upper()}}_URL:-{{cookiecutter.cache_system}}}"{% endif%}{%endif%}
+      {% if 'post' in cookiecutter.db_mode %}
+      POSTGRES_STARTUP_TIMEOUT: "${POSTGRES_STARTUP_TIMEOUT:-45s}"
+      POSTGRES_HOST: "${POSTGRES_HOST:-db}"
+      POSTGRES_PORT: "${POSTGRES_PORT:-5432}"
+      POSTGRES_DB: "${POSTGRES_DB:-db}"
+      POSTGRES_USER: "${POSTGRES_USER:-user}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
+      PGPASSWD: "${POSTGRES_PASSWORD:-password}"
+      PGPASSWORD: "${POSTGRES_PASSWORD:-password}"
+      {% elif 'mysql' in cookiecutter.db_mode %}
+      MYSQL_HOST: "${MYSQL_HOST:-db}"
+      MYSQL_PORT: "${MYSQL_PORT:-3306}"
+      MYSQL_DATABASE: "${MYSQL_DATABASE:-db}"
+      MYSQL_USER: "${MYSQL_USER:-user}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD:-password}"
+      {% else %}
+      DB_HOST: "${DB_HOST:-db}"
+      DB_PORT: "${DB_PORT:-5432}"
+      DB_NAME: "${DB_NAME;-db}"
+      DB_USER: "${DB_USER:-user}"
+      DB_PASSWORD: "${DB_PASSWORD:-password}"
+      {% endif %}
+      DJANGO__USER_UID: "${DJANGO__USER_UID:-1000}"
+      {% if cookiecutter.with_ftp %}
+      FTP_USER_UID: "${DJANGO__USER_UID:-1000}"
+      DJANGO__FTP_USER: "${DJANGO__FTP_USER:-ftp}"
+      FTP_USER_NAME: "${DJANGO__FTP_USER:-ftp}"
+      DJANGO__FTP_PASSWORD: "${DJANGO__FTP_PASSWORD:-secret1324510}"
+      FTP_USER_PASS: "${DJANGO__FTP_PASSWORD:-secret1324510}"
+      DJANGO__FTP_PORT: "${DJANGO__FTP_PORT:-{{cookiecutter.ftp_port_range_start|int -1 }}}"
+      FTP_USER_HOME: "${DJANGO__FTP_ROOT:-/ftp}"
+      {% endif %}
+      SECRET_KEY: "${SECRET_KEY:-ChangeThatSuperSecret}"
+      MAILCATCHER_USER: "${MAILCATCHER_USER:-mailcatcher}"
+      MAILCATCHER_PASSWORD: "${MAILCATCHER_PASSWORD:-mailcatcher}"
   {{cookiecutter.app_type}}: &{{cookiecutter.app_type}}
     <<: [ *env ]
     tty: true
     # latest image is only used in prod (without dev & test tools)
     image: "${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE}:${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE_VERSION}-dev"
     environment: &django_env
+      <<: [ *env_vars ]
+      PROJECT_DIR: "${PROJECT_DIR:-/code/src/{{cookiecutter.django_project_name}}/}"
+      PROJECT_PACKAGE: "${PROJECT_PACKAGE:-{{cookiecutter.django_project_name}}}"
       DJANGO_WSGI: "${DJANGO_WSGI:-{{cookiecutter.django_project_name}}.wsgi}"
       EXTRA_USER_DIRS: ""
       GUNICORN_CLASS: "${GUNICORN_CLASS:-{{cookiecutter.gunicorn_class}}}"
@@ -44,10 +93,7 @@ x-images:
     <<: [ *env ]
     image: corpusops/pureftpd
     environment: &ftp_env
-      FTP_USER_HOME: "${DJANGO__FTP_ROOT:-/ftp}"
-      FTP_USER_UID: "${DJANGO__USER_UID:-1000}"
-      FTP_USER_PASS: "${DJANGO__FTP_PASSWORD:-secret1324510}"
-      FTP_USER_NAME: "${DJANGO__FTP_USER:-ftp}"
+      <<: [ *env_vars ]
       ADDED_FLAGS: "-O w3c:/var/log/pure-ftpd/transfer.log"
       FTP_MAX_CONNECTIONS: 50
       FTP_MAX_CLIENTS: 50
@@ -116,7 +162,10 @@ services:
     <<: [ *env ]
     image: "{{cookiecutter["{0}_image".format(cookiecutter.db_mode)]}}"
     volumes:
-      - postgresql:/var/lib/postgresql/data
+    - postgresql:/var/lib/postgresql/data
+  backup:
+    <<: [ *env ]
+    image: "{{cookiecutter.dbsmartbackup_image}}"
   nginx:
     <<: [ *env ]
     image: "{{cookiecutter.nginx_image}}"

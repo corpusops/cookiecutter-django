@@ -34,11 +34,9 @@ services:
     restart: unless-stopped
   backup:
     restart: unless-stopped
-    env_file: [.env, docker.env]
-    image: "{{cookiecutter.dbsmartbackup_image}}"
     volumes:
-      - backupdb-dumps:/var/db_smart_backup/
-      - backupdb-logs:/var/db_smart_backup/logs/
+    - backupdb-dumps:/var/db_smart_backup/
+    - backupdb-logs:/var/db_smart_backup/logs/
 {% if cookiecutter.with_celery %}  celery-broker:
     restart: unless-stopped
   celery-beat: &celery
