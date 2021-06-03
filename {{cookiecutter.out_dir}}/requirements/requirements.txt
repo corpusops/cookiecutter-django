@@ -10,8 +10,6 @@ deepmerge<=1.0
 {% endif %}
 docxtpl>=0.5,<0.6
 django-url-filter>=0.3,<0.4
-python-magic>=0.4,<0.5
-simpleeval>=0.9,<1.0
 {% if cookiecutter.with_djextensions %}django-extensions>=3.0,<4.0{% endif %}
 
 # connectors
