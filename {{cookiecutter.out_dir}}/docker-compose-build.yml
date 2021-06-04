@@ -7,8 +7,6 @@ x-images:
         PY_VER: "${DJANGO_PY_VER:-{{cookiecutter.py_ver}}}"
         WITH_VSCODE: "${WITH_VSCODE:-0}"
         VSCODE_VERSION: "${VSCODE_VERSION-}"
-        WITH_PYCHARM: "${WITH_PYCHARM:-0}"
-        PYCHARM_VERSION: "${PYCHARM_VERSION-}"
         BASE: "${DJANGO_BASE_IMAGE:-{{cookiecutter.base_image}}}"
 services:
   {%- if not cookiecutter.remove_cron %}
