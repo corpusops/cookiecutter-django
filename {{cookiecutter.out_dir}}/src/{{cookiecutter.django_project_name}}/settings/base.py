@@ -468,6 +468,10 @@ def post_process_settings(globs=None):
         _locals['SERVER_EMAIL'] = _locals['DEFAULT_FROM_EMAIL']
     _locals.setdefault('ADMINS', [('root', _locals['SERVER_EMAIL'])])
     _locals.setdefault('EMAIL_HOST', 'localhost')
+    FORCE_SCRIPT_NAME = _locals.get('FORCE_SCRIPT_NAME', '')
+    FORCE_STATICS = _locals.get('FORCE_STATICS', '')
+    if FORCE_SCRIPT_NAME and not FORCE_STATICS:
+        _locals['STATIC_URL'] = f'{FORCE_SCRIPT_NAME}{_locals["STATIC_URL"]}'
     globals().update(_locals)
     return _locals, filter_globals(), env
 
