@@ -41,6 +41,7 @@ variables:
   DOCKER_HOST: tcp://docker:2375
   DOCKER_DRIVER: overlay2
   #
+  NONINTERACTIVE: "1"
   TZ: Europe/Paris
   DOCKER_REGISTRY: {{cookiecutter.docker_registry}}
   # for activating buildkit which is really better at caching and buildspeed
