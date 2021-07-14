@@ -5,5 +5,5 @@
 # DEFAULT_FROM_EMAIL = ''
 # SERVER_EMAIL = ''
 # ADMINS = ()
-SECRET_KEY = 'super-hot-secret-123456789'
+# SECRET_KEY = 'super-hot-secret-123456789'
 # vim:set ft=python:
