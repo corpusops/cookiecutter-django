@@ -90,9 +90,13 @@ cops_django_db_mode: {{cookiecutter.db_mode}}
 #   {{'{{'}}- ret|to_json}}
 # teleport_post_reset_script: |-
 #   {{'{{'}}teleport_post_reset_script_default}}
-#   cat|COMPOSE_INTERACTIVE_NO_CLI= {{'{{'}}teleport_dc}} \
-#   run -u django --no-deps --rm django sh -ex - <<EOF
+#   cd "{{'{{'}}teleport_wd}}"
+#   {{'{{'}}cops_django_drun}} sh -ex - <<EOF
 #   /code/sys/scripts/mysuperscript.sh
+#   EOF
+#   cd "{{'{{'}}teleport_wd}}"
+#   {{'{{'}}cops_django_drun}} python <<EOF
+#   print('helloworld')
 #   EOF
 # teleport_ms_project: {{cookiecutter.lname}}
 
