@@ -6,30 +6,30 @@
 - edit your /etc/hosts if stack is not yet in DNS
 
     ```
-    x.x.x.x {{cookiecutter.dev_host}}     {{cookiecutter.dev_domain}}
-    x.x.x.x {{cookiecutter.qa_host}}      {{cookiecutter.qa_domain}}
-    x.x.x.x {{cookiecutter.staging_host}} {{cookiecutter.staging_domain}}
-    x.x.x.x {{cookiecutter.prod_host}}    {{cookiecutter.prod_domain}}
+    {% if cookiecutter.dev_host %}x.x.x.x {{cookiecutter.dev_host}}     {{cookiecutter.dev_domain}}{%endif%}
+    {% if cookiecutter.qa_host %}x.x.x.x {{cookiecutter.qa_host}}      {{cookiecutter.qa_domain}}{%endif%}
+    {% if cookiecutter.staging_host %}x.x.x.x {{cookiecutter.staging_host}} {{cookiecutter.staging_domain}}{%endif%}
+    {% if cookiecutter.prod_host %}x.x.x.x {{cookiecutter.prod_host}}    {{cookiecutter.prod_domain}}{%endif%}
     ```
 - Put this in your ``~/.ssh/config``
 
     ```sshconfig
-    Host {{cookiecutter.dev_host}}
+    {% if cookiecutter.dev_host%}Host {{cookiecutter.dev_host}}
     User root
     ServerAliveInterval 5
-    Port {{cookiecutter.dev_port}}
-    {%- if cookiecutter.staging_host%}Host {{cookiecutter.staging_host}}
+    Port {{cookiecutter.dev_port}}{%endif%}
+    {% if cookiecutter.staging_host%}Host {{cookiecutter.staging_host}}
     User root
     ServerAliveInterval 5
     Port {{cookiecutter.staging_port}}{%endif%}
-    {%-if cookiecutter.qa_host %}Host {{cookiecutter.qa_host}}
+    {% if cookiecutter.qa_host %}Host {{cookiecutter.qa_host}}
     User root
     ServerAliveInterval 5
     Port {{cookiecutter.qa_port}}{%endif%}
-    Host {{cookiecutter.prod_host}}
+    {% if cookiecutter.prod_host %}Host {{cookiecutter.prod_host}}
     User root
     ServerAliveInterval 5
-    Port {{cookiecutter.prod_port}}
+    Port {{cookiecutter.prod_port}}{%endif%}
     ```
 
 ## init local deploy
