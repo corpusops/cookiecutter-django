@@ -8,7 +8,6 @@ boto3>=1.9,<=1.10
 django-storages>=1.7,<1.8
 deepmerge<=1.0
 {% endif %}
-docxtpl>=0.5,<0.6
 django-url-filter>=0.3,<0.4
 {% if cookiecutter.with_djextensions %}django-extensions>=3.0,<4.0{% endif %}
 
