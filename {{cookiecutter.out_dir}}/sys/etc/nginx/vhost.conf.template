@@ -86,7 +86,7 @@ map $http_x_forwarded_host $best_http_host {
         proxy_redirect off;
         proxy_pass http://django:8000;
         {{'{{'}} if ne .xscriptname "" }}
-        proxy_set_header X-Script-Name {{.xscriptname}};
+        proxy_set_header X-Script-Name {{'{{'}}.xscriptname}};
         {{'{{'}} end }}
         # Never cache the API content to prevent proxy caching
         add_header Pragma "no-cache";
@@ -163,7 +163,7 @@ server {
         root  /public/502.html;
     }
     {{'{{'}} if eq .noforcessl "1"}}# {{'{{'}} end }}if ($forwarded_ssl_scheme != "https"){ rewrite ^(.*)$ https://$host$1 permanent; }
-    {{'{{'}} if ne .xscriptname "" }}rewrite ^{{.xscriptname}}/?(.*)$ /$1 break;{{ end }}
+    {{'{{'}} if ne .xscriptname "" }}rewrite ^{{'{{'}}.xscriptname}}/?(.*)$ /$1 break;{{'{{'}} end }}
 
     {{'{{'}} if ne .nostatics "1" }}
     location ~ ^/static(?<static>.*) {
