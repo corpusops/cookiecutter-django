@@ -37,13 +37,15 @@ x-images:
       {% endif %}
       DJANGO__USER_UID: "${DJANGO__USER_UID:-1000}"
       {% if cookiecutter.with_ftp %}
-      FTP_USER_UID: "${DJANGO__USER_UID:-1000}"
       DJANGO__FTP_USER: "${DJANGO__FTP_USER:-ftp}"
-      FTP_USER_NAME: "${DJANGO__FTP_USER:-ftp}"
       DJANGO__FTP_PASSWORD: "${DJANGO__FTP_PASSWORD:-secret1324510}"
-      FTP_USER_PASS: "${DJANGO__FTP_PASSWORD:-secret1324510}"
       DJANGO__FTP_PORT: "${DJANGO__FTP_PORT:-{{cookiecutter.ftp_port_range_start|int -1 }}}"
+      {% if cookiecutter.with_ftp in ['ftp'] %}
       FTP_USER_HOME: "${DJANGO__FTP_ROOT:-/ftp}"
+      FTP_USER_NAME: "${DJANGO__FTP_USER:-ftp}"
+      FTP_USER_PASS: "${DJANGO__FTP_PASSWORD:-secret1324510}"
+      FTP_USER_UID: "${DJANGO__USER_UID:-1000}"
+      {% endif %}
       {% endif %}
       SECRET_KEY: "${SECRET_KEY:-ChangeThatSuperSecret}"
       MAILCATCHER_USER: "${MAILCATCHER_USER:-mailcatcher}"
@@ -59,7 +61,7 @@ x-images:
       PROJECT_DIR: "${PROJECT_DIR:-/code/src/{{cookiecutter.django_project_name}}/}"
       PROJECT_PACKAGE: "${PROJECT_PACKAGE:-{{cookiecutter.django_project_name}}}"
       DJANGO_WSGI: "${DJANGO_WSGI:-{{cookiecutter.django_project_name}}.wsgi}"
-      EXTRA_USER_DIRS: ""
+      EXTRA_USER_DIRS: "{% if cookiecutter.with_ftp%}${DJANGO__FTP_ROOT:-/ftp}{%endif%}"
       GUNICORN_CLASS: "${GUNICORN_CLASS:-{{cookiecutter.gunicorn_class}}}"
       SECRET_KEY: "${SECRET_KEY:-ChangeThatSuperSecret}"
 {% if cookiecutter.with_celery %}      DJANGO_CELERY: "${DJANGO_CELERY:-{{cookiecutter.django_project_name}}.celery:app}"
@@ -92,15 +94,16 @@ x-images:
 {% if cookiecutter.with_ftp %}
   ftp: &ftp
     <<: [ *env ]
-    image: corpusops/pureftpd
+    image: {{ cookiecutter.with_ftp in ['ssh'] and 'corpusops/sshd' or 'corpusops/pureftpd' }}
     environment: &ftp_env
       <<: [ *env_vars ]
+      {% if cookiecutter.with_ftp in ['ftp'] %}
       ADDED_FLAGS: "-O w3c:/var/log/pure-ftpd/transfer.log"
       FTP_MAX_CONNECTIONS: 50
-      FTP_MAX_CLIENTS: 50
+      FTP_MAX_CLIENTS: 50{%endif%}
 {% endif %}
 services:
-{% if cookiecutter.with_ftp -%}
+{% if cookiecutter.with_ftp -%}{% if cookiecutter.with_ftp in ['ftp']%}
 # has only to be reachable from within the docker network (no passive mode !)
   ftp-int:
     <<: [ *ftp ]
@@ -112,7 +115,8 @@ services:
     - "ftp-root:${DJANGO__FTP_ROOT:-/ftp}"
     - ftp-pw:/etc/pure-ftpd/passwd
     - ftp-ssl:/etc/ssl/private
-    - ftp-log-int:/var/log/pure-ftpd
+    - ftp-log-int:/var/log/pure-ftpd{%endif%}
+{% if cookiecutter.with_ftp in ['ftp']%}
   ftp:
     <<: [ *ftp ]
     environment:
@@ -127,6 +131,20 @@ services:
     - ftp-pw:/etc/pure-ftpd/passwd
     - ftp-ssl:/etc/ssl/private
     - ftp-log:/var/log/pure-ftpd
+{% elif cookiecutter.with_ftp in ['ssh']%}
+  ftp:
+    <<: [ *ftp ]
+    environment:
+      <<: [ *ftp_env ]
+      SFTP_MODE: "${SFTP_MODE:-true}"
+      SFTP_CHROOT: "${SFTP_CHROOT:-true}"
+      SSH_USERS: "${DJANGO__FTP_USER:-ftp}:${DJANGO__USER_UID:-1000}::${DJANGO__FTP_PASSWORD:-secret1324510}"
+    ports:
+    - "${DJANGO__FTP_LISTEN:-0.0.0.0}:${DJANGO__FTP_PORT:-{{cookiecutter.ftp_port_range_start|int -1}}}:22"
+    volumes:
+    - "ftp-root:${DJANGO__FTP_ROOT:-/home/ftp}"
+    - ftp-log:/var/log
+{% endif %}
 {%- endif %}
   mailcatcher:
     <<: [ *env ]
@@ -216,7 +234,7 @@ services:
     depends_on:
     - {{cookiecutter.app_type}}
     volumes:
-{% if cookiecutter.with_ftp %}     - "ftp-root:${DJANGO__FTP_ROOT:-/ftp}"{% endif %}
+{% if cookiecutter.with_ftp %}    - "ftp-root:${DJANGO__FTP_ROOT:-/ftp}"{% endif %}
     - ./sys/scripts:/code/sys/scripts
     {%- if not cookiecutter.remove_cron %}
     - ./sys/etc/cron.d:/code/sys/etc/cron.d/
@@ -286,7 +304,9 @@ volumes:
 {% if cookiecutter.with_ftp %}
   ftp-root:
   ftp-log:
+{% if cookiecutter.with_ftp in ['ftp'] %}
   ftp-log-int:
   ftp-pw:
   ftp-ssl:
+{% endif -%}
 {% endif -%}

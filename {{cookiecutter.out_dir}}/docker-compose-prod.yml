@@ -5,9 +5,9 @@ x-{{cookiecutter.app_type}}: &{{cookiecutter.app_type}}
   - ./local.py:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/local.py
   image: "${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE}:${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE_VERSION}"
 services:
-{% if cookiecutter.with_ftp %}
+{% if cookiecutter.with_ftp %}{% if cookiecutter.with_ftp in ['ftp']%}
   ftp-int:
-    restart: unless-stopped
+    restart: unless-stopped{%endif%}
   ftp:
     restart: unless-stopped
 {%- endif %}
