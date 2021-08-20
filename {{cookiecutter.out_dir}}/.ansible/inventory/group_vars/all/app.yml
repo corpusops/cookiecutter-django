@@ -63,7 +63,7 @@ cops_django_ftp_port_range_end: "{{'{{'}}(cops_django_ftp_port_range_start|int) 
 cops_django_ftp_port_range: "{{'{{'}}cops_django_ftp_port_range_start}} {{'{{'}}cops_django_ftp_port_range_end}}"
 {% endif %}
 cops_django_ftp_listen: 0.0.0.0
-cops_django_ftp_user: django
+cops_django_ftp_user: ftp
 cops_django_has_ftp: true
 cops_django_ftp_root: {{cookiecutter.ftp_root}}
 {% endif%}
