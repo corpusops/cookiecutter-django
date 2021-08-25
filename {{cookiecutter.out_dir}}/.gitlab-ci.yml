@@ -619,7 +619,7 @@ build_images: &build_images
     wait
     log "END push:"
     cat ${ret}
-    if !( egrep -q ^0 ${ret} );then exit 1;fi'
+    if [ "$(egrep -v ^0 $ret|wc -l)" != "0" ];then exit 1;fi'
   - *writeokstatus
   - *waitafterjobs
   variables: &release_vars
