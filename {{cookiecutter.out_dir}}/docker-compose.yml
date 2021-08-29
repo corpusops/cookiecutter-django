@@ -207,7 +207,6 @@ services:
       - |-
         sed -i -re "s/user\s+.*;/user root;/g" /etc/nginx/nginx.conf
         export DJANGO__HTTP_PROTECT_USER=$${DJANGO__HTTP_PROTECT_USER:-root}
-        export DJANGO__HTTP_PROTECT_USER=$${DJANGO__HTTP_PROTECT_USER:-root}
         export DJANGO__HTTP_PROTECT_PASSWORD=$${DJANGO__HTTP_PROTECT_PASSWORD-}
         : retrocompat
         touch /etc/htpasswd/protect
