@@ -27,6 +27,7 @@ x-images:
       - ./sys/etc/supervisor.d:/code/etc/supervisor.d
       {%- endif%}
       - ./sys/etc/cron.d:/code/sys/etc/cron.d/
+      - ./docs:/code/docs
 {%- if not cookiecutter.no_lib %}
       - ./lib:/code/lib
 {%- endif%}
@@ -49,6 +50,10 @@ services:
   {{nginxc}}  - "${DJANGO__HTTP_PORT:-80}:80"
   {{nginxc}}  {% if not nginxc%}{{nginxsslc}}{%endif %}- "${DJANGO__HTTPS_PORT:-443}:443"
   {{nginxc}}  environment: {NO_SSL: "0"}
+  {{nginxc}}  volumes:
+  {{nginxc}}  - ./docs:/code/docs
+  {{nginxc}}  - ./local/media:/code/public/media
+  {{nginxc}}  - ./private:/code/private
   {{cookiecutter.app_type}}:
     <<: [ *django ]
     environment:

@@ -442,6 +442,7 @@ build_images: &build_images
     BEFORE_STATUS_FLAGS: ${SERVICES_TOWER_FLAG}{%if cookiecutter.with_bundled_front%} ${JSBUILD_STATUS_FLAG}{%endif%}
   script:
   - *definefuncs
+  - &doc apk add bash && ./docs/build.sh
   - &build_step1 |-
     set +e
     # copy in compose image the wanted docker binary version

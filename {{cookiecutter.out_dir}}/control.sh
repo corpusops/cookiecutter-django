@@ -459,6 +459,12 @@ do_vscode() {
 }
 
 
+#  doc: generate documentation
+do_doc() {
+    docs/build.sh "$@"
+}
+
+
 do_main() {
     local args=${@:-usage}
     local actions="up_corpusops|shell|usage|install_docker|setup_corpusops|open_perms_valve|get_container_code|vscode"
@@ -466,6 +472,7 @@ do_main() {
 
     actions="$actions|init|up|fg|pull|build|buildimages|down|rm|run"
     actions_{{cookiecutter.app_type}}="runserver|tests|test|coverage|linting|manage|python{% if cookiecutter.with_celery%}|celery_beat_fg|celery_worker_fg{%endif%}"
+    actions="$actions|doc"
     actions="@($actions|$actions_{{cookiecutter.app_type}})"
     action=${1-}
     source_envs
