@@ -1,0 +1,10 @@
+/logs/crons*.log
+/code/data/crons*.log {
+        daily
+        size 5M
+        compress
+        rotate {{'{{'}}.Env.CRON_LOGROTATE | default "365" }}
+        copytruncate
+        missingok
+        notifempty
+}

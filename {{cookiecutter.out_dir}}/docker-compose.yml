@@ -249,6 +249,7 @@ services:
     - ./sys/scripts:/code/sys/scripts
     {%- if not cookiecutter.remove_cron %}
     - ./sys/etc/cron.d:/code/sys/etc/cron.d/
+    - ./sys/etc/logrotate.d:/code/sys/etc/logrotate.d/
     {%- endif %}
     - ./src/{{cookiecutter.django_settings.replace('.', '/')}}/instances:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/instances
     - mediafiles:/code/public/media
