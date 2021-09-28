@@ -9,9 +9,9 @@ x-images:
   django: &django
     environment: &django_env
        DJANGO_SETTINGS_MODULE: "${DJANGO_SETTINGS_MODULE:-{{cookiecutter.django_settings}}.dev}"
-       NO_MIGRATE: "1"
-       NO_COLLECT_STATIC: "1"
-       NO_STATICS: "1"
+       NO_MIGRATE: "${NO_MIGRATE-1}"
+       NO_COLLECT_STATIC: "${NO_COLLECT_STATIC-1}"
+       NO_STATICS: "${NO_STATICS-1}"
     volumes: &django_volumes
       {%-if cookiecutter.use_submodule_for_deploy_code %}
       - ./{{cookiecutter.deploy_project_dir}}/sys/sudoer:/etc/sudoers.d/${APP_TYPE:-django}
