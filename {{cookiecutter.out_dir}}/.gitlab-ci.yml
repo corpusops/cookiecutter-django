@@ -454,7 +454,7 @@ build_images: &build_images
     EOFCACHE
       cfgs="${cfgs} ${dcoverrides}"
       dc="$D_COMPOSE" && for i in ${cfgs};do dc="$dc -f ${i}";done
-      cimg=$($dc config|docker run --rm -i mikefarah/yq yq r - "services.${service}.image")
+      cimg=$($dc config|docker run --rm -i --entrypoint yq mikefarah/yq:4 e ".services.${service}.image" -)
       # As per https://github.com/moby/moby/issues/39003, when a tag is built with BUILDKIT_INLINE_CACHE
       # and https://github.com/docker/compose/issues/7336
       # be sure 1. to not touch it (retag, or anything) before pushing it to registry or you won't be
@@ -507,7 +507,7 @@ build_images: &build_images
       if (to_squash);then
         # compute the docker-compose service build: args back to docker CLI build-args
         buildargs=$($dc config\
-            |docker run -i --rm mikefarah/yq yq r - services.${service}.build.args -j\
+            |docker run -i --rm --entrypoint yq mikefarah/yq:4 e .services.${service}.build.args - -j\
             |docker run -i --rm imega/jq ".|to_entries[]|\" --build-arg \(.key)=\(.value)\"" -j)
         if !(vv docker build --squash -t ${cimg} . $buildargs);then exit 1;fi
       else
