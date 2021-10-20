@@ -165,6 +165,7 @@ server {
     {{'{{'}} if eq .noforcessl "1"}}# {{'{{'}} end }}if ($forwarded_ssl_scheme != "https"){ rewrite ^(.*)$ https://$host$1 permanent; }
     {{'{{'}} if ne .xscriptname "" }}rewrite ^{{'{{'}}.xscriptname}}/?(.*)$ /$1 break;{{'{{'}} end }}
 
+    rewrite ^/docs/?$ $scheme://$host/docs/index.html permanent;
     location ~ ^/docs(?<docs>.*) {
     {{'{{'}} if .Env.DJANGO__DOC_PROTECT_PASSWORD }}
     auth_basic            "Restricted";
