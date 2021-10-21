@@ -226,14 +226,13 @@ before_script: &top_before_script
   -e "s/^([^=]+_IMAGE_VERSION=.*)latest/\\1build-${CI_PIPELINE_IID}/g"
   -e "s|$DOCKER_REGISTRY|$BUILDCACHE_REGISTRY|g"
   -e "s/^(CI_COMMIT_SHA=).*/\\1${CI_COMMIT_SHA}/g" > $env;done;
-{%if cookiecutter.with_bundled_front%}
-- &warm_statics_tarball
-  sh -ec "if [ -n ${STATICS_LOAD-} ] && [ -e \"\$STATICS_TARBALL\" ];then
-     echo \"Warming statics cache from \$STATICS_TARBALL\" >&2;
-     if [ ! -e sys/statics ];then mkdir -p sys/statics;fi;
-     cp -fv \"\$STATICS_TARBALL\" sys/statics/;
-  fi"
-{%endif%}
+{{jscomment}}- &warm_statics_tarball
+{{jscomment}}  sh -ec "if [ -n ${STATICS_LOAD-} ] && [ -e \"\$STATICS_TARBALL\" ];then
+{{jscomment}}     echo \"Warming statics cache from \$STATICS_TARBALL\" >&2;
+{{jscomment}}     if [ ! -e sys/statics ];then mkdir -p sys/statics;fi;
+{{jscomment}}     cp -fv \"\$STATICS_TARBALL\" sys/statics/;
+{{jscomment}}  fi"
+
 # to speed up pipelines, we assemble the 2 registry services into one single one
 # in the fist service, we spawn two registries, one for dockerhub cache, and one for builds
 # indeed, when a registry is in pullthrough mode, we cant push to it custom images.
@@ -749,7 +748,7 @@ manual_release_and_deploy_{{i}}: &manual_release_and_deploy_{{i}}_tpl
   script:
   - *waitbeforejobs
   - *definefuncs
-  {% if cookiecutter.with_bundled_front%}- *warm_statics_tarball{% else %}#{%endif%}
+  {{jscomment}}- *warm_statics_tarball
   - *build_step1
   - *release_step1
   - *release_tags
