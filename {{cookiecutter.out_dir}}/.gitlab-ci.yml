@@ -206,9 +206,11 @@ before_script: &top_before_script
 - &gendockerlogin |-
   set -e;cat > /docker_login <<EOF
   set -e
+  if [ "x${REGISTRY_PASSWORD}" != "x" ];then
   echo "login to $DOCKER_REGISTRY" >&2
   echo "$REGISTRY_PASSWORD" \
     | docker login "$DOCKER_REGISTRY" --username="$REGISTRY_USER" --password-stdin
+  fi
   echo "login to $BUILDCACHE_REGISTRY" >&2
   echo gitlab \
     | docker login $PROXYCACHE_REGISTRY --username gitlab --password-stdin
