@@ -18,6 +18,7 @@
 {{'{{'}} $v := merge $v ( dict "server_name_in_redirect_ssl" ( .Env.NGINX_SERVERNAME_IN_REDIRECT_SSL | default $v.server_name_in_redirect ) ) }}
 {{'{{'}} $v := merge $v ( dict "real_ip_from_recursive"      ( .Env.NGINX_REAL_IP_FROM_RECURSIVE | default "on" )                           ) }}
 {{'{{'}} $v := merge $v ( dict "real_ip_from"                ( .Env.NGINX_REAL_IP_FROM | default "10.0.0.0/8 172.16.0.0/12 192.168.0.0/16" )) }}
+{{'{{'}} $v := merge $v ( dict "real_ip_header"              ( .Env.NGINX_REAL_IP_HEADER | default "x-forwarded-for" )                      ) }}
 {{'{{'}} $v := merge $v ( dict "ssl_ciphers"                 ( .Env.NGINX_SSL_CIPHERS | default $dciphers )                                 ) }}
 {{'{{'}} $v := merge $v ( dict "ssl_protocols"               ( .Env.NGINX_SSL_PROTOCOLS | default "TLSv1 TLSv1.1 TLSv1.2" )                 ) }}
 {{'{{'}} $v := merge $v ( dict "log_level"                   ( .Env.NGINX_LOGLEVEL | default "crit" )                 ) }}
@@ -41,6 +42,7 @@ log_format custom_combined '"$remote_addr - $remote_user [$time_local] "$request
 map $request_method $method_loggable { OPTIONS 0;default 1;}
 
 # activate real_ip logging
+real_ip_header{{'{{'}}$v.real_ip_header}};
 real_ip_recursive {{'{{'}} $v.real_ip_from_recursive }};
 {{'{{'}} range $v.real_ip_from | splitList " " }}
 set_real_ip_from {{'{{'}} . }};
