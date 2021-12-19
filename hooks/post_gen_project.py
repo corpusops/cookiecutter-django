@@ -77,6 +77,8 @@ if [ ! -e "{{cookiecutter.deploy_project_dir}}/.git" ];then
   && git fetch origin && git reset --hard origin/{DEPLOY_BR} )
 """.format(**locals())
 EGITSCRIPT = """
+sed="sed";if (uname | egrep -iq "darwin|bsd");then sed="gsed";fi
+if !($sed --version);then echo $sed not avalaible;exit 1;fi
 {%raw%}vv() {{ echo "$@">&2;"$@"; }}{%endraw%}
 {% if cookiecutter.use_submodule_for_deploy_code %}
 dockerfile={{cookiecutter.deploy_project_dir}}/Dockerfile
@@ -86,8 +88,8 @@ dockerfile=Dockerfile
 {% if cookiecutter.remove_cron %}
 if [ -e $dockerfile ] && [ ! -h $dockerfile ];then
     rm -f crontab
-    sed -i -re "/ADD .*cron/d" $dockerfile
-    sed -i -re "/CMD .*cron/d" $dockerfile
+    $sed -i -re "/ADD .*cron/d" $dockerfile
+    $sed -i -re "/CMD .*cron/d" $dockerfile
 fi
 {% endif %}
 {% for i in ['dev', 'prod', 'qa', 'staging'] -%}
@@ -103,23 +105,23 @@ rm -rfv \
 {% endfor %}
 {% if cookiecutter.no_private %}
 rm -rf private
-sed -i -re "/ADD( --chown={{cookiecutter.app_type}}:{{cookiecutter.app_type}})? private/d" $dockerfile
+$sed -i -re "/ADD( --chown={{cookiecutter.app_type}}:{{cookiecutter.app_type}})? private/d" $dockerfile
 {% endif %}
 {% if cookiecutter.no_lib %}
-sed -i -re "/ADD( --chown={{cookiecutter.app_type}}:{{cookiecutter.app_type}})? lib/d" $dockerfile
+$sed -i -re "/ADD( --chown={{cookiecutter.app_type}}:{{cookiecutter.app_type}})? lib/d" $dockerfile
 rm -rf lib
 {% endif %}
 if [ -e $dockerfile ] && [ ! -h $dockerfile ];then
-sed -i -re \
+$sed -i -re \
 	"s/PY_VER=.*/PY_VER={{cookiecutter.py_ver}}/g" \
 	$dockerfile
 
-sed -i -re \
+$sed -i -re \
 	"s/project/{{cookiecutter.django_project_name}}/g" \
 	$dockerfile
 fi
 if ( find sys/*sh 2>/dev/null );then
-sed -i -re \
+$sed -i -re \
 	"s/project/{{cookiecutter.django_project_name}}/g" \
 	sys/*sh
 fi
@@ -129,7 +131,7 @@ set +x
 while read f;do
     if ( egrep -q "local/{{cookiecutter.app_type}}" "$f" );then
         echo "rewrite: $f"
-        vv sed -i -r \
+        vv $sed -i -r \
         -e "s|local/{{cookiecutter.app_type}}/||g" \
         -e "/(ADD\s+){{cookiecutter.deploy_project_dir.replace('/', '\/')}}\/ local/d" \
         -e "s|{{cookiecutter.deploy_project_dir}}/||g" \
@@ -137,15 +139,15 @@ while read f;do
         "$f"
     fi
 done < <( find -type f|egrep -v "((^./(\.tox|\.git|local))|/static/)"; )
-sed -i -re "/\/code\/sys\/\* sys/d" $dockerfile
+$sed -i -re "/\/code\/sys\/\* sys/d" $dockerfile
 {% endif %}
 set -x
 {% if not cookiecutter.with_celery %}
 find src -name celery.py -delete
 {% endif %}
 # strip whitespaces from compose
-sed -i -re 's/\s+$//g' docker-compose*.yml
-sed -i -r '/^\s*$/d' docker-compose*.yml
+$sed -i -re 's/\s+$//g' docker-compose*.yml
+$sed -i -r '/^\s*$/d' docker-compose*.yml
 {% if not cookiecutter.with_bundled_front%}rm -f .nvmrc{%endif%}
 {% if not cookiecutter.with_apptest%}find src -name apptest |xargs rm -rf{%endif%}
 """
