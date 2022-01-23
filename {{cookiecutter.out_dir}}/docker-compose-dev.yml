@@ -83,5 +83,5 @@ services:
 {%- endif %}
   mailcatcher:
     ports:
-    - "${DJANGO__MAILCATCHER_LISTEN:-0.0.0.0}:${DJANGO__MAILCATCHER:-8025}:8025"
+    - "${DJANGO__MAILCATCHER_LISTEN:-0.0.0.0}:${DJANGO__MAILCATCHER_PORT:-8025}:8025"
   backup: { <<: [ *bypass ] }
