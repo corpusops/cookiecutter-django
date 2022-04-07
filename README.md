@@ -34,6 +34,7 @@ Install gnu-sed with `brew install gsed` and use it as default with `export PATH
     cd ~/out_dir
     # review before commit
     # for relative checkout to work, we need remote objects locally
+    git add -f local/regen.sh
     git commit local -m "Add deploy"
     ```
 
