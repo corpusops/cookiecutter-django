@@ -246,6 +246,34 @@ Once you have build once your image, you have two options to reuse your image as
     - Add a debug configuration
         - host: `0.0.0.0`
 
+### fixes
+- If there are errors when running debug sessions eg:
+
+    ```
+    django_1          | ModuleNotFoundError: No module named '_pydevd_bundle_ext'
+    ```
+
+    - stop your stack
+    - stop pycharm
+    - docker rmi all pycharm images (`docker images -a |grep -i pycharm`)
+    - docker volume rm all pycharm volumes (`docker volume ls |grep -i pycharm`)
+    - restart your stack (`./control.sh up`)
+    - restart pycharm
+    - edit your debug session and add/modify this envvar: `PYDEVD_USE_CYTHON=NO`
+    - start a debug session
+    - `docker exec -it <THEPYCHARCONTAINERID> bash` (`docker ps`)
+
+        ```bash
+        . /code/venv/bin/activate
+        apt update && apt install $(cat /code/apt.txt)
+        cd /opt/.pycharm_helpers/pydev
+        rm -rf build
+        python setup_cython.py build_ext --inplace
+        ```
+    - terminate the debug session in pycharm
+    - edit your debug session and add/modify this envvar: `PYDEVD_USE_CYTHON=YES`
+    - Congrats, your debug session env should be repaired
+
 
 ### Using VSCode
 
