@@ -281,13 +281,13 @@ services: &services_tpl
     printf 'gitlab:$2y$05$hCvFNwJZBGGlIGzQ0sZZw.Eoijz9CcblylhqQqettP.JnCMrwQMk6\n\n'>/htpasswd
     #
     if [ ! -e "${s}" ];then mkdir -pv ${s}; fi
-    if [ ! -e "${s}/${cn}.c.crt" ] || [ ! -e "${s}/${cn}.ca.crt" ];then
+    if [ ! -e "${s}/${cn}.c.crt" ] || [ ! -e "${s}/${cn}.ca.crt" ] || ! ( openssl x509 -in "${s}/${cn}.c.crt" -noout -text |grep -q DNS: ) ;then
       if ! ( openssl --version >/dev/null 2>&1 );then apk update && apk add openssl;fi
       openssl genrsa -out "${s}/${cn}.ca.key" 4096 && openssl genrsa -out "${s}/${cn}.c.key" 4096
       openssl req -batch -x509 -new -nodes -key "${s}/${cn}.ca.key" -sha256 -days 34675 \
         -subj "/CN=${cn}Cacert/" -out "${s}/${cn}.ca.crt"
       openssl req -batch -new -sha256 -key "${s}/${cn}.c.key" -subj "/CN=${cn}/" -out "${s}/${cn}.c.csr"
-      openssl x509 -req -in "${s}/${cn}.c.csr" -CA "${s}/${cn}.ca.crt" -CAkey "${s}/${cn}.ca.key" \
+      echo "subjectAltName=DNS:${cn}"|openssl x509 -req -extfile /dev/stdin -in "${s}/${cn}.c.csr" -CA "${s}/${cn}.ca.crt" -CAkey "${s}/${cn}.ca.key" \
         -CAcreateserial -out "${s}/${cn}.c.crt" -days 34675 -sha256
     fi
     ( unset REGISTRY_AUTH_HTPASSWD_REALM REGISTRY_AUTH_HTPASSWD_PATH \
