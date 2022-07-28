@@ -201,7 +201,7 @@ before_script: &top_before_script
 - &settz ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo ${TZ} > /etc/timezone
 - &pullsubmodules
     set -e;if ! (git --version >/dev/null 2>&1);then apk update;apk add git;fi &&
-    cd ${PROJECT_COMMON_DEPLOY_DIR};git fetch origin;git reset --hard $DJANGO_DEPLOY_VERSION --;cd - >/dev/null 2>&1
+    cd ${PROJECT_COMMON_DEPLOY_DIR};( git fetch --unshallow || true );git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*";git fetch origin;git reset --hard $DJANGO_DEPLOY_VERSION --;cd - >/dev/null 2>&1
 # first registry login does not have to success, we only want it to be available on release
 - &gendockerlogin |-
   set -e;cat > /docker_login <<EOF
