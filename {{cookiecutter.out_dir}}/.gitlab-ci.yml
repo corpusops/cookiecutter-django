@@ -105,6 +105,7 @@ variables:
   PRELOAD_BUILDCACHE_IMAGES: ${BUILDCACHE_REF_DOCKER_IMAGE}-nosquash $BUILDCACHE_CURRENT_DOCKER_IMAGE $BUILDCACHE_REF_DOCKER_IMAGE $BUILDCACHE_LATEST_DOCKER_IMAGE
   PRELOAD_RELEASED_IMAGES: $REF_DOCKER_IMAGE $LATEST_DOCKER_IMAGE
   TAGGUABLE_IMAGE_BRANCH: "^(master|dev|qa|staging|prod)$"
+  SKIP_TEST_BRANCHES: "(qa|staging|prod)"
   # To speed up all builds we may cache in Controls which branch is used to generate image cache tarball
   CACHE_DAYS: "7"
   # {{cookiecutter.lname}} settings
@@ -148,6 +149,7 @@ before_script: &top_before_script
 - &createdirs for i in ${WORKSPACE} ${STATICS_DIRECTORY} ${PROJECT_CACHE_ROOT}/apt;do if [ ! -e "$i" ];then mkdir -pv "$i";fi;done
 - &definefuncs |-
    set -e;if [ ! -e "${WORKSPACE}/funcs" ];then cat>"${WORKSPACE}/funcs"<<'EOF'
+   is_testable() { if ( echo "${CI_COMMIT_REF_NAME}" | egrep -q "${SKIP_TEST_BRANCHES}" );then return 1;fi;return 0; }
    to_squash() {
     # as squashing is a slow and consuming operation, only do it for releasable pipelines
     if ! ( echo ${CI_COMMIT_REF_NAME} | egrep -q "$TAGGUABLE_IMAGE_BRANCH" );then NO_SQUASH=1;fi;
@@ -544,7 +546,7 @@ build_images: &build_images
   - &launch_test_stack
     echo CONTROL_COMPOSE_FILES=$(echo ${COMPOSE_PROD_CONFIGS}|awk '{print $1}')>>.env;
     set -e;apk update -q;apk add -q bash;echo COMPOSE_PROJECT_NAME=run${CI_PIPELINE_IID}_${CI_JOB_ID}>>.env;
-    for i in $DOCKER_SERVICES;do ./control.sh up --force-recreate --no-deps $i;done
+    if ( is_testable ) ;then for i in $DOCKER_SERVICES;do ./control.sh up --force-recreate --no-deps $i;done;fi
   - *writeokstatus
   allow_failure: true
 
@@ -557,8 +559,8 @@ build_images: &build_images
 {{testsc}}  script:
 {{testsc}}  - *definefuncs
 {{testsc}}  - *launch_test_stack
-{{testsc}}  - ./control.sh test
-{{testsc}}  - ./control.sh coverage
+{{testsc}}  - if ( is_testable ) ;then ./control.sh test;fi
+{{testsc}}  - if ( is_testable ) ;./control.sh coverage;fi
 {{testsc}}  - *writeokstatus
 {{testsc}}  - *waitafterjobs
 
@@ -570,7 +572,7 @@ build_images: &build_images
 {{lintingc}}  script:
 {{lintingc}}  - *definefuncs
 {{lintingc}}  - *launch_test_stack
-{{lintingc}}  - ./control.sh linting
+{{lintingc}}  - if ( is_testable ) ;then ./control.sh linting;fi
 {{lintingc}}  - *writeokstatus
 {{lintingc}}  - *waitafterjobs
 
