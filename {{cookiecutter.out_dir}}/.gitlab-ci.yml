@@ -202,8 +202,10 @@ before_script: &top_before_script
 - &linkapt set -e;if [ -e /var/cache/apt ];then rm -rf /var/cache/apt/archives;ln -s ${PROJECT_CACHE_ROOT}/apt /var/cache/apt/archives;fi
 - &settz ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo ${TZ} > /etc/timezone
 - &pullsubmodules
+    if !( echo ${GIT_SUBMODULE_STRATEGY-} | egrep -q none );then
     set -e;if ! (git --version >/dev/null 2>&1);then apk update;apk add git;fi &&
-    cd ${PROJECT_COMMON_DEPLOY_DIR};( git fetch --unshallow  >/dev/null 2>&1 || true );git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*";git fetch origin;git reset --hard $DJANGO_DEPLOY_VERSION --;cd - >/dev/null 2>&1
+    cd ${PROJECT_COMMON_DEPLOY_DIR};( git fetch --unshallow  >/dev/null 2>&1 || true );git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*";git fetch origin;git reset --hard $DJANGO_DEPLOY_VERSION --;cd - >/dev/null 2>&1;
+    fi
 # first registry login does not have to success, we only want it to be available on release
 - &gendockerlogin |-
   set -e;cat > /docker_login <<EOF
