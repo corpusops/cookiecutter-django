@@ -562,7 +562,7 @@ build_images: &build_images
 {{testsc}}  - *definefuncs
 {{testsc}}  - *launch_test_stack
 {{testsc}}  - if ( is_testable ) ;then ./control.sh test;fi
-{{testsc}}  - if ( is_testable ) ;./control.sh coverage;fi
+{{testsc}}  - if ( is_testable ) ;then ./control.sh coverage;fi
 {{testsc}}  - *writeokstatus
 {{testsc}}  - *waitafterjobs
 
