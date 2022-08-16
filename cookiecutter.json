@@ -123,7 +123,7 @@
     "no_private": "",
     "base_image": "corpusops/ubuntu-bare:20.04",
     "registry_image": "registry:2",
-    "compose_image": "docker/compose:1.27.4",
+    "compose_image": "docker/compose:1.29.2",
     "docker_test_image": "busybox",
     "dind_image": "docker:dind",
     "gitlabci_envs": "{% set r = [] %}{% for i in ['dev', 'qa', 'staging', 'prod']%}{% if cookiecutter[i+'_host'] %}{% set _ = r.append(i)%}{%endif%}{%endfor%}{{r|join(' ')}}",
