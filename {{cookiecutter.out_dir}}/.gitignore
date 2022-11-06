@@ -68,7 +68,7 @@ testem.log
 yarn-error.log
 /typings
 *~
-/src/{{cookiecutter.django_project_name}}/static/dist/
+/src/*/static/dist/
 
 # e2e
 /e2e/*.js
@@ -79,3 +79,4 @@ yarn-error.log
 
 # DB Files
 *.sqlite3
+/*.sql

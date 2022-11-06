@@ -20,6 +20,7 @@ from importlib import import_module
 
 import django
 from django.utils.log import DEFAULT_LOGGING
+from django.utils.translation import gettext_lazy as _
 
 try:
     from django.utils import six
@@ -34,7 +35,7 @@ except ImportError:
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-{{cookiecutter.lname.upper()}}_DIR = PROJECT_DIR
+{{cookiecutter.django_project_name.upper()}}_DIR = PROJECT_DIR
 SRC_DIR = os.path.dirname(PROJECT_DIR)
 BASE_DIR = os.path.dirname(SRC_DIR)
 DATA_DIR = os.path.join(BASE_DIR, 'data')
@@ -93,7 +94,7 @@ ROOT_URLCONF = PROJECT_NAME + '.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join({{cookiecutter.lname.upper()}}_DIR, 'templates')],
+        'DIRS': [os.path.join({{cookiecutter.lname.upper()}}_DIR, 'templates/')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -183,17 +184,30 @@ AUTH_PASSWORD_VALIDATORS = [
 {% if cookiecutter.user_model %}
 AUTH_USER_MODEL = '{{cookiecutter.user_model}}'
 {% endif %}
+# Login URL and redirect
 # LOGIN_URL = 'login'
 # LOGIN_REDIRECT_URL = 'home'
 # LOGOUT_URL = 'logout'
 
 # Internationalization
-# https://docs.djangoproject.com/en/{{cookiecutter.django_ver_1}}/topics/i18n/
+# https://docs.djangoproject.com/en/2.2/topics/i18n/
+# Local time zone for this installation. Choices can be found here:
+# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
+# although not all choices may be available on all operating systems.
+# On Unix systems, a value of None will cause Django to use the same
+# timezone as the operating system.
+# If running in a Windows environment this must be set to the same as your
 LANGUAGE_CODE = '{{cookiecutter.language_code}}'
 TIME_ZONE = '{{cookiecutter.tz}}'
+# DATE_FORMAT = 'iso-8601'
+# If you set this to False, Django will make some optimizations so as not
+# to load the internationalization machinery.
 USE_I18N = {{ cookiecutter['use_i18n'] and 'True' or 'False'}}
+# If you set this to False, Django will not format dates, numbers and
+# calendars according to the current locale
 USE_L10N = {{ cookiecutter['use_l10n'] and 'True' or 'False'}}
 USE_TZ = {{ cookiecutter['use_tz'] and 'True' or 'False'}}
+# A tuple of directories where Django looks for translation files.
 LOCALE_PATHS = (
     os.path.join(PROJECT_DIR, 'locales'),
 )
@@ -231,7 +245,7 @@ CACHES = {
                 '{}:{}'.format(
                     os.getenv('MEMCACHE_HOST', 'memcached'),
                     os.getenv('MEMCACHE_PORT', '11211'))){%endif%},
-        {% if cookiecutter.cache_system == 'redis'%}"OPTIONS": {
+{% if cookiecutter.cache_system == 'redis'%}        "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },{%endif%}
         {% if cookiecutter.cache_system == 'memcached'%}"KEY_PREFIX": '{{cookiecutter.memcached_key_prefix}}',{%endif%}
@@ -264,6 +278,14 @@ USE_DJANGO_EXTENSIONS = False
 
 INSTANCE_HEADER = None
 INSTANCE_COLOR = '#ffe767'
+
+###############################################################################
+#
+# custom project settings
+#
+###############################################################################
+
+
 
 ###############################################################################
 # Environment settings routines, compliant with 12Factor: https://12factor.net/
@@ -407,6 +429,7 @@ def post_process_settings(globs=None):
     _locals, env = locals_settings_update(locals().copy(), globs)
     check_explicit_settings(_locals)
     for setting, func, fkwargs in (
+        ('COMPRESS_ENABLED', as_bool, {}),
         ('DEBUG', as_bool, {}),
         ('EMAIL_PORT', as_int, {}),
         ('EMAIL_USE_TLS', as_bool, {}),
@@ -505,7 +528,10 @@ def set_prod_settings(globs):
     CORS_ALLOWED_ORIGIN_REGEXES = _locals.setdefault(
         'CORS_ALLOWED_ORIGIN_REGEXES', tuple())
     schemes = ('http://', 'https://')
-    if COPS_ALL_HOSTNAMES:
+    if CORS_ORIGIN_ALLOW_ALL:
+        CORS_ORIGIN_WHITELIST = _locals['CORS_ORIGIN_WHITELIST'] = tuple()
+        CORS_ALLOWED_ORIGIN_REGEXES = _locals['COPS_ALL_HOSTNAMES'] = tuple()
+    elif COPS_ALL_HOSTNAMES:
         CORS_ORIGIN_WHITELIST = _locals['CORS_ORIGIN_WHITELIST'] = tuple()
         CORS_ALLOWED_ORIGIN_REGEXES = tuple()
         for i in COPS_ALL_HOSTNAMES:
@@ -518,7 +544,7 @@ def set_prod_settings(globs):
         _locals['CORS_ALLOWED_ORIGIN_REGEXES'] = CORS_ALLOWED_ORIGIN_REGEXES
 
     # those settings by default are empty, we need to handle this case
-    if not (CORS_ORIGIN_WHITELIST or CORS_ALLOWED_ORIGIN_REGEXES):
+    if not CORS_ORIGIN_ALLOW_ALL and not (CORS_ORIGIN_WHITELIST or CORS_ALLOWED_ORIGIN_REGEXES):
         _locals['CORS_ALLOWED_ORIGIN_REGEXES'] = (
             r'http://{env}-{{cookiecutter.lname}}\.{{cookiecutter.tld_domain}}'.format(env=env),  #noqa
             r'https://{env}-{{cookiecutter.lname}}\.{{cookiecutter.tld_domain}}'.format(env=env),  #noqa

@@ -1,2 +1,0 @@
-pygments
--e local/makina-sphinx-theme/

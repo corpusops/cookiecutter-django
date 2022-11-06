@@ -1,6 +1,7 @@
-# for teleport, do not remove
+# for docs & teleport, do not remove
 openssh-client
 rsync
+make
 # runtime dependencies
 {%- if cookiecutter.py_ver.startswith('3') %}
 python3

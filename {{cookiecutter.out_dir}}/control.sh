@@ -1,4 +1,11 @@
 #!/bin/bash
+
+# If you need more debug play with these variables:
+# export NO_STARTUP_LOGS=
+# export SHELL_DEBUG=1
+# export DEBUG=1
+# start by the first one, then try the others
+
 set -e
 readlinkf() {
     if ( uname | egrep -iq "darwin|bsd" );then
@@ -46,6 +53,10 @@ if [[ -n $NO_SITE_PACKAGES ]];then
     TOX_ARGS="$TOX_ARGS --sitepackages"
 fi
 NO_DEVELOP=${NO_DEVELOP-}
+# special case: be sure to define some docker internal variables but let them overridable through .env
+export DOCKER_BUILDKIT=${DOCKER_BUILDKIT-1}
+export COMPOSE_DOCKER_CLI_BUILD=${COMPOSE_DOCKER_CLI_BUILD-1}
+export BUILDKIT_PROGRESS=${BUILDKIT_PROGRESS-plain}
 
 join_by() { local IFS="$1"; shift; echo "$*"; }
 
@@ -136,6 +147,13 @@ do_dcompose() {
     set -- dvv $DC "$@"
     "$@"
 }
+
+#  dbcompose $@: wrapper to docker-compose with build compose files set
+do_dbcompose() {
+    set -- dvv $DCB "$@"
+    "$@"
+}
+
 
 #  ----
 #  [services_ports=1] usershell $user [$args]: open shell inside $CONTAINER as $APP_USER using docker-compose run
@@ -365,7 +383,8 @@ fi
 if [ -e /code/setup.py ] && [ -z "$NO_DEVELOP" ];then
     TOX_ARGS="--develop $TOX_ARGS"
 fi
-tox $TOX_ARGS'
+tox $TOX_ARGS
+'
 EOF
 }
 
@@ -458,21 +477,34 @@ do_vscode() {
     code $VSCODE_ARGS
 }
 
+#  [NO_BUILD=] do_make_docs: daemon to sync local files inside docker containers (volumes to be exact)
+do_make_docs() {
+    if [[ -z ${NO_BUILD-} ]];then $DCB build docs;fi
+    # by default container entrypoint sync data to output dir
+    $DCB run --rm \
+        -e NO_BUILD=${NO_BUILD-} \
+        -e NO_INIT=${NO_HTML-} \
+        -e NO_CLEAN=${NO_CLEAN-} \
+        -e HOST_USER_UID=$(id -u) \
+        -e SOURCEDIR=${SOURCEDIR-} \
+        -e BUILDDIR=${BUILDDIR-} \
+        -e DEBUG=${DEBUG-} \
+        docs "$@"
+}
 
 #  doc: generate documentation
 do_doc() {
-    docs/build.sh "$@"
+    do_make_docs "$@"
 }
-
 
 do_main() {
     local args=${@:-usage}
     local actions="up_corpusops|shell|usage|install_docker|setup_corpusops|open_perms_valve|get_container_code|vscode"
-    actions="$actions|yamldump|stop|usershell|exec|userexec|dexec|duserexec|dcompose"
+    actions="$actions|yamldump|stop|usershell|exec|userexec|dexec|duserexec|dcompose|dbcompose|ps"
 
     actions="$actions|init|up|fg|pull|build|buildimages|down|rm|run"
     actions_{{cookiecutter.app_type}}="runserver|tests|test|coverage|linting|manage|python{% if cookiecutter.with_celery%}|celery_beat_fg|celery_worker_fg{%endif%}"
-    actions="$actions|doc"
+    actions="$actions|doc|make_docs"
     actions="@($actions|$actions_{{cookiecutter.app_type}})"
     action=${1-}
     source_envs

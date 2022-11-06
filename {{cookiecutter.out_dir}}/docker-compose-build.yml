@@ -1,14 +1,26 @@
 version: '3.7'
 x-images:
+  env: &env {env_file: [.env, docker.env]}
   {{cookiecutter.app_type}}: &{{cookiecutter.app_type}}
     build:
       context: "."
-      args:
+      args: &args
+        BUILDKIT_INLINE_CACHE: "1"
+        BASE: "${DJANGO_BASE_IMAGE:-{{cookiecutter.base_image}}}"
+        # BASE: "${DRUPAL_BASE_IMAGE:-{{cookiecutter.debian_image}}}"
         PY_VER: "${DJANGO_PY_VER:-{{cookiecutter.py_ver}}}"
         WITH_VSCODE: "${WITH_VSCODE:-0}"
         VSCODE_VERSION: "${VSCODE_VERSION-}"
-        BASE: "${DJANGO_BASE_IMAGE:-{{cookiecutter.base_image}}}"
 services:
+  {%-if not cookiecutter.remove_doc%}
+  docs:
+    <<: [ *env, *{{cookiecutter.app_type}} ]
+    image: "${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE}:${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE_VERSION}-docsbuilder"
+    build: {args: {<<: [ *args ], PY_VER: "${DJANGO_PY_VER:-{{cookiecutter.py_ver}}}", BASE: "${DOCS_IMAGE_BASE:-{{cookiecutter.docs_image}}}"}, context: ".", dockerfile: "Dockerfile-docs"}
+    volumes:
+    - ./docs:/code/docs.host
+    - ./src:/code/src
+  {%-endif%}
   {%- if not cookiecutter.remove_cron %}
   cron: {<<: [ *{{cookiecutter.app_type}} ]}
   {%-endif%}

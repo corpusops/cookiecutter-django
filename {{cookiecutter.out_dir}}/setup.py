@@ -13,7 +13,7 @@ long_description = "\n\n".join(READMES)
 classifiers = [
     "Programming Language :: Python",
     "Topic :: Software Development"]
-name = '{{cookiecutter.lname}}'
+name = '{{cookiecutter.django_project_name}}'
 version = "1.0"
 src_dir = 'src'
 install_requires = []

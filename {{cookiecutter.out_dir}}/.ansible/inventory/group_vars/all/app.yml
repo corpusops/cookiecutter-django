@@ -1,6 +1,7 @@
 ---
 {{cookiecutter.app_type}}_servers: {{cookiecutter.lname}}_servers
 cops_{{cookiecutter.app_type}}_name: "{{cookiecutter.lname}}"
+cops_django_py_ver: "{{cookiecutter.py_ver}}"
 cops_django_project_module_name: "{{cookiecutter.django_project_name}}"
 cops_{{cookiecutter.app_type}}_tld_domain: "{{cookiecutter.tld_domain}}"
 cops_{{cookiecutter.app_type}}_mail_domain: "{{ cookiecutter.mail_domain }}"
@@ -55,8 +56,8 @@ cops_django_ftp_ip: "{{'{{'}}corpusops_network_live_ext_ip|default('')}}"
 cops_django_ftp_internal_publichost: ""
 cops_django_ftp_mode: "{{cookiecutter.with_ftp in ['ssh'] and cookiecutter.with_ftp or 'ftp'}}"
 {% if cookiecutter.with_ftp in ['ftp'] %}
-cops_django_ftp_int_port: {{cookiecutter.ftp_port}}
 cops_django_ftp_int_host: ftp-int
+cops_django_ftp_int_port: {{cookiecutter.ftp_port}}
 cops_django_ftp_port_range_start: {{cookiecutter.ftp_port_range_start}}
 cops_django_ftp_port_range_len: {{cookiecutter.ftp_port_len}}
 cops_django_ftp_port_range_end: "{{'{{'}}(cops_django_ftp_port_range_start|int) + (cops_django_ftp_port_range_len|int)}}"
@@ -104,4 +105,3 @@ cops_django_db_mode: {{cookiecutter.db_mode}}
 #   print('helloworld')
 #   EOF
 # teleport_ms_project: {{cookiecutter.lname}}
-cops_django_py_ver: "{{cookiecutter.py_ver}}

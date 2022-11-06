@@ -38,7 +38,7 @@ proxy_buffers 4 256k;
 proxy_busy_buffers_size 256k;
 
 # logging setup
-log_format custom_combined '"$remote_addr - $remote_user [$time_local] "$request" $status $bytes_sent "$http_referer" "$http_user_agent" "$gzip_ratio"';
+log_format custom_combined '"$remote_addr" - $remote_user [$time_local] "$request" $status $bytes_sent "$http_referer" "$http_user_agent" "$gzip_ratio"';
 # Define type of requests going to logs (to remove OPTIONS requests for example)
 map $request_method $method_loggable { OPTIONS 0;default 1;}
 
@@ -206,12 +206,18 @@ server {
     }
     {{'{{'}} end }}
 
-    location ~ ^/(api/|admin/) {
+    location ~ ^/(admin/) {
         {{'{{'}} template "apipass" . }}
+    }
+
+    location ~ ^/(api/) {
+        {{'{{'}} template "apipass" . }}
+        # auth_basic off;
     }
 
     location ~ ^{{cookiecutter.media_uri}}/ {
         root /code/public/;
+        # auth_basic off;
     }
 
     location / {

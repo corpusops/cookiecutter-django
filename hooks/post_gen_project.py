@@ -43,6 +43,10 @@ SYMLINKS_FILES = {
     "../../{{cookiecutter.deploy_project_dir}}/.ansible/playbooks/deploy_key_teardown.yml",  #noqa
     ".ansible/playbooks/site.yml":
     "../../{{cookiecutter.deploy_project_dir}}/.ansible/playbooks/site.yml",  #noqa
+    "docs/apt.txt": "../local/django-deploy-common/docs/apt.txt",  #noqa
+    "docs/entry.sh": "../local/django-deploy-common/docs/entry.sh",  #noqa
+    "docs/requirements.txt": "../local/django-deploy-common/docs/requirements.txt",  #noqa
+    "Dockerfile-docs": "./local/django-deploy-common/Dockerfile-docs",  #noqa
     # "tox.ini":    "{{cookiecutter.deploy_project_dir}}/tox.ini",  #noqa
     "Dockerfile": "{{cookiecutter.deploy_project_dir}}/Dockerfile",  #noqa
 }
@@ -92,7 +96,7 @@ if [ -e $dockerfile ] && [ ! -h $dockerfile ];then
     $sed -i -re "/CMD .*cron/d" $dockerfile
 fi
 {% endif %}
-{% for i in ['dev', 'prod', 'qa', 'staging'] -%}
+{% for i in ['dev', 'prod', 'qa', 'preprod', 'staging'] -%}
 {% if not cookiecutter['{0}_host'.format(i)]%}
 git rm -rf \
    .ansible/inventory/group_vars/{{i}} \

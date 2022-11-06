@@ -1,6 +1,6 @@
 PATH=/code/venv/bin:/code/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
-MAILTO=""
 LOGS=/logs/cron
+MAILTO=""
 
 {{'{{'}} (((.Env.crons_mysupercron | default "false" )| lower ) | eq  "true" ) | ternary "" "#" -}}
 {{'{{'}} .Env.crons_mysupercron_periodicity | default "0 7 5 * *" }} django /bin/bash -c "/code/venv/bin/python /code/src/manage.py mysupercron &> $LOGS/mysupercron.log"

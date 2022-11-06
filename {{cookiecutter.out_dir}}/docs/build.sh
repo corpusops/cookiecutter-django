@@ -17,20 +17,5 @@ readlinkf() {
     fi
 }
 cd $(dirname $(readlinkf $0))/..
-{% if cookiecutter.with_sphinx %}
-SPHINX_IMAGE="${SPHINX_IMAGE:-sphinxdoc/sphinx}"
-SPHINX_PYTHON="${SPHINX_PYTHON:-python}"
-SPHINX_MP="${SPHINX_MP:-/docs}"
-SPHINX_WD="${SPHINX_WD:-$SPHINX_MP/docs}"
-t=$(docker build -q -f docs/Dockerfile \
-    --build-arg SPHINX_PYTHON=$SPHINX_PYTHON \
-    --build-arg SPHINX_IMAGE=$SPHINX_IMAGE \
-    .)
-cmd="${@-make html}"
-printf "${cmd}\n" \
-    | docker run --rm -i -u $(id -u) \
-    -v "$(pwd):$SPHINX_MP" \
-    -w "$SPHINX_WD" \
-    --entrypoint bash $t -ex
-{% endif%}
+./control.sh make_docs
 # vim:set et sts=4 ts=4 tw=80:
