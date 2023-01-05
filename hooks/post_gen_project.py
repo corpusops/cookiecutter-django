@@ -22,16 +22,18 @@ SYMLINKS_DIRS = {
     "../../../{{cookiecutter.deploy_project_dir}}/.ansible/playbooks/roles/{{cookiecutter.app_type}}",  #noqa
 }
 SYMLINKS_FILES = {
-    ".ansible/scripts/setup_vaults.sh": "cops_wrapper.sh",  #noqa
-    ".ansible/scripts/setup_corpusops.sh": "cops_wrapper.sh",  #noqa
-    ".ansible/scripts/test.sh": "cops_wrapper.sh",  #noqa
-    ".ansible/scripts/setup_core_variables.sh": "cops_wrapper.sh",  #noqa
-    ".ansible/scripts/call_roles.sh": "cops_wrapper.sh",  #noqa
-    ".ansible/scripts/yamldump.py": "cops_wrapper.sh",  #noqa
+    "docs/.env": "../.env",  #noqa
+    "docs/docker.env": "../docker.env",  #noqa
     ".ansible/scripts/call_ansible.sh": "cops_wrapper.sh",  #noqa
+    ".ansible/scripts/call_roles.sh": "cops_wrapper.sh",  #noqa
     ".ansible/scripts/edit_vault.sh": "cops_wrapper.sh",  #noqa
     ".ansible/scripts/print_env.sh": "call_ansible.sh",  #noqa
     ".ansible/scripts/setup_ansible.sh": "cops_wrapper.sh",  #noqa
+    ".ansible/scripts/setup_core_variables.sh": "cops_wrapper.sh",  #noqa
+    ".ansible/scripts/setup_corpusops.sh": "cops_wrapper.sh",  #noqa
+    ".ansible/scripts/setup_vaults.sh": "cops_wrapper.sh",  #noqa
+    ".ansible/scripts/test.sh": "cops_wrapper.sh",  #noqa
+    ".ansible/scripts/yamldump.py": "cops_wrapper.sh",  #noqa
     ".ansible/playbooks/ping.yml": "../../{{cookiecutter.deploy_project_dir}}/.ansible/playbooks/ping.yml",  #noqa
     ".ansible/playbooks/teleport.yml": "../../{{cookiecutter.deploy_project_dir}}/.ansible/playbooks/teleport.yml",  #noqa
     ".ansible/playbooks/backup.yml": "../../{{cookiecutter.deploy_project_dir}}/.ansible/playbooks/backup.yml",  #noqa
@@ -43,10 +45,11 @@ SYMLINKS_FILES = {
     "../../{{cookiecutter.deploy_project_dir}}/.ansible/playbooks/deploy_key_teardown.yml",  #noqa
     ".ansible/playbooks/site.yml":
     "../../{{cookiecutter.deploy_project_dir}}/.ansible/playbooks/site.yml",  #noqa
-    "docs/apt.txt": "../local/django-deploy-common/docs/apt.txt",  #noqa
-    "docs/entry.sh": "../local/django-deploy-common/docs/entry.sh",  #noqa
-    "docs/requirements.txt": "../local/django-deploy-common/docs/requirements.txt",  #noqa
-    "Dockerfile-docs": "./local/django-deploy-common/Dockerfile-docs",  #noqa
+    "docs/apt.txt": "../{{cookiecutter.deploy_project_dir}}/docs/apt.txt",  #noqa
+    "docs/entry.sh": "../{{cookiecutter.deploy_project_dir}}/docs/entry.sh",  #noqa
+    "docs/requirements.txt": "../{{cookiecutter.deploy_project_dir}}/docs/requirements.txt",  #noqa
+    "docs/Dockerfile": "../{{cookiecutter.deploy_project_dir}}/docs/Dockerfile",  #noqa
+    "Dockerfile-docs": "docs/Dockerfile",  #noqa
     # "tox.ini":    "{{cookiecutter.deploy_project_dir}}/tox.ini",  #noqa
     "Dockerfile": "{{cookiecutter.deploy_project_dir}}/Dockerfile",  #noqa
 }
@@ -124,10 +127,10 @@ $sed -i -re \
 	"s/project/{{cookiecutter.django_project_name}}/g" \
 	$dockerfile
 fi
-if ( find sys/*sh 2>/dev/null );then
+if ( find sys/*.sh 2>/dev/null );then
 $sed -i -re \
 	"s/project/{{cookiecutter.django_project_name}}/g" \
-	sys/*sh
+	sys/*.sh
 fi
 set +x
 {% if not cookiecutter.use_submodule_for_deploy_code %}
