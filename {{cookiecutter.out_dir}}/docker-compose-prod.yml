@@ -1,26 +1,33 @@
 version: '{{cookiecutter.compose_version}}'
 x-images:
+  x-log: &log
+    depends_on: [log]
+    logging: {driver: syslog, options: {tag: '{{'{{'}}index .ContainerLabels "com.docker.compose.service"}}', syslog-address: "tcp://${SYSLOG_ADDRESS:-127.0.0.1}:${SYSLOG_PORT:-{{cookiecutter.syslog_port}}}"}}
   x-restart: &restart
     restart: unless-stopped
   x-{{cookiecutter.app_type}}: &{{cookiecutter.app_type}}
     <<: [ *restart ]
-{%- if not cookiecutter.no_local_volumes %}
+    image: "${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE}:${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE_VERSION}"
     volumes:
-    - ./src/{{cookiecutter.django_settings.replace('.', '/')}}:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/
+    - logs:/logs
+{%- if not cookiecutter.no_local_volumes %}
     - ./local.py:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/local.py
 {%- endif %}
-    image: "${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE}:${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE_VERSION}"
 services:
+  log:
+    <<: [ *restart ]
+    volumes: [logs:/var/log]
+    ports: ["${SYSLOG_ADDRESS:-127.0.0.1}:${SYSLOG_PORT:-{{cookiecutter.syslog_port}}}:10514"]
 {%- if cookiecutter.with_ftp %}
 {%- if cookiecutter.with_ftp in ['ftp']%}
   ftp-int:
-    <<: [ *restart ]
+    <<: [ *restart, *log ]
 {%- endif%}
   ftp:
-    <<: [ *restart ]
+    <<: [ *restart, *log ]
 {%- endif %}
   nginx:
-    <<: [ *restart ]
+    <<: [ *restart, *log ]
     ports:
     - "${DJANGO__HTTP_LISTEN:-0.0.0.0}:${DJANGO__HTTP_PORT:-80}:80"
   {{cookiecutter.app_type}}:
@@ -32,28 +39,25 @@ services:
     <<: [ *{{cookiecutter.app_type}} ]
 {%- endif%}
   mailcatcher:
-    <<: [ *restart ]
+    <<: [ *restart, *log ]
 {%- if cookiecutter.cache_system%}
   {{cookiecutter.cache_system}}:
-    <<: [ *restart ]
+    <<: [ *restart, *log ]
 {% endif%}
   db:
-    <<: [ *restart ]
+    <<: [ *restart, *log ]
   backup:
-    <<: [ *restart ]
+    <<: [ *restart, *log ]
     volumes:
     - backupdb-dumps:/var/db_smart_backup
 {%- if cookiecutter.with_celery %}
   celery-broker:
-    <<: [ *restart ]
+    <<: [ *restart, *log ]
   celery-beat: &celery
     <<: [ *{{cookiecutter.app_type}} ]
   celery-worker:
     <<: [ *{{cookiecutter.app_type}} ]
 {%- endif %}
-{%- if cookiecutter.db_mode.startswith('post') %}
-  setup-postgres:
-    <<: [ *restart ]
-{%- endif %}
 volumes:
   backupdb-dumps:
+  logs:

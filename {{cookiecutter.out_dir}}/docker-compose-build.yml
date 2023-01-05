@@ -7,6 +7,7 @@ x-images:
       args: &args
         BUILDKIT_INLINE_CACHE: "1"
         BASE: "${DJANGO_BASE_IMAGE:-{{cookiecutter.base_image}}}"
+        HELPERS: "${HELPERS_IMAGE:-{{cookiecutter.helpers_image}}}"
         # BASE: "${{'{'}}{{cookiecutter.app_type.upper()}}}}_BASE_IMAGE:-{{cookiecutter.debian_image}}}"
         PY_VER: "${DJANGO_PY_VER:-{{cookiecutter.py_ver}}}"
         WITH_VSCODE: "${WITH_VSCODE:-0}"

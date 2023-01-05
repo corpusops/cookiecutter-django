@@ -1,87 +1,97 @@
 version: '{{cookiecutter.compose_version}}'
 {% set nginxc    = (not cookiecutter.nginx_in_dev) and '#' or '' %}
+{% set nginxnc   = (cookiecutter.nginx_in_dev) and '#' or '' %}
 {% set nginxsslc = (not cookiecutter.ssl_in_dev) and '#' or '' %}
 x-images:
   bypass: &bypass
     command: 'sh -c "while true;do echo notstarted;sleep 65000;done"'
     entrypoint: 'sh -c "while true;do echo notstarted;sleep 65000;done"'
     restart: "no"
-  django: &django
-    environment: &django_env
+  {{cookiecutter.app_type}}: &{{cookiecutter.app_type}}
+    environment: &{{cookiecutter.app_type}}_env
        DJANGO_SETTINGS_MODULE: "${DJANGO_SETTINGS_MODULE:-{{cookiecutter.django_settings}}.dev}"
        NO_MIGRATE: "${NO_MIGRATE-1}"
        NO_COLLECT_STATIC: "${NO_COLLECT_STATIC-1}"
        NO_STATICS: "${NO_STATICS-1}"
-    volumes: &django_volumes
-      {%-if cookiecutter.use_submodule_for_deploy_code %}
-      - ./{{cookiecutter.deploy_project_dir}}/sys/sudoer:/etc/sudoers.d/${APP_TYPE:-django}
-      - ./{{cookiecutter.deploy_project_dir}}/sys/init.sh:/code/sys/init.sh
-      - ./{{cookiecutter.deploy_project_dir}}/sys/init.sh:/code/init/init.sh
-      - ./{{cookiecutter.deploy_project_dir}}/sys/etc/supervisor.d:/code/sys/etc/supervisor.d
-      - ./{{cookiecutter.deploy_project_dir}}:/code/{{cookiecutter.deploy_project_dir}}
-      {%-else %}
-      - ./sys/sudoer:/etc/sudoers.d/$APP_TYPE
-      - ./sys/init.sh:/code/init/init.sh
-      # retrocompat
-      - ./sys/init.sh:/code/sys/init.sh
-      - ./sys/etc/supervisor.d:/code/etc/supervisor.d
-      {%- endif%}
-      - ./sys/etc/cron.d:/code/sys/etc/cron.d/
-      - ./docs:/code/docs
-{%- if not cookiecutter.no_lib %}
-      - ./lib:/code/lib
-{%- endif%}
-      - ./local:/code/local
-{%- if cookiecutter.with_bundled_front %}
-      - ./frontend:/code/frontend
+    volumes: &{{cookiecutter.app_type}}_volumes
+    - ./local/localdir:/local
+{%- if cookiecutter.no_local_volumes %}
+    - ./sys/scripts:/code/sys/scripts
+{%- if not cookiecutter.remove_cron %}
+    - ./sys/etc/cron.d:/code/sys/etc/cron.d
 {%- endif %}
-      - ./src:/code/src
-{%- if not cookiecutter.no_private %}
-      - ./private:/code/private
+    - ./sys/etc/logrotate.d:/code/sys/etc/logrotate.d
+    - ./src/{{cookiecutter.django_settings.replace('.', '/')}}/instances:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/instances
 {%- endif%}
-      - ./tox.ini:/code/tox.ini
-      - ./.tox:/code/.tox
-      - ./local/media:/code/public/media
-      - ./requirements:/code/requirements
+{%-  if cookiecutter.use_submodule_for_deploy_code %}
+    - ./{{cookiecutter.deploy_project_dir}}/sys/sudoer:/etc/sudoers.d/${APP_TYPE:-{{cookiecutter.app_type}}}
+    - ./{{cookiecutter.deploy_project_dir}}/sys/init.sh:/code/sys/init.sh
+    - ./{{cookiecutter.deploy_project_dir}}/sys/init.sh:/code/init/init.sh
+    - ./{{cookiecutter.deploy_project_dir}}/sys/etc/supervisor.d:/code/sys/etc/supervisor.d
+    - ./{{cookiecutter.deploy_project_dir}}:/code/{{cookiecutter.deploy_project_dir}}
+{%- else %}
+    - ./sys/sudoer:/etc/sudoers.d/$APP_TYPE
+    - ./sys/init.sh:/code/init/init.sh
+    # retrocompat
+    - ./sys/init.sh:/code/sys/init.sh
+    - ./sys/etc/supervisor.d:/code/etc/supervisor.d
+{%- endif%}
+{%- if not cookiecutter.no_lib %}
+    - ./lib:/code/lib
+{%- endif%}
+    - ./local:/code/local
+{%- if cookiecutter.with_bundled_front %}
+    - ./frontend:/code/frontend
+{%- endif %}
+    - ./src:/code/src
+{%- macro django_assets() %}
+    - ./docs:/code/docs
+{%- if not cookiecutter.no_private %}
+    - ./local/private:/code/private
+{%- endif%}
+    - ./local/public:/code/public
+    - ./local/media:/code/public/media
+    - ./local/static:/code/public/static
+{%- endmacro %}
+{{- django_assets() }}
+    - ./tox.ini:/code/tox.ini
+    - ./.tox:/code/.tox
+    - ./requirements:/code/requirements
 services:
-  {{nginxc}}nginx:
-{% if nginxc -%}
-    <<: [ *bypass ]
-    # uncomment to activate in dev
-{%-endif%}
-  {{nginxc}}  ports:
-  {{nginxc}}  - "${DJANGO__HTTP_PORT:-80}:80"
-  {{nginxc}}  {% if not nginxc%}{{nginxsslc}}{%endif %}- "${DJANGO__HTTPS_PORT:-443}:443"
-  {{nginxc}}  environment: {NO_SSL: "0"}
-  {{nginxc}}  volumes:
-  {{nginxc}}  - ./docs:/code/docs
-  {{nginxc}}  - ./local/media:/code/public/media
-  {{nginxc}}  - ./private:/code/private
+  # uncomment to activate in dev
+  nginx:
+    {{nginxnc}}<<: [ *bypass ]
+    ports:
+    - "${DJANGO__HTTP_PORT:-80}:80"
+    {{nginxsslc}}- "${DJANGO__HTTPS_PORT:-443}:443"
+    environment: {NO_SSL: "0"}
+    volumes:
+    {{django_assets().strip().replace('\n', '\n{0}'.format(nginxc and nginxc or ''))}}
   {{cookiecutter.app_type}}:
-    <<: [ *django ]
+    <<: [ *{{cookiecutter.app_type}} ]
     environment:
-      <<: [ *django_env ]
+      <<: [ *{{cookiecutter.app_type}}_env ]
       IMAGE_MODE: fg
     ports:
     - "${DJANGO__API_LISTEN:-0.0.0.0}:${DJANGO__API_PORT:-8000}:8000"
     - "${DJANGO__VSCODE_LISTEN:-0.0.0.0}:${DJANGO__VSCODE_PORT:-5678}:5678"
   cron:
-    <<: [ *django ]
+    <<: [ *{{cookiecutter.app_type}} ]
     environment:
-      <<: [ *django_env ]
+      <<: [ *{{cookiecutter.app_type}}_env ]
   db:
     ports:
     - "${DJANGO__DB_OUT_LISTEN:-0.0.0.0}:${DJANGO__DB_OUT_PORT:-{{cookiecutter.db_out_port}}}:5432"
 {% if cookiecutter.with_celery %}
   celery-beat: &celery
-    <<: [ *django ]
+    <<: [ *{{cookiecutter.app_type}} ]
     environment:
-      <<: [ *django_env ]
+      <<: [ *{{cookiecutter.app_type}}_env ]
       IMAGE_MODE: celery_beat
   celery-worker:
     <<: [ *celery ]
     environment:
-      <<: [ *django_env ]
+      <<: [ *{{cookiecutter.app_type}}_env ]
       IMAGE_MODE: celery_worker
 {%- endif %}
   mailcatcher:
