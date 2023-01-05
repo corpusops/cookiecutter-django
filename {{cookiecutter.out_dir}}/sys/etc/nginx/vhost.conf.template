@@ -7,14 +7,14 @@
 {{'{{'}} $v := merge $v ( dict "diffie"                      ( .Env.NGINX_DH_FILE | default ( print $v.certspath  "/dhparams.pem" ))        ) }}
 {{'{{'}} $v := merge $v ( dict "nossl"                       ( .Env.NO_SSL | default "1" )                                                  ) }}
 {{'{{'}} if not ( .Env.NO_FORCE_SSL | empty ) }}
-{{'{{'}} $v := merge $v ( dict "noforcessl" .Env.NO_FORCE_SSL ) }}
+{{'{{'}} $v := merge $v ( dict "noforcessl" .Env.NO_FORCE_SSL                                                                               ) }}
 {{'{{'}} else }}
-{{'{{'}} $v := merge $v ( dict "noforcessl" ((eq $v.nossl "1") | ternary "0" "1" )) }}
+{{'{{'}} $v := merge $v ( dict "noforcessl" ((eq $v.nossl "1") | ternary "0" "1" )                                                           )}}
 {{'{{'}} end }}
 {{'{{'}} $v := merge $v ( dict "nostatics"                   ( .Env.NO_STATICS | default "" )                                               ) }}
 {{'{{'}} $v := merge $v ( dict "server_name"                 ( .Env.NGINX_SERVERNAME     | default "localhost") ) }}
 {{'{{'}} $v := merge $v ( dict "server_name_in_redirect"     ( .Env.NGINX_SERVERNAME_IN_REDIRECT | default "on" )                           ) }}
-{{'{{'}} $v := merge $v ( dict "server_aliases"              ( .Env.NGINX_SERVER_ALIASES | default ""         ) ) }}
+{{'{{'}} $v := merge $v ( dict "server_aliases"              ( .Env.NGINX_SERVER_ALIASES | default ""         )                             ) }}
 {{'{{'}} $v := merge $v ( dict "redirect_server_aliases"     ( .Env.NGINX_REDIRECT_SERVER_ALIASES | default "off" )                         ) }}
 {{'{{'}} $v := merge $v ( dict "server_name_in_redirect_ssl" ( .Env.NGINX_SERVERNAME_IN_REDIRECT_SSL | default $v.server_name_in_redirect ) ) }}
 {{'{{'}} $v := merge $v ( dict "real_ip_from_recursive"      ( .Env.NGINX_REAL_IP_FROM_RECURSIVE | default "on" )                           ) }}
@@ -22,11 +22,16 @@
 {{'{{'}} $v := merge $v ( dict "real_ip_header"              ( .Env.NGINX_REAL_IP_HEADER | default "x-forwarded-for" )                      ) }}
 {{'{{'}} $v := merge $v ( dict "ssl_ciphers"                 ( .Env.NGINX_SSL_CIPHERS | default $dciphers )                                 ) }}
 {{'{{'}} $v := merge $v ( dict "ssl_protocols"               ( .Env.NGINX_SSL_PROTOCOLS | default "TLSv1 TLSv1.1 TLSv1.2" )                 ) }}
-{{'{{'}} $v := merge $v ( dict "log_level"                   ( .Env.NGINX_LOGLEVEL | default "crit" )                 ) }}
-{{'{{'}} $v := merge $v ( dict "xscriptname"                 ( .Env.DJANGO__FORCE_SCRIPT_NAME | default "" )                ) }}
+{{'{{'}} $v := merge $v ( dict "log_level"                   ( .Env.NGINX_LOGLEVEL | default "crit" )                                       ) }}
+{{'{{'}} $v := merge $v ( dict "xscriptname"                 ( .Env.DJANGO__FORCE_SCRIPT_NAME | default "" )                                ) }}
 {%- if cookiecutter.with_bundled_docs %}
-{{'{{'}} $v := merge $v ( dict "has_doc"                     ( .Env.DJANGO__HAS_DOC | default "1" )                ) }}
+{{'{{'}} $v := merge $v ( dict "has_doc"                     ( .Env.DJANGO__HAS_DOC | default "1" )                                         ) }}
 {%- endif %}
+{{'{{'}} $v := merge $v ( dict "base_dir"                    ( .Env.BASE_DIR | default ( print "/code" ))                                   ) }}
+{{'{{'}} $v := merge $v ( dict "doc_dir"                     ( .Env.BASE_DIR | default ( print $v.base_dir "/docs" ))                       ) }}
+{{'{{'}} $v := merge $v ( dict "media_dir"                   ( .Env.BASE_DIR | default ( print $v.base_dir "/public/media" ))                      ) }}
+{{'{{'}} $v := merge $v ( dict "static_dir"                  ( .Env.BASE_DIR | default ( print $v.base_dir "/public/static" ))                    ) }}
+{{'{{'}} $v := merge $v ( dict "private_dir"                 ( .Env.BASE_DIR | default ( print $v.base_dir "/private" ))                    ) }}
 
 
 # optimize internal nginx buffers
@@ -103,8 +108,8 @@ server {
     server_name {{'{{'}} $v.server_name }}{{'{{'}} if ne $v.redirect_server_aliases "on" }}{{'{{'}}if $v.server_aliases }} {{'{{'}}$v.server_aliases}}{{'{{'}}end}}{{'{{'}}end}};
     server_name_in_redirect {{'{{'}} $v.server_name_in_redirect }};
 
-    error_log  /logs/django-error.log  {{'{{'}}$v.log_level}};
-    access_log /logs/django-access.log custom_combined if=$method_loggable;
+    error_log  /dev/stdout {{'{{'}}$v.log_level}};
+    access_log /dev/stdout custom_combined if=$method_loggable;
 
     {{'{{'}} define "vhost" }}
     {{'{{'}} if .Env.DJANGO__HTTP_PROTECT_PASSWORD }}
@@ -174,13 +179,13 @@ server {
 {%- if cookiecutter.with_bundled_docs %}
 {{'{{'}} if eq .has_doc "1" }}
     rewrite ^/docs/?$ $scheme://$host/docs/index.html permanent;
-    location ~ ^/docs(?<docs>.*) {
+    location ~ ^/docs(?<subpath>.*) {
     {{'{{'}} if .Env.DJANGO__DOC_PROTECT_PASSWORD }}
     auth_basic            "Restricted";
     auth_basic_user_file  /etc/htpasswd/docprotect;
     {{'{{'}} end }}
-        root /code/docs/{%if cookiecutter.with_sphinx%}_build/html/{%endif%};
-        try_files $docs =404;
+        root {{'{{'}}.doc_dir}}/{%if cookiecutter.with_sphinx%}_build/html/{%endif%};
+        try_files $subpath =404;
 
         # static optimisations
         tcp_nodelay off;
@@ -198,9 +203,9 @@ server {
 {%- endif %}
 
     {{'{{'}} if ne .nostatics "1" }}
-    location ~ ^/static(?<static>.*) {
-        root /code/public/static/;
-        try_files $static =404;
+    location ~ ^/static(?<subpath>.*) {
+        root {{'{{'}}.static_dir}}/;
+        try_files $subpath =404;
 
         # static optimisations
         tcp_nodelay off;
@@ -225,9 +230,9 @@ server {
         # auth_basic off;
     }
 
-    location ~ ^{{cookiecutter.media_uri}}/ {
-        root /code/public/;
-        # auth_basic off;
+    location ~ ^{{cookiecutter.media_uri}}(?<subpath>.*) {
+        root {{'{{'}}.media_dir}}/;
+        try_files $subpath =404;
     }
 
     location / {
@@ -258,8 +263,8 @@ server {
     ssl_session_timeout 10m;
     ssl_prefer_server_ciphers on;
     ssl_dhparam {{'{{'}} $v.diffie }};
-    error_log  /logs/ssl-django-error.log  {{'{{'}}$v.log_level}};
-    access_log /logs/ssl-django-access.log custom_combined if=$method_loggable;
+    error_log  /dev/stdout {{'{{'}}$v.log_level}};
+    access_log /dev/stdout custom_combined if=$method_loggable;
     {{'{{'}} template "vhost" $v }}
 }
 {{'{{'}} end }}
@@ -278,8 +283,8 @@ server {
     listen 80;
     server_name {{'{{'}}$v.server_aliases}};
     server_name_in_redirect {{'{{'}} $v.server_name_in_redirect }};
-    error_log  /logs/django-error.log  {{'{{'}}$v.log_level}};
-    access_log /logs/django-access.log custom_combined if=$method_loggable;
+    error_log  /dev/stdout {{'{{'}}$v.log_level}};
+    access_log /dev/stdout custom_combined if=$method_loggable;
     {{'{{'}} template "rvhost" $v }}
 }
 {{'{{'}} if ne $v.nossl "1" }}
@@ -296,8 +301,8 @@ server {
     ssl_session_timeout 10m;
     ssl_prefer_server_ciphers on;
     ssl_dhparam {{'{{'}} $v.diffie }};
-    error_log  /logs/ssl-django-error.log  {{'{{'}}$v.log_level}};
-    access_log /logs/ssl-django-access.log custom_combined if=$method_loggable;
+    error_log  /dev/stdout {{'{{'}}$v.log_level}};
+    access_log /dev/stdout custom_combined if=$method_loggable;
     {{'{{'}} template "rvhost" $v }}
 }
 {{'{{'}} end }}
