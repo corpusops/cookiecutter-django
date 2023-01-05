@@ -67,12 +67,6 @@ if [[ -n "$FORCE_OSX_SYNC" ]]; then
 fi
 CONTROL_COMPOSE_FILES="${CONTROL_COMPOSE_FILES:-$DEFAULT_CONTROL_COMPOSE_FILES}"
 COMPOSE_COMMAND=${COMPOSE_COMMAND:-docker-compose}
-USE_TOX_DIRECT=${USE_TOX_DIRECT-1}
-NO_SITE_PACKAGES=${NO_SITE_PACKAGES-1}
-TOX_ARGS="${TOX_ARGS-}"
-if [[ -n $NO_SITE_PACKAGES ]];then
-    TOX_ARGS="$TOX_ARGS --sitepackages"
-fi
 NO_DEVELOP=${NO_DEVELOP-}
 # special case: be sure to define some docker internal variables but let them overridable through .env
 export DOCKER_BUILDKIT="${DOCKER_BUILDKIT-1}"
@@ -373,44 +367,18 @@ do_yamldump() {
 
 # {{cookiecutter.app_type.upper()}} specific
 #  python: enter python interpreter
-do_python() {
-    do_usershell $VENV/bin/python $@
-}
+do_python() { do_usershell $VENV/bin/python $@; }
 
 #  manage [$args]: run manage.py commands
-do_manage() {
-    do_python manage.py $@
-}
+do_manage() { do_python manage.py $@; }
 
 #  runserver [$args]: alias for fg
-do_runserver() {
-    do_fg "$@"
-}
+do_runserver() { do_fg "$@"; }
 
 do_run_server() { do_runserver $@; }
 
 #  tests [$tests]: run tests
-do_test() {
-    local bargs=${@:-tests}
-    TOX_ARGS="$TOX_ARGS -c ../tox.ini -e $bargs"
-    stop_containers
-    cat | do_dcompose run -e SHELL_USER=root \
-     -e USE_TOX_DIRECT=$USE_TOX_DIRECT -e NO_DEVELOP=$NO_DEVELOP -e TOX_ARGS="$TOX_ARGS" \
-    --rm --entrypoint /code/init/init.sh \
-    django bash -e <<'EOF'
-if [ -e ../.tox ];then chown django ../.tox;fi
-gosu django bash -ec '
-TOX_ARGS=${TOX_ARGS-}
-if [ "x$USE_TOX_DIRECT" = "x1" ] && ( tox --help | grep -q -- --direct );then
-   TOX_ARGS="--direct-yolo $TOX_ARGS"
-fi
-if [ -e /code/setup.py ] && [ -z "$NO_DEVELOP" ];then
-    TOX_ARGS="--develop $TOX_ARGS"
-fi
-tox $TOX_ARGS
-'
-EOF
-}
+do_test() { stop_containers && do_dcompose run --rm --entrypoint /code/init/init.sh django tox -e ${@:-tests}; }
 
 do_tests() { do_test $@; }
 
@@ -424,7 +392,6 @@ do_coverage() { do_test coverage; }
 #  celery_beat_fg: launch celery app container in foreground (using entrypoint)
 do_celery_beat_fg() {
     (   CONTAINER=celery-beat \
-        && stop_containers $CONTAINER \
         && services_ports=1 do_usershell \
         "celery -A \$DJANGO_CELERY beat -l \$CELERY_LOGLEVEL $@" )
 }
@@ -503,9 +470,10 @@ do_vscode() {
 
 #  [NO_BUILD=] do_make_docs: daemon to sync local files inside docker containers (volumes to be exact)
 do_make_docs() {
-    if [[ -z ${NO_BUILD-} ]];then do_dbcompose build docs;fi
+    if [[ -z ${NO_BUILD-} ]];then COMPOSE_FILE_RUN="docs/docker-compose.yml:docs/docker-compose-build.yml" do_dcompose build docs;fi
     # by default container entrypoint sync data to output dir
-    do_dbcompose run --rm \
+    COMPOSE_FILE_RUN="docs/docker-compose.yml" do_dcompose run --rm \
+        -e NO_INSTALL=${NO_INSTALL-1} \
         -e NO_BUILD=${NO_BUILD-} \
         -e NO_INIT=${NO_HTML-} \
         -e NO_CLEAN=${NO_CLEAN-} \
@@ -537,10 +505,10 @@ do_main() {
     actions="$actions|init|up|fg|pull|build|buildimages|down|rm|run"
     actions_{{cookiecutter.app_type}}="runserver|tests|test|coverage|linting|manage|python{% if cookiecutter.with_celery%}|celery_beat_fg|celery_worker_fg{%endif%}"
     actions="$actions|doc|make_docs"
-    actions="@($actions|$actions_{{cookiecutter.app_type}})"
 {%- if cookiecutter.with_bundled_front %}
     actions="$actions|gen_js_conf"
 {% endif %}
+    actions="@($actions|$actions_{{cookiecutter.app_type}})"
     action=${1-}
     if [[ -n $@ ]];then shift;fi
     set_dc
