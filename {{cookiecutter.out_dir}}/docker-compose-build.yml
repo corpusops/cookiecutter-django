@@ -12,20 +12,6 @@ x-images:
         WITH_VSCODE: "${WITH_VSCODE:-0}"
         VSCODE_VERSION: "${VSCODE_VERSION-}"
 services:
-{%-if not cookiecutter.remove_doc%}
-  docs:
-    <<: [ *env, *{{cookiecutter.app_type}} ]
-    image: "${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE}:${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE_VERSION}-docsbuilder"
-    build: {args: {<<: [ *args ], PY_VER: "${DJANGO_PY_VER:-{{cookiecutter.py_ver}}}", BASE: "${DOCS_IMAGE_BASE:-{{cookiecutter.docs_image}}}"}, context: ".", dockerfile: "Dockerfile-docs"}
-    volumes:
-    - ./docs:/code/docs.host
-    - ./{{cookiecutter.docs_folder}}:/out
-    - ./local:/code/local
-    - ./src:/code/src
-    environment:
-      BUILDDIR: "${BUILDDIR:-/out}"
-      SOURCEDIR: "${SOURCEDIR:-/code/docs.host}"
-{%-endif%}
 {%- if not cookiecutter.remove_cron %}
   cron: {<<: [ *{{cookiecutter.app_type}} ]}
 {%-endif%}
