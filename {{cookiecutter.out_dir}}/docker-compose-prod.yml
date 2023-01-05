@@ -1,57 +1,59 @@
 version: '{{cookiecutter.compose_version}}'
-x-{{cookiecutter.app_type}}: &{{cookiecutter.app_type}}
-  volumes:
-  - ./src/{{cookiecutter.django_settings.replace('.', '/')}}:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/
-  - ./local.py:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/local.py
-  image: "${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE}:${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE_VERSION}"
-services:
-{% if cookiecutter.with_ftp %}{% if cookiecutter.with_ftp in ['ftp']%}
-  ftp-int:
-    restart: unless-stopped{%endif%}
-  ftp:
+x-images:
+  x-restart: &restart
     restart: unless-stopped
+  x-{{cookiecutter.app_type}}: &{{cookiecutter.app_type}}
+    <<: [ *restart ]
+{%- if not cookiecutter.no_local_volumes %}
+    volumes:
+    - ./src/{{cookiecutter.django_settings.replace('.', '/')}}:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/
+    - ./local.py:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/local.py
+{%- endif %}
+    image: "${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE}:${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE_VERSION}"
+services:
+{%- if cookiecutter.with_ftp %}
+{%- if cookiecutter.with_ftp in ['ftp']%}
+  ftp-int:
+    <<: [ *restart ]
+{%- endif%}
+  ftp:
+    <<: [ *restart ]
 {%- endif %}
   nginx:
-    restart: unless-stopped
+    <<: [ *restart ]
     ports:
     - "${DJANGO__HTTP_LISTEN:-0.0.0.0}:${DJANGO__HTTP_PORT:-80}:80"
   {{cookiecutter.app_type}}:
-    restart: unless-stopped
     <<: [ *{{cookiecutter.app_type}} ]
     ports:
     - "${DJANGO__API_LISTEN:-127.0.0.1}:${DJANGO__API_PORT:-8000}:8000"
 {%- if not cookiecutter.remove_cron %}
   cron:
     <<: [ *{{cookiecutter.app_type}} ]
-    restart: unless-stopped
 {%- endif%}
   mailcatcher:
-    restart: unless-stopped
+    <<: [ *restart ]
 {%- if cookiecutter.cache_system%}
   {{cookiecutter.cache_system}}:
-    restart: unless-stopped
+    <<: [ *restart ]
 {% endif%}
   db:
-    restart: unless-stopped
+    <<: [ *restart ]
   backup:
-    restart: unless-stopped
+    <<: [ *restart ]
     volumes:
-    - backupdb-dumps:/var/db_smart_backup/
-    - backupdb-logs:/var/db_smart_backup/logs/
+    - backupdb-dumps:/var/db_smart_backup
 {%- if cookiecutter.with_celery %}
   celery-broker:
-    restart: unless-stopped
+    <<: [ *restart ]
   celery-beat: &celery
     <<: [ *{{cookiecutter.app_type}} ]
-    restart: unless-stopped
   celery-worker:
     <<: [ *{{cookiecutter.app_type}} ]
-    restart: unless-stopped
 {%- endif %}
 {%- if cookiecutter.db_mode.startswith('post') %}
   setup-postgres:
-    restart: unless-stopped
+    <<: [ *restart ]
 {%- endif %}
 volumes:
-  backupdb-logs:
   backupdb-dumps:
