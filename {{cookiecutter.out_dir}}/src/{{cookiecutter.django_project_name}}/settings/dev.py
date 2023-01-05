@@ -28,10 +28,6 @@ CORS_ORIGIN_ALLOW_ALL = True
 # INTERNAL_IPS = ('127.0.0.1',)  # Used by app debug_toolbar
 DEBUG = True
 
-# Force every loggers to use console handler only. Note that using 'root'
-# logger is not enough if children don't propage.
-for logger in six.itervalues(LOGGING['loggers']):  # noqa
-    logger['handlers'] = ['console']
 # Log every level.
 LOGGING['handlers']['console']['level'] = logging.NOTSET  # noqa
 

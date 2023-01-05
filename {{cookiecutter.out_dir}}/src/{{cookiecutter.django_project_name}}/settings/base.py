@@ -457,6 +457,7 @@ def post_process_settings(globs=None):
         _locals['CACHES']['default']['LOCATION'] = cache_url
     except KeyError:
         pass
+    LOGGING = _locals.setdefault('LOGGING', copy.deepcopy(DEFAULT_LOGGING))
     {% if cookiecutter.with_sentry -%}SENTRY_DSN = _locals.setdefault('SENTRY_DSN', '')
     SENTRY_RELEASE = _locals.setdefault('SENTRY_RELEASE', 'prod')
     INSTALLED_APPS = _locals.setdefault('INSTALLED_APPS', tuple())
@@ -477,7 +478,6 @@ def post_process_settings(globs=None):
             'raven.transport.requests.RequestsHTTPTransport')
         # If you are using git, you can also automatically
         # configure the release based on the git info.
-        LOGGING = _locals.setdefault('LOGGING', copy.deepcopy(DEFAULT_LOGGING))
         LOGGING['disable_existing_loggers'] = True
         LOGGING.setdefault('handlers', {}).update({
             'sentry': {
@@ -498,6 +498,14 @@ def post_process_settings(globs=None):
         if 'DEPLOY_ENV' in _locals:
             _locals['RAVEN_CONFIG']['environment'] = _locals['DEPLOY_ENV']
     {%- endif %}
+    # If available, force every loggers to use console handler and end up in stdout log for docker to upstream logs
+    if 'console' in LOGGING['handlers']:
+        for logger in six.itervalues(LOGGING['loggers']):
+            if 'console' not in logger['handlers']:
+                logger['handlers'].append('console')
+        rhandlers = LOGGING.setdefault('root', {}).setdefault('handlers', [])
+        if 'console' not in rhandlers:
+            rhandlers.append('console')
     if (
         _locals['USE_DJANGO_EXTENSIONS'] and
         ('django_extensions' not in _locals['INSTALLED_APPS'])
