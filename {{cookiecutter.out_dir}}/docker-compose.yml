@@ -1,5 +1,5 @@
-{%- set db_tag = 'post' in cookiecutter.db_mode and 'postgres' or cookiecutter.db_mode -%}
-version: '3.7'
+{%- set db_tag = 'post' in cookiecutter.db_mode and 'postgres' or cookiecutter.db_mode %}
+version: '{{cookiecutter.compose_version}}'
 x-images:
   env: &env
     env_file: [.env, docker.env]

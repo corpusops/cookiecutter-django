@@ -1,4 +1,4 @@
-version: '3.7'
+version: '{{cookiecutter.compose_version}}'
 {% set nginxc    = (not cookiecutter.nginx_in_dev) and '#' or '' %}
 {% set nginxsslc = (not cookiecutter.ssl_in_dev) and '#' or '' %}
 x-images:

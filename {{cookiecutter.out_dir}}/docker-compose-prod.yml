@@ -1,4 +1,4 @@
-version: '3.7'
+version: '{{cookiecutter.compose_version}}'
 x-{{cookiecutter.app_type}}: &{{cookiecutter.app_type}}
   volumes:
   - ./src/{{cookiecutter.django_settings.replace('.', '/')}}:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/
