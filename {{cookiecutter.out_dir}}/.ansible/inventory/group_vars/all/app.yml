@@ -37,7 +37,7 @@ cops_{{cookiecutter.app_type}}_dotenv_extra: |-
   DJANGO__FTP_INTERNAL_PUBLICHOST={{'{{'}}cops_django_ftp_internal_publichost}}
   {{'{%'}} endif%}
 {% endif %}
-cops_django_restarted_services: "{{"{{"}}cops_django_restarted_services_default{% if cookiecutter.cache_system %}.replace(
+cops_django_restarted_services: "{{"{{"}}cops_django_restarted_services_default{% if cookiecutter.cache_system and (cookiecutter.cache_system != 'redis') %}.replace(
     'redis', '{{cookiecutter.cache_system}}'){%endif
     %}.replace(' django', ' django{%
     if cookiecutter.with_celery%} celery-broker celery-beat celery-worker{%endif
