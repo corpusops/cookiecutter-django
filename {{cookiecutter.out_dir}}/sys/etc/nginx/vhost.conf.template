@@ -23,6 +23,10 @@
 {{'{{'}} $v := merge $v ( dict "ssl_protocols"               ( .Env.NGINX_SSL_PROTOCOLS | default "TLSv1 TLSv1.1 TLSv1.2" )                 ) }}
 {{'{{'}} $v := merge $v ( dict "log_level"                   ( .Env.NGINX_LOGLEVEL | default "crit" )                 ) }}
 {{'{{'}} $v := merge $v ( dict "xscriptname"                 ( .Env.DJANGO__FORCE_SCRIPT_NAME | default "" )                ) }}
+{%- if cookiecutter.with_bundled_docs %}
+{{'{{'}} $v := merge $v ( dict "has_doc"                     ( .Env.DJANGO__HAS_DOC | default "1" )                ) }}
+{%- endif %}
+
 
 # optimize internal nginx buffers
 types_hash_max_size 2048;
@@ -165,6 +169,9 @@ server {
     {{'{{'}} if eq .noforcessl "1"}}# {{'{{'}} end }}if ($forwarded_ssl_scheme != "https"){ rewrite ^(.*)$ https://$host$1 permanent; }
     {{'{{'}} if ne .xscriptname "" }}rewrite ^{{'{{'}}.xscriptname}}/?(.*)$ /$1 break;{{'{{'}} end }}
 
+
+{%- if cookiecutter.with_bundled_docs %}
+{{'{{'}} if eq .has_doc "1" }}
     rewrite ^/docs/?$ $scheme://$host/docs/index.html permanent;
     location ~ ^/docs(?<docs>.*) {
     {{'{{'}} if .Env.DJANGO__DOC_PROTECT_PASSWORD }}
@@ -186,7 +193,9 @@ server {
         add_header Pragma "cache";
         add_header Cache-Control "public";
     }
-
+{{'{{'}} end }}
+{%- endif %}
+  
     {{'{{'}} if ne .nostatics "1" }}
     location ~ ^/static(?<static>.*) {
         root /code/public/static/;
