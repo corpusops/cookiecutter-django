@@ -40,10 +40,6 @@ BUILD_CONTAINERS="$APP_CONTAINER{%-if not cookiecutter.remove_cron%} cron{%endif
 EDITOR=${EDITOR:-vim}
 DIST_FILES_FOLDERS=". src/*/settings"
 CONTROL_COMPOSE_FILES="${CONTROL_COMPOSE_FILES:-docker-compose.yml docker-compose-dev.yml}"
-export DOCKER_BUILDKIT="${DOCKER_BUILDKIT-1}"
-export COMPOSE_DOCKER_CLI_BUILD="${COMPOSE_DOCKER_CLI_BUILD-1}"
-export BUILDKIT_PROGRESS="${BUILDKIT_PROGRESS-plain}"
-export BUILDKIT_INLINE_CACHE="${BUILDKIT_INLINE_CACHE-1}"
 COMPOSE_COMMAND=${COMPOSE_COMMAND:-docker-compose}
 ENV_FILES="${ENV_FILES:-.env docker.env}"
 USE_TOX_DIRECT=${USE_TOX_DIRECT-1}
@@ -54,9 +50,10 @@ if [[ -n $NO_SITE_PACKAGES ]];then
 fi
 NO_DEVELOP=${NO_DEVELOP-}
 # special case: be sure to define some docker internal variables but let them overridable through .env
-export DOCKER_BUILDKIT=${DOCKER_BUILDKIT-1}
-export COMPOSE_DOCKER_CLI_BUILD=${COMPOSE_DOCKER_CLI_BUILD-1}
-export BUILDKIT_PROGRESS=${BUILDKIT_PROGRESS-plain}
+export DOCKER_BUILDKIT="${DOCKER_BUILDKIT-1}"
+export COMPOSE_DOCKER_CLI_BUILD="${COMPOSE_DOCKER_CLI_BUILD-1}"
+export BUILDKIT_PROGRESS="${BUILDKIT_PROGRESS-plain}"
+export BUILDKIT_INLINE_CACHE="${BUILDKIT_INLINE_CACHE-1}"
 
 join_by() { local IFS="$1"; shift; echo "$*"; }
 
