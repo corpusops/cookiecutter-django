@@ -53,6 +53,7 @@ x-images:
       CELERY_SCHEDULER: "${CELERY_SCHEDULER:-django_celery_beat.schedulers:DatabaseScheduler}"
   {{cookiecutter.app_type}}: &{{cookiecutter.app_type}}
     <<: [ *env ]
+    ipc: "service:django"
     tty: true
     # latest image is only used in prod (without dev & test tools)
     image: "${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE}:${{'{'}}{{cookiecutter.app_type.upper()}}_IMAGE_VERSION}-dev"
@@ -239,6 +240,7 @@ services:
       SUPERVISORD_CONFIGS: cron nginx rsyslog
   {{cookiecutter.app_type}}:
     <<: [ *{{cookiecutter.app_type}} ]
+    ipc: shareable
   {%- if not cookiecutter.remove_cron %}
   cron:
     <<: [ *{{cookiecutter.app_type}} ]
@@ -273,12 +275,13 @@ services:
     environment:
       <<: [ *django_env ]
       IMAGE_MODE: celery_beat
-    depends_on: [db, celery-broker, setup-{{db_tag}}]
+    depends_on: [db, celery-broker, setup-{{db_tag}}, {{cookiecutter.app_type}}]
   celery-worker:
     <<: [ *celery ]
     environment:
       <<: [ *django_env ]
       IMAGE_MODE: celery_worker
+    depends_on: [django]
 {% endif -%}
 {% if db_tag == 'postgres' %}  setup-postgres:
     <<: [ *env ]
