@@ -27,7 +27,7 @@ it's commit to gitlab and **The CI/CD pipelines are thrown**:
 
 If tests are ok:
 
-- If it is master or a tag, the image is pushed to the registry
+- If it is {{cookiecutter.main_branch}} or a tag, the image is pushed to the registry
     with the appropriate tag
 - Otherwise, on any other branch, you can manually trigger a manual job to
  build the dev tag that will be autodeployed at a later stage on the
@@ -36,7 +36,7 @@ If tests are ok:
 ## In all cases, we teardown the test resources:
 
 - test dockers (compose) are downed.
-- If master/tag, TMP image is now a reference image in cache
+- If {{cookiecutter.main_branch}}/tag, TMP image is now a reference image in cache
     to speed up further builds
 - TMP built image is deleted in other cases
 
@@ -44,7 +44,7 @@ If tests are ok:
 
 - We deploy using an [ansible playbook](./README.md#details)
 - For dev environment:
-    - we autodeploy master and tags for dev environment
+    - we autodeploy {{cookiecutter.main_branch}} and tags for dev environment
     - we await for manual operation to deploy any other branch/PR.
 - For other envs than dev, we await for a manual, user,
     instruction to deploy on envs.

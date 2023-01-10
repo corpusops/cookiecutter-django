@@ -174,7 +174,7 @@
     ```sh
     # docker image tag to pull
     export CI_COMMIT_TAG_NAME=v2.1
-    export CI_COMMIT_REF_NAME=master
+    export CI_COMMIT_REF_NAME={{cookiecutter.main_branch}}
     # staging or  prod
     export A_ENV_NAME=staging
     # or export A_ENV_NAME=prod
