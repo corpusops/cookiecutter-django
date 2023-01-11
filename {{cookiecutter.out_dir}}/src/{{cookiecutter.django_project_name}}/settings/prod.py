@@ -25,8 +25,6 @@ SECURE_SSL_REDIRECT = {% if cookiecutter.settings_secure_ssl_redirect%}True{%els
 # ACCEL_REDIRECT_LOCATION = "{0}/".format(MEDIA_ROOT)
 # ACCEL_REDIRECT_URI = "/mediai/"
 
-SESSION_ENGINE = "django.contrib.sessions.backends.db"
-
 SESSION_ENGINE = "{{cookiecutter.session_engine_prod}}"
 
 locs_, globs_, env = post_process_settings(locals())

@@ -26,7 +26,11 @@ try:
     from django.utils import six
 except ImportError:
     import six
+{%- if cookiecutter.with_bundled_front %}
 
+from {{cookiecutter.django_project_name}}.manifest_loader import CustomLoader
+
+{%- endif %}
 try:
     import raven  # noqa
     HAS_SENTRY = True
@@ -156,7 +160,7 @@ for knob, values in db_opts:
 for v, envvars in db_opts_dict[db_opts_k].items():
     for envvar in envvars + db_opts_dict['general'][v]:
         try:
-            DEFAULT_DB.setdefault(v,  os.environ[envvar])
+            DEFAULT_DB.setdefault(v, os.environ[envvar])
             break
         except KeyError:
             pass
@@ -222,13 +226,11 @@ STATICFILES_DIRS = (
 STATIC_ROOT = os.path.join(PUBLIC_DIR, 'static')
 MEDIA_URL = '{{cookiecutter.media_uri}}/'
 MEDIA_ROOT = os.path.join(PUBLIC_DIR, 'media')
-
 {% if cookiecutter.with_bundled_front %}
-from {{cookiecutter.django_project_name}}.manifest_loader import CustomLoader
 
 MANIFEST_LOADER = {
-    "manifest_file": "dist/manifest.json",
-    "loader": CustomLoader,
+    'manifest_file': 'dist/manifest.json',
+    'loader': CustomLoader,
 }
 {% endif %}
 
@@ -237,27 +239,29 @@ LOGGING = copy.deepcopy(DEFAULT_LOGGING)
 
 # Cache settings
 CACHES = {
-    "default": {
-{% if cookiecutter.cache_system %}
-        "BACKEND": "{% if cookiecutter.cache_system == 'redis'%}django_redis.cache.RedisCache{% elif cookiecutter.cache_system=='memcached'%}django.core.cache.backends.memcached.MemcachedCache{%endif%}",
-        "LOCATION": {% if cookiecutter.cache_system == 'redis'%}"redis://redis:6379/1"{% elif cookiecutter.cache_system=='memcached'%}os.getenv(
+    'default': {
+{%- if cookiecutter.cache_system %}
+        'BACKEND': '{% if cookiecutter.cache_system == 'redis'%}django_redis.cache.RedisCache{% elif cookiecutter.cache_system=='memcached'%}django.core.cache.backends.memcached.MemcachedCache{%endif%}',
+        'LOCATION': {% if cookiecutter.cache_system == 'redis'%}'redis://redis:6379/1'{% elif cookiecutter.cache_system=='memcached'%}os.getenv(
             'MEMCACHED_URL',
                 '{}:{}'.format(
                     os.getenv('MEMCACHE_HOST', 'memcached'),
-                    os.getenv('MEMCACHE_PORT', '11211'))){%endif%},
-{% if cookiecutter.cache_system == 'redis'%}        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                    os.getenv('MEMCACHE_PORT', '11211')))
+{%-endif%},
+{%- if cookiecutter.cache_system == 'redis'%}
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         },{%endif%}
-        {% if cookiecutter.cache_system == 'memcached'%}"KEY_PREFIX": '{{cookiecutter.memcached_key_prefix}}',{%endif%}
+{% if cookiecutter.cache_system == 'memcached'%}        'KEY_PREFIX': '{{cookiecutter.memcached_key_prefix}}',{%endif%}
     }
 {% else %}
     'default': {
         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
     }
-{%endif %}
+{%- endif %}
 }
 
-SESSION_ENGINE = "{{cookiecutter.session_engine_base}}"
+SESSION_ENGINE = '{{cookiecutter.session_engine_base}}'
 
 # Mail
 EMAIL_HOST = 'mailcatcher'
@@ -414,7 +418,7 @@ def check_explicit_settings(_locals):
     '''
     for setting in EXPLICIT_ENV_VARS:
         try:
-            _ = _locals[setting]  #noqa
+            _ = _locals[setting]  # noqa
         except KeyError:
             raise Exception('{0} django settings is not defined')
 
@@ -475,7 +479,7 @@ def post_process_settings(globs=None):
         LOGGING.setdefault('handlers', {}).update({
             'sentry': {
                 'level': 'ERROR',
-                'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',  #noqa
+                'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',  # noqa
             }})
         root = LOGGING.setdefault('root', {})
         root['handlers'] = ['sentry']
@@ -497,7 +501,7 @@ def post_process_settings(globs=None):
     ):
         _locals['INSTALLED_APPS'] += ('django_extensions', )
     if env != 'prod':
-        _locals["INSTANCE_HEADER"] = env.upper()
+        _locals['INSTANCE_HEADER'] = env.upper()
 
     default_mail = (
         '{env}-{{cookiecutter.lname}}@{{cookiecutter.tld_domain}}'.format(
@@ -546,8 +550,8 @@ def set_prod_settings(globs):
     # those settings by default are empty, we need to handle this case
     if not CORS_ORIGIN_ALLOW_ALL and not (CORS_ORIGIN_WHITELIST or CORS_ALLOWED_ORIGIN_REGEXES):
         _locals['CORS_ALLOWED_ORIGIN_REGEXES'] = (
-            r'http://{env}-{{cookiecutter.lname}}\.{{cookiecutter.tld_domain}}'.format(env=env),  #noqa
-            r'https://{env}-{{cookiecutter.lname}}\.{{cookiecutter.tld_domain}}'.format(env=env),  #noqa
+            r'http://{env}-{{cookiecutter.lname}}\.{{cookiecutter.tld_domain}}'.format(env=env),  # noqa
+            r'https://{env}-{{cookiecutter.lname}}\.{{cookiecutter.tld_domain}}'.format(env=env),  # noqa
             r'http://.*\.?{{cookiecutter.tld_domain}}',
             r'https://.*\.?{{cookiecutter.tld_domain}}')
     if not ALLOWED_HOSTS:

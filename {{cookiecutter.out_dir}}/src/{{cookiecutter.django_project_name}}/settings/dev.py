@@ -15,8 +15,12 @@ from .base import *  # noqa
 os.environ['RELATIVE_SETTINGS_MODULE'] = '.dev'
 
 INSTALLED_APPS += tuple([  # noqa
-    {% if cookiecutter.with_toolbar %}'debug_toolbar',{%endif%}
-    {% if cookiecutter.with_djextensions %}'django_extensions',{%endif%}
+{%- if cookiecutter.with_toolbar %}
+    'debug_toolbar',
+{%- endif%}
+{%- if cookiecutter.with_djextensions %}
+    'django_extensions',
+{%- endif%}
 ])
 SECRET_KEY = os.environ.get('SECRET_KEY', 'secretkey-superhot-12345678')
 ALLOWED_HOSTS = ['*']
