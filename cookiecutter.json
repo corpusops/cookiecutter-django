@@ -17,7 +17,7 @@
     "qa_domain": "qa-{{cookiecutter.lname}}.{{cookiecutter.tld_domain}}",
     "staging_domain": "staging-{{cookiecutter.lname}}.{{cookiecutter.tld_domain}}",
     "prod_domain": "{{cookiecutter.lname}}.{{cookiecutter.tld_domain}}",
-    "preprod_domain": "{{cookiecutter.lname}}.{{cookiecutter.tld_domain}}",
+    "preprod_domain": "preprod-{{cookiecutter.lname}}.{{cookiecutter.tld_domain}}",
     "dev_alternate_domains": "www.{{cookiecutter.dev_domain}}",
     "qa_alternate_domains": "www.{{cookiecutter.qa_domain}}",
     "staging_alternate_domains": "www.{{cookiecutter.staging_domain}}",
@@ -27,7 +27,7 @@
     "staging_host": "{{cookiecutter.staging_domain.replace('-{0}.'.format(cookiecutter.lname), '-docker-{0}.'.format(cookiecutter.lname))}}",
     "qa_host": "{{cookiecutter.qa_domain.replace('-{0}.'.format(cookiecutter.lname), '-docker-{0}.'.format(cookiecutter.lname))}}",
     "dev_host": "{{cookiecutter.dev_domain.replace('-{0}.'.format(cookiecutter.lname), '-docker-{0}.'.format(cookiecutter.lname))}}",
-    "preprod_host": "{{cookiecutter.preprod_domain.replace('-{0}.'.format(cookiecutter.lname), '-docker-{0}.'.format(cookiecutter.lname))}}",
+    "preprod_host": "preprod-{{cookiecutter.preprod_domain.replace('-{0}.'.format(cookiecutter.lname), '-docker-{0}.'.format(cookiecutter.lname))}}",
     "prod_host": "{{cookiecutter.prod_domain.replace('-{0}.'.format(cookiecutter.lname), '-docker-{0}.'.format(cookiecutter.lname))}}",
     "staging_port": "22",
     "remove_doc": "",
@@ -149,6 +149,7 @@
 	"node_image_flavor": "slim",
     "with_pil": "y",
     "with_black": "y",
+    "main_branch": "master",
     "with_sphinx": "y",
     "db_out_port": "{% if 'post' in cookiecutter.db_mode or 'pg' in cookiecutter.db_mode%}5436{% elif cookiecutter.db_mode == 'mysql' %}3310{% endif %}"
 }
