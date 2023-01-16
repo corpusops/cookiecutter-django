@@ -146,7 +146,7 @@
     "corpusops_image": "corpusops/ubuntu:20.04",
     "docs_folders": "docs/*",
     "statics_folders": " src/*/static/dist",
-	"node_image_flavor": "slim",
+	"node_image_flavor": "-slim",
     "with_pil": "y",
     "with_black": "y",
     "main_branch": "master",
