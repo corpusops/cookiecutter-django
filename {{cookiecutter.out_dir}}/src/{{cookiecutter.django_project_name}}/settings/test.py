@@ -7,8 +7,6 @@ for a in INSTALLED_APPS:
     if 'rest_framework' in a:
         REST_FRAMEWORK['TEST_REQUEST_DEFAULT_FORMAT'] = 'json'
 
-SECRET_KEY = 'spam-spam-spam-spam'
-
 MEDIA_ROOT = tempfile.mkdtemp()
 FILE_UPLOAD_TEMP_DIR = tempfile.mkdtemp()
 

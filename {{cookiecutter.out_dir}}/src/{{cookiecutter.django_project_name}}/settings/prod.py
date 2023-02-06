@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from .base import *  # noqa
 
+
 # SECURITY #
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -26,7 +27,6 @@ SECURE_SSL_REDIRECT = {% if cookiecutter.settings_secure_ssl_redirect%}True{%els
 # ACCEL_REDIRECT_URI = "/mediai/"
 
 SESSION_ENGINE = "{{cookiecutter.session_engine_prod}}"
-
 locs_, globs_, env = post_process_settings(locals())
 globals().update(globs_)
 try:

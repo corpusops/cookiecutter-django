@@ -52,7 +52,7 @@ PROJECT_NAME = os.path.basename(PROJECT_DIR)
 # See https://docs.djangoproject.com/en/{{cookiecutter.django_ver_1}}/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = None
+SECRET_KEY = os.environ.get('SECRET_KEY', 'secretkey-superhot-12345678')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -461,7 +461,7 @@ def post_process_settings(globs=None):
         _locals['CACHES']['default']['LOCATION'] = cache_url
     except KeyError:
         pass
-    LOGGING = _locals.setdefault('LOGGING', copy.deepcopy(DEFAULT_LOGGING))
+    _LOGGING = _locals.setdefault('LOGGING', copy.deepcopy(LOGGING))
     {% if cookiecutter.with_sentry -%}SENTRY_DSN = _locals.setdefault('SENTRY_DSN', '')
     SENTRY_RELEASE = _locals.setdefault('SENTRY_RELEASE', 'prod')
     INSTALLED_APPS = _locals.setdefault('INSTALLED_APPS', tuple())
@@ -482,13 +482,13 @@ def post_process_settings(globs=None):
             'raven.transport.requests.RequestsHTTPTransport')
         # If you are using git, you can also automatically
         # configure the release based on the git info.
-        LOGGING['disable_existing_loggers'] = True
-        LOGGING.setdefault('handlers', {}).update({
+        _LOGGING['disable_existing_loggers'] = True
+        _LOGGING.setdefault('handlers', {}).update({
             'sentry': {
                 'level': 'ERROR',
                 'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',  # noqa
             }})
-        root = LOGGING.setdefault('root', {})
+        root = _LOGGING.setdefault('root', {})
         root['handlers'] = ['sentry']
         if SENTRY_TAGS and isinstance(SENTRY_TAGS, six.string_types):
             _locals['SENTRY_TAGS'] = {}
