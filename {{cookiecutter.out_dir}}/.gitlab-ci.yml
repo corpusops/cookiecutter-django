@@ -134,7 +134,7 @@ variables: &variables
   - &skip_not_main_trigger                      {if: "$CI_COMMIT_REF_NAME != $MAIN_BRANCH", when: never}
   - &skip_on_release_branches_main_tags_trigger {if: "$CI_COMMIT_REF_NAME =~ /^({{gitlabci_branches|join('|')}})$/ || $CI_COMMIT_REF_NAME != $MAIN_BRANCH || $CI_COMMIT_TAG == null", when: never}
   - &skip_on_release_branches_tags_trigger      {if: "$CI_COMMIT_REF_NAME =~ /^({{gitlabci_branches|join('|')}})$/{% if not cookiecutter.no_tags_pipelines%} || $CI_COMMIT_TAG != null{%endif%}", when: never}
-  - &on_release_branches_main_tags_trigger      {if: "$CI_COMMIT_REF_NAME =~ /^({{gitlabci_branches|join('|')}})$/ || $CI_COMMIT_REF_NAME == $MAIN_BRANCH{% if not cookiecutter.no_tags_pipelines%} || $CI_COMMIT_TAG != null{%endifµ%}", when: on_success}
+  - &on_release_branches_main_tags_trigger      {if: "$CI_COMMIT_REF_NAME =~ /^({{gitlabci_branches|join('|')}})$/ || $CI_COMMIT_REF_NAME == $MAIN_BRANCH{% if not cookiecutter.no_tags_pipelines%} || $CI_COMMIT_TAG != null{%endif%}", when: on_success}
   - &mon_release_branches_main_tags_trigger     {if: "$CI_COMMIT_REF_NAME =~ /^({{gitlabci_branches|join('|')}})$/ || $CI_COMMIT_REF_NAME == $MAIN_BRANCH{% if not cookiecutter.no_tags_pipelines%} || $CI_COMMIT_TAG != null{%endif%}", when: manual}
   - &on_release_branches_tags_trigger           {if: "$CI_COMMIT_REF_NAME =~ /^({{gitlabci_branches|join('|')}})$/{% if not cookiecutter.no_tags_pipelines%} || $CI_COMMIT_TAG != null{%endif%}", when: on_success}
   - &on_main_and_tags_trigger                   {if: "$CI_COMMIT_REF_NAME == $MAIN_BRANCH || $CI_COMMIT_TAG == null", when: on_success}
