@@ -144,6 +144,7 @@
     "node_version": "14.18.0",
     "node_image": "corpusops/node",
     "corpusops_image": "corpusops/ubuntu:20.04",
+    "docs_folder": "docs",
     "docs_folders": "docs/*",
     "statics_folders": " src/*/static/dist",
 	"node_image_flavor": "-slim",
@@ -151,5 +152,10 @@
     "with_black": "y",
     "main_branch": "master",
     "with_sphinx": "y",
-    "db_out_port": "{% if 'post' in cookiecutter.db_mode or 'pg' in cookiecutter.db_mode%}5436{% elif cookiecutter.db_mode == 'mysql' %}3310{% endif %}"
+    "db_out_port": "{% if 'post' in cookiecutter.db_mode or 'pg' in cookiecutter.db_mode%}5436{% elif cookiecutter.db_mode == 'mysql' %}3310{% endif %}",
+    "sphinx_theme": "sphinx_makina_theme",
+    "sphinx_theme_path": "",
+    "sphinx_copyright": "FIXME",
+    "sphinx_author": "FIXME",
+    "no_tags_pipelines": "y"
 }

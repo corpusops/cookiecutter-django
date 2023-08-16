@@ -103,6 +103,8 @@ die(){ log $@;exit 1; }
 
 vv() { log "$@";"$@";}
 
+debug() { if [[ -n $DEBUG ]];then log "$@";fi }
+
 dvv() { if [[ -n $DEBUG ]];then log "$@";fi;"$@";}
 
 #  up_corpusops: update corpusops
@@ -151,15 +153,31 @@ _shell() {
 #  dcompose $@: wrapper to docker-compose
 do_dcompose() {
     set -- dvv $DC "$@"
-    ( export COMPOSE_FILE="$COMPOSE_FILE_RUN" && "$@" )
+    ( export COMPOSE_FILE="$COMPOSE_FILE_RUN" && debug "using COMPOSE_FILE=$COMPOSE_FILE" && "$@" )
 }
 
 #  dbcompose $@: wrapper to docker-compose with build compose files set
 do_dbcompose() {
-    set -- dvv do_dbcompose "$@"
-    ( export COMPOSE_FILE="$COMPOSE_FILE_BUILD" && "$@" )
+    set -- dvv $DCB "$@"
+    ( export COMPOSE_FILE="$COMPOSE_FILE_BUILD" && debug "using COMPOSE_FILE=$COMPOSE_FILE" && "$@" )
 }
 
+#  mysql $@: wrapper to mysql interpreter
+do_mysql() {
+    set -x
+    cmd='do_dcompose exec db sh -ec "mysql --password=\$MYSQL_PASSWORD --user=\$MYSQL_USER \$MYSQL_DATABASE'
+    cli=( "$@" )
+    for var in "${cli[@]}";do cmd="$cmd $(printf %q "$var")";done
+    eval $cmd'"'
+}
+
+#  psql $@: wrapper to psql interpreter
+do_psql() {
+    cmd='do_dcompose exec db bash -ec "PGUSER=\$POSTGRES_USER PGPASSWORD=\$PGPASSWD PGHOST=\$POSTGRES_HOST PGPORT=\$POSTGRES_PORT PGDATABASE=\$POSTGRES_DB psql'
+    cli=( "$@" )
+    for var in "${cli[@]}";do cmd="$cmd $(printf %q "$var")";done
+    eval $cmd'"'
+}
 
 #  ----
 #  [services_ports=1] usershell $user [$args]: open shell inside $CONTAINER as $APP_USER using docker-compose run
@@ -421,7 +439,7 @@ do_celery_worker_fg() {
 
 {% endif -%}
 #  open_perms_valve: Give the host user rights to edit most common files inside the container
-#                    wich are generally mounted as docker volumes from the host via posix ACLs
+#                    which are generally mounted as docker volumes from the host via posix ACLs
 #                    This won't work on OSX for now.
 do_open_perms_valve() {
     SUPEREDITOR="${SUPEREDITOR:-$(id -u)}"
@@ -492,8 +510,6 @@ do_make_docs() {
         -e NO_INIT=${NO_HTML-} \
         -e NO_CLEAN=${NO_CLEAN-} \
         -e HOST_USER_UID=$(id -u) \
-        -e SOURCEDIR=${SOURCEDIR-} \
-        -e BUILDDIR=${BUILDDIR-} \
         -e DEBUG=${DEBUG-} \
         docs "$@"
 }
@@ -506,7 +522,7 @@ do_doc() {
 do_main() {
     local args=${@:-usage}
     local actions="up_corpusops|shell|usage|install_docker|setup_corpusops|open_perms_valve|get_container_code|vscode"
-    actions="$actions|yamldump|stop|usershell|exec|userexec|dexec|duserexec|dcompose|dbcompose|ps"
+    actions="$actions|yamldump|stop|usershell|exec|userexec|dexec|duserexec|dcompose|dbcompose|ps|psql|mysql"
 
     actions="$actions|init|up|fg|pull|build|buildimages|down|rm|run"
     actions_{{cookiecutter.app_type}}="runserver|tests|test|coverage|linting|manage|python{% if cookiecutter.with_celery%}|celery_beat_fg|celery_worker_fg{%endif%}"
