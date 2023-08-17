@@ -4,16 +4,22 @@ x-images:
   env: &env
     env_file: [.env, docker.env]
     environment: &env_vars
-      {% if cookiecutter.with_celery -%}
-      {% if cookiecutter.celery_broker == 'rabbitmq' %}
+{%- if cookiecutter.with_celery -%}
+{%- if cookiecutter.celery_broker == 'rabbitmq' %}
       RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER:-admin}"
       RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS:-mypass}"
-      {% endif %}
-      {%- endif %}{%if cookiecutter.cache_system%}
-      {% if cookiecutter.cache_system == 'redis' %}REDIS_URL: "${REDIS_URL:-redis://redis:6379/1}"
-      {% elif cookiecutter.cache_system == 'memcached' %}MEMCACHED_URL: "${MEMCACHED_URL:-memcached:11211}"
-      {% else %}{{cookiecutter.cache_system.upper()}}_URL: "${{'{'}}{{cookiecutter.cache_system.upper()}}_URL:-{{cookiecutter.cache_system}}{{'}'}}"{% endif%}{%endif%}
-      {% if 'post' in cookiecutter.db_mode %}
+{%- endif %}
+{%- endif %}
+{%- if cookiecutter.cache_system%}
+{%-  if cookiecutter.cache_system == 'redis' %}
+      REDIS_URL: "${REDIS_URL:-redis://redis:6379/1}"
+{%- elif cookiecutter.cache_system == 'memcached' %}
+      MEMCACHED_URL: "${MEMCACHED_URL:-memcached:11211}"
+{%- else %}
+      {{cookiecutter.cache_system.upper()}}_URL: "${{'{'}}{{cookiecutter.cache_system.upper()}}_URL:-{{cookiecutter.cache_system}}{{'}'}}"
+{%- endif%}
+{%- endif%}
+{%- if 'post' in cookiecutter.db_mode %}
       POSTGRES_STARTUP_TIMEOUT: "${POSTGRES_STARTUP_TIMEOUT:-45s}"
       POSTGRES_HOST: "${POSTGRES_HOST:-db}"
       POSTGRES_PORT: "${POSTGRES_PORT:-5432}"
@@ -22,31 +28,31 @@ x-images:
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-password}"
       PGPASSWD: "${POSTGRES_PASSWORD:-password}"
       PGPASSWORD: "${POSTGRES_PASSWORD:-password}"
-      {% elif 'mysql' in cookiecutter.db_mode %}
+{%- elif 'mysql' in cookiecutter.db_mode %}
       MYSQL_HOST: "${MYSQL_HOST:-db}"
       MYSQL_PORT: "${MYSQL_PORT:-3306}"
       MYSQL_DATABASE: "${MYSQL_DATABASE:-db}"
       MYSQL_USER: "${MYSQL_USER:-user}"
       MYSQL_PASSWORD: "${MYSQL_PASSWORD:-password}"
-      {% else %}
+{%- else %}
       DB_HOST: "${DB_HOST:-db}"
       DB_PORT: "${DB_PORT:-5432}"
       DB_NAME: "${DB_NAME;-db}"
       DB_USER: "${DB_USER:-user}"
       DB_PASSWORD: "${DB_PASSWORD:-password}"
-      {% endif %}
+{%- endif %}
       DJANGO__USER_UID: "${DJANGO__USER_UID:-1000}"
-      {% if cookiecutter.with_ftp %}
+{%- if cookiecutter.with_ftp %}
       DJANGO__FTP_USER: "${DJANGO__FTP_USER:-ftp}"
       DJANGO__FTP_PASSWORD: "${DJANGO__FTP_PASSWORD:-secret1324510}"
       DJANGO__FTP_PORT: "${DJANGO__FTP_PORT:-{{cookiecutter.ftp_port_range_start|int -1 }}}"
-      {% if cookiecutter.with_ftp in ['ftp'] %}
+{%- if cookiecutter.with_ftp in ['ftp'] %}
       FTP_USER_HOME: "${DJANGO__FTP_ROOT:-/ftp}"
       FTP_USER_NAME: "${DJANGO__FTP_USER:-ftp}"
       FTP_USER_PASS: "${DJANGO__FTP_PASSWORD:-secret1324510}"
       FTP_USER_UID: "${DJANGO__USER_UID:-1000}"
-      {% endif %}
-      {% endif %}
+{%- endif %}
+{%- endif %}
       SECRET_KEY: "${SECRET_KEY:-ChangeThatSuperSecret}"
       MAILCATCHER_USER: "${MAILCATCHER_USER:-mailcatcher}"
       MAILCATCHER_PASSWORD: "${MAILCATCHER_PASSWORD:-mailcatcher}"
@@ -65,12 +71,16 @@ x-images:
       EXTRA_USER_DIRS: "{% if cookiecutter.with_ftp%}${DJANGO__FTP_ROOT:-/ftp}{%endif%}"
       GUNICORN_CLASS: "${GUNICORN_CLASS:-{{cookiecutter.gunicorn_class}}}"
       SECRET_KEY: "${SECRET_KEY:-ChangeThatSuperSecret}"
-{% if cookiecutter.with_celery %}      DJANGO_CELERY: "${DJANGO_CELERY:-{{cookiecutter.django_project_name}}.celery:app}"
+{%- if cookiecutter.with_celery %}
+      DJANGO_CELERY: "${DJANGO_CELERY:-{{cookiecutter.django_project_name}}.celery:app}"
       DJANGO_CELERY_BROKER: "${DJANGO_CELERY_BROKER:-{{cookiecutter.celery_broker}}}"
       DJANGO_CELERY_HOST: "${DJANGO_CELERY_HOST:-celery-broker}"
-{% endif %}    depends_on:
+{%- endif %}
+    depends_on:
     - db
-{% if cookiecutter.cache_system%}    - "{{cookiecutter.cache_system}}"{%endif%}
+{%- if cookiecutter.cache_system%}
+    - "{{cookiecutter.cache_system}}"
+{%-endif%}
     - setup-{{db_tag}}
     working_dir: /code/src
     command:
@@ -84,9 +94,9 @@ x-images:
       && /init.sh
     volumes:
       - ./sys/scripts:/code/sys/scripts
-      {%- if not cookiecutter.remove_cron %}
+{%- if not cookiecutter.remove_cron %}
       - ./sys/etc/cron.d:/code/sys/etc/cron.d/
-      {%- endif %}
+{%- endif %}
       - ./sys/etc/logrotate.d:/code/sys/etc/logrotate.d
       - ./src/{{cookiecutter.django_settings.replace('.', '/')}}/instances:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/instances
       - mediafiles:/code/public/media
@@ -94,8 +104,10 @@ x-images:
       - logs:/logs/
       - ./data:/code/data
       - docs:/code/outdocs
-{% if cookiecutter.with_ftp %}      - "ftp-root:${DJANGO__FTP_ROOT:-/ftp}"{% endif %}
-{% if cookiecutter.with_ftp %}
+{%- if cookiecutter.with_ftp %}
+      - "ftp-root:${DJANGO__FTP_ROOT:-/ftp}"
+{%- endif %}
+{%- if cookiecutter.with_ftp %}
   ftp: &ftp
     <<: [ *env ]
     image: {{ cookiecutter.with_ftp in ['ssh'] and 'corpusops/sshd' or 'corpusops/pureftpd' }}
@@ -105,9 +117,10 @@ x-images:
       ADDED_FLAGS: "-O w3c:/var/log/pure-ftpd/transfer.log"
       FTP_MAX_CONNECTIONS: 50
       FTP_MAX_CLIENTS: 50{%endif%}
-{% endif %}
+{%- endif %}
 services:
-{% if cookiecutter.with_ftp -%}{% if cookiecutter.with_ftp in ['ftp']%}
+{%- if cookiecutter.with_ftp %}
+{%- if cookiecutter.with_ftp in ['ftp']%}
 # has only to be reachable from within the docker network (no passive mode !)
   ftp-int:
     <<: [ *ftp ]
@@ -120,7 +133,7 @@ services:
     - ftp-pw:/etc/pure-ftpd/passwd
     - ftp-ssl:/etc/ssl/private
     - ftp-log-int:/var/log/pure-ftpd{%endif%}
-{% if cookiecutter.with_ftp in ['ftp']%}
+{%- if cookiecutter.with_ftp in ['ftp']%}
   ftp:
     <<: [ *ftp ]
     environment:
@@ -135,7 +148,7 @@ services:
     - ftp-pw:/etc/pure-ftpd/passwd
     - ftp-ssl:/etc/ssl/private
     - ftp-log:/var/log/pure-ftpd
-{% elif cookiecutter.with_ftp in ['ssh']%}
+{%- elif cookiecutter.with_ftp in ['ssh']%}
   ftp:
     <<: [ *ftp ]
     environment:
@@ -148,7 +161,7 @@ services:
     volumes:
     - "ftp-root:${DJANGO__SFTP_ROOT:-/home/ftp}"
     - ftp-log:/var/log
-{% endif %}
+{%- endif %}
 {%- endif %}
   mailcatcher:
     <<: [ *env ]
@@ -241,7 +254,7 @@ services:
   {{cookiecutter.app_type}}:
     <<: [ *{{cookiecutter.app_type}} ]
     ipc: shareable
-  {%- if not cookiecutter.remove_cron %}
+{%- if not cookiecutter.remove_cron %}
   cron:
     <<: [ *{{cookiecutter.app_type}} ]
     environment:
@@ -250,20 +263,23 @@ services:
     depends_on:
     - {{cookiecutter.app_type}}
     volumes:
-{% if cookiecutter.with_ftp %}    - "ftp-root:${DJANGO__FTP_ROOT:-/ftp}"{% endif %}
+{%- if cookiecutter.with_ftp %}
+    - "ftp-root:${DJANGO__FTP_ROOT:-/ftp}"
+{% endif %}
     - ./sys/scripts:/code/sys/scripts
-    {%- if not cookiecutter.remove_cron %}
+{%- if not cookiecutter.remove_cron %}
     - ./sys/etc/cron.d:/code/sys/etc/cron.d/
     - ./sys/etc/logrotate.d:/code/sys/etc/logrotate.d/
-    {%- endif %}
+{%- endif %}
     - ./src/{{cookiecutter.django_settings.replace('.', '/')}}/instances:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/instances
     - mediafiles:/code/public/media
     - statics:/code/public/static
     - logs:/logs/
     - cronlogs:/var/log
     - ./data:/code/data
-  {%-endif%}
-{% if cookiecutter.with_celery %}  celery-broker:
+{%-endif%}
+{%- if cookiecutter.with_celery %}
+  celery-broker:
     <<: [ *env ]
     image: "{{cookiecutter['{0}_image'.format(cookiecutter.celery_broker)]}}"
     {% if cookiecutter.celery_broker in ['redis', 'rabbitmq'] -%}
@@ -282,8 +298,9 @@ services:
       <<: [ *django_env ]
       IMAGE_MODE: celery_worker
     depends_on: [django]
-{% endif -%}
-{% if db_tag == 'postgres' %}  setup-postgres:
+{%- endif %}
+{%- if db_tag == 'postgres' %}
+  setup-postgres:
     <<: [ *env ]
     image: "{{cookiecutter["{0}_image".format(cookiecutter.db_mode)]}}"
     depends_on:
@@ -305,11 +322,13 @@ services:
       set -x \
       && dockerize -wait file://$$flag -timeout $${POSTGRES_STARTUP_TIMEOUT} \
       && while true;do printf "HTTP/1.1 200 OK\n\nstarted"| ( nc -l -p 80 || /bin/true);done
-{% endif %}
+{%- endif %}
 volumes:
   docs:
   postgresql:
-{% if cookiecutter.cache_system in ['redis']%}  {{cookiecutter.cache_system}}:{%endif%}
+{%- if cookiecutter.cache_system in ['redis']%}
+  {{cookiecutter.cache_system}}:
+{%- endif%}
   nginx-htpasswd:
   nginx-certs:
   mediafiles:
@@ -319,13 +338,15 @@ volumes:
   logs:
   mails:
   cronlogs:
-  {%if cookiecutter.with_celery%}celery{{cookiecutter.celery_broker}}:{%endif%}
-{% if cookiecutter.with_ftp %}
+{%- if cookiecutter.with_celery%}
+  celery{{cookiecutter.celery_broker}}:
+{%- endif%}
+{%- if cookiecutter.with_ftp %}
   ftp-root:
   ftp-log:
-{% if cookiecutter.with_ftp in ['ftp'] %}
+{%- if cookiecutter.with_ftp in ['ftp'] %}
   ftp-log-int:
   ftp-pw:
   ftp-ssl:
-{% endif -%}
-{% endif -%}
+{%- endif %}
+{%- endif %}

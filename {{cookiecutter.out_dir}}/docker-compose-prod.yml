@@ -20,16 +20,17 @@ services:
     <<: [ *{{cookiecutter.app_type}} ]
     ports:
     - "${DJANGO__API_LISTEN:-127.0.0.1}:${DJANGO__API_PORT:-8000}:8000"
-  {% if not cookiecutter.remove_cron %}
+{%- if not cookiecutter.remove_cron %}
   cron:
     <<: [ *{{cookiecutter.app_type}} ]
     restart: unless-stopped
-  {%- endif%}
+{%- endif%}
   mailcatcher:
     restart: unless-stopped
-{% if cookiecutter.cache_system%}  {{cookiecutter.cache_system}}:
+{%- if cookiecutter.cache_system%}
+  {{cookiecutter.cache_system}}:
     restart: unless-stopped
-{%endif%}
+{% endif%}
   db:
     restart: unless-stopped
   backup:
@@ -37,7 +38,8 @@ services:
     volumes:
     - backupdb-dumps:/var/db_smart_backup/
     - backupdb-logs:/var/db_smart_backup/logs/
-{% if cookiecutter.with_celery %}  celery-broker:
+{%- if cookiecutter.with_celery %}
+  celery-broker:
     restart: unless-stopped
   celery-beat: &celery
     <<: [ *{{cookiecutter.app_type}} ]
@@ -45,10 +47,11 @@ services:
   celery-worker:
     <<: [ *{{cookiecutter.app_type}} ]
     restart: unless-stopped
-{% endif -%}
-{% if cookiecutter.db_mode.startswith('post') %}  setup-postgres:
+{%- endif %}
+{%- if cookiecutter.db_mode.startswith('post') %}
+  setup-postgres:
     restart: unless-stopped
-{% endif %}
+{%- endif %}
 volumes:
   backupdb-logs:
   backupdb-dumps:
