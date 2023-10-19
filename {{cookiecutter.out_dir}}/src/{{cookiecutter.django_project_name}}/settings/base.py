@@ -31,6 +31,7 @@ except ImportError:
 from {{cookiecutter.django_project_name}}.manifest_loader import CustomLoader
 
 {%- endif %}
+
 try:
     import raven  # noqa
     HAS_SENTRY = True

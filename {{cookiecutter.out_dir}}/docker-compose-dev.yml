@@ -32,6 +32,9 @@ x-images:
       - ./lib:/code/lib
 {%- endif%}
       - ./local:/code/local
+{%- if cookiecutter.with_bundled_front %}
+      - ./frontend:/code/frontend
+{%- endif %}
       - ./src:/code/src
 {%- if not cookiecutter.no_private %}
       - ./private:/code/private

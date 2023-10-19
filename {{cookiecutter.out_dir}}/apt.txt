@@ -3,6 +3,7 @@ openssh-client
 rsync
 make
 # runtime dependencies
+{%- set uver = cookiecutter.ubuntu_image.split(':')[1].split('.')[0] | int %}
 {%- if cookiecutter.py_ver.startswith('3') %}
 python3
 {%- else %}
@@ -16,13 +17,22 @@ binutils
 ca-certificates
 curl
 gdal-bin
+{%- if uver >= 22 %}
+libgdal30
+{%- else %}
 libgdal26
+{%- endif %}
 gettext
 git
 less
+{%- if uver >= 22 %}
+libllvm14
+llvm-14
+{%- else %}
 libllvm10
-libsoup2.4-1
 llvm-10
+{%- endif %}
+libsoup2.4-1
 lsb-release
 sudo
 tzdata
@@ -35,7 +45,11 @@ libopenjp2-7
 zlib1g
 libfreetype6
 liblcms2-2
+{%- if uver >= 22 %}
+libwebp7
+{%- else %}
 libwebp6
+{%- endif %}
 tcl8.6
 tk8.6
 libharfbuzz0b
@@ -51,7 +65,12 @@ gpg
 libgcc-9-dev
 libproj-dev
 libstdc++-9-dev
+{%- if uver >= 22 %}
+llvm-14-dev
+{%- else %}
+libllvm10
 llvm-10-dev
+{%- endif %}
 {% if 'post' in cookiecutter.db_mode %}postgresql-client{% endif %}
 {% if 'post' in cookiecutter.db_mode %}postgresql-server-dev-all{% endif %}
 python{{cookiecutter.py_ver}}-dev

@@ -519,6 +519,16 @@ do_doc() {
     do_make_docs "$@"
 }
 
+{%- if cookiecutter.with_bundled_front %}
+#  gen_js_conf: generate JS configs
+do_gen_js_conf() {
+    docker run --rm -v $(pwd):/a -e U_UID=$(id -u) corpusops/alpine-bare sh -c ': \
+        && cd /a \
+        && frep sys/etc/configs/frontend.config.json:frontend/public/frontend.config.json --overwrite \
+        && chown $U_UID frontend/public/frontend.config.json'
+}
+{%- endif %}
+
 do_main() {
     local args=${@:-usage}
     local actions="up_corpusops|shell|usage|install_docker|setup_corpusops|open_perms_valve|get_container_code|vscode"
@@ -528,6 +538,9 @@ do_main() {
     actions_{{cookiecutter.app_type}}="runserver|tests|test|coverage|linting|manage|python{% if cookiecutter.with_celery%}|celery_beat_fg|celery_worker_fg{%endif%}"
     actions="$actions|doc|make_docs"
     actions="@($actions|$actions_{{cookiecutter.app_type}})"
+{%- if cookiecutter.with_bundled_front %}
+    actions="$actions|gen_js_conf"
+{% endif %}
     action=${1-}
     if [[ -n $@ ]];then shift;fi
     set_dc

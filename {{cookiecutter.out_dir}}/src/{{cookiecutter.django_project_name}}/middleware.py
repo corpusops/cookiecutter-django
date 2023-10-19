@@ -27,7 +27,7 @@ class ShowInstanceHeaderMiddleware:
             return response
 
         # Determine message
-        message = f'''<div style="text-align: center;
+        message = f"""<div style="text-align: center;
             position: absolute;
             top: 0;
             width: 100%;
@@ -36,15 +36,17 @@ class ShowInstanceHeaderMiddleware:
             padding: 5px;
             font-size: 15px;
             box-sizing: border-box;
-        ">{settings.INSTANCE_HEADER}</div>'''
+        ">{settings.INSTANCE_HEADER}</div>"""
 
         # Insert the message in the response.
         content = response.content.decode(response.charset)
-        bits = re.split('<body(.*?)>', content, flags=re.IGNORECASE | re.DOTALL)
+        bits = re.split("<body(.*?)>", content, flags=re.IGNORECASE | re.DOTALL)
         if len(bits) > 1:
             bits[2] = message + bits[2]
             response.content = (
-                bits[0] + f'<body style="padding-top: 30px; box-sizing: border-box"{bits[1]}>' + bits[2]
+                bits[0]
+                + f'<body style="padding-top: 30px; box-sizing: border-box"{bits[1]}>'
+                + bits[2]
             )
             if "Content-Length" in response:
                 response["Content-Length"] = len(response.content)

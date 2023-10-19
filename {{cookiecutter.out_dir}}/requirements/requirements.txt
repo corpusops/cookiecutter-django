@@ -15,14 +15,18 @@ django-url-filter>=0.3,<0.4
 # connectors
 psycopg2{{cookiecutter.psycopg_req}}
 {% if cookiecutter.cache_system == 'redis'-%}
+{%- if cookiecutter.django_ver_1[0]|int >= 4 %}
+django-redis>=5.2.0
+{%- else %}
 django-redis>=4.9,<4.10
+{%- endif %}
 {%endif-%}
 {%- if cookiecutter.cache_system == 'memcached'%}
 python-memcached
 {%endif %}
 # SIG
 mercantile>=1.0,<1.1
-Fiona>=1.7,<1.8
+Fiona>=1.7,<1.8.22
 
 {% if cookiecutter.with_pil %}
 django-versatileimagefield>=1.10,<2.0
@@ -31,8 +35,8 @@ Pillow>=5.3.0,<6.0.0
 {% if cookiecutter.with_drf -%}
 # DRF
 djangorestframework>=3.11,<3.12
-djangorestframework-gis==0.12
-djangorestframework-simplejwt>=4.4,<4.5
+djangorestframework-gis==1.0
+djangorestframework-simplejwt>=5,<=5.1.0
 drf-yasg>=1.9,<2.0
 {% endif -%}
 {% if cookiecutter.with_ia_libs -%}
