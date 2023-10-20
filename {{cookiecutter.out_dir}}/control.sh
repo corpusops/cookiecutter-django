@@ -518,8 +518,8 @@ do_make_docs() {
 do_doc() {
     do_make_docs "$@"
 }
-
 {%- if cookiecutter.with_bundled_front %}
+
 #  gen_js_conf: generate JS configs
 do_gen_js_conf() {
     docker run --rm -v $(pwd):/a -e U_UID=$(id -u) corpusops/alpine-bare sh -c ': \
