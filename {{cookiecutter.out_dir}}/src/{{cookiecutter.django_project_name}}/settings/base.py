@@ -312,6 +312,7 @@ ENV_VARS = EXPLICIT_ENV_VARS + [
     'EMAIL_HOST',
     'EMAIL_PORT',
     'EMAIL_USE_TLS',
+    'EMAIL_USE_SSL',
     'EMAIL_HOST_USER',
     'EMAIL_HOST_PASSWORD',
     'DEFAULT_FROM_EMAIL']
@@ -438,6 +439,7 @@ def post_process_settings(globs=None):
         ('DEBUG', as_bool, {}),
         ('EMAIL_PORT', as_int, {}),
         ('EMAIL_USE_TLS', as_bool, {}),
+        ('EMAIL_USE_SSL', as_bool, {}),
         ('CORS_ORIGIN_ALLOW_ALL', as_bool, {}),
         ('AUTHENTICATION_BACKENDS', as_col, {'final_type': tuple}),
         ('LOGO_LOGIN', as_col, {'final_type': tuple}),
