@@ -1,5 +1,6 @@
 {%- set envs = ['dev', 'qa', 'staging', 'prod', 'preprod'] %}
 {%- set aenvs = [] %}{%- for i in envs %}{% if cookiecutter.get(i+'_host', '')%}{% set _ = aenvs.append(i) %}{%endif%}{%endfor%}
+{%- set refenv = aenvs|length > 1 and aenvs[-2] or aenvs[-1] %}
 # Initialise your development environment
 - Only now launch pycharm and configure a project on this working directory
 
@@ -428,10 +429,10 @@ docker-compose -f docker-compose.yml -f docker-compose-dev.yml up django
 
 ### Using promotion in practice
 - As an example, we are taking <br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;the ``{{aenvs[-2]}}`` branch which is tied to <br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;the {{aenvs[-2]}} **inventory ansible group**<br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;and deliver the {{aenvs[-2]}} **docker image**<br/>
-  &nbsp;&nbsp;&nbsp;&nbsp;and associated resources on the **{{aenvs[-2]}} environment**.
+  &nbsp;&nbsp;&nbsp;&nbsp;the ``{{refenv}}`` branch which is tied to <br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;the {{refenv}} **inventory ansible group**<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;and deliver the {{refenv}} **docker image**<br/>
+  &nbsp;&nbsp;&nbsp;&nbsp;and associated resources on the **{{refenv}} environment**.
 - First, run an entire pipeline on the branch (eg:``{{cookiecutter.main_branch}}``)  and the commit you want to deploy.<br/>
   Please note that it can also be another branch like `stable` if `stable` branch was configured to produce the `stable` docker tags via the `TAGGUABLE_IMAGE_BRANCH` [`.gitlab-ci.yml`](./.gitlab-ci.yml) setting.
 - Push your commit to the desired related env branche(s) (remove the ones you won't deploy now) to track the commit you are deploying onto
