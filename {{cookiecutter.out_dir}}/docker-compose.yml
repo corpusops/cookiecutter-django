@@ -56,7 +56,9 @@ x-images:
       SECRET_KEY: "${SECRET_KEY:-ChangeThatSuperSecret}"
       MAILCATCHER_USER: "${MAILCATCHER_USER:-mailcatcher}"
       MAILCATCHER_PASSWORD: "${MAILCATCHER_PASSWORD:-mailcatcher}"
+{%- if cookiecutter.with_celery %}
       CELERY_SCHEDULER: "${CELERY_SCHEDULER:-django_celery_beat.schedulers:DatabaseScheduler}"
+{%- endif %}
   {{cookiecutter.app_type}}: &{{cookiecutter.app_type}}
     <<: [ *env ]
     ipc: "service:django"
