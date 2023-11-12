@@ -2,7 +2,7 @@
 coverage
 {% if cookiecutter.with_toolbar %}django-debug-toolbar>=3.0,<4.0{% endif %}
 eradicate
-isort
+isort>=5.0.0
 pylama
 pycodestyle
 tblib
