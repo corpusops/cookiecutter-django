@@ -488,8 +488,7 @@ CORPUSOPS_VAULT_PASSWORD="xxx" .ansible/scripts/setup_vaults.sh
 ## Load a production database from old prod (standard modes)
 ```sh
 .ansible/scripts/call_ansible.sh -vvvv .ansible/playbooks/teleport.yml \
-    -e "{teleport_mode: standard, teleport_destination: controller, teleport_origin: prod}"
-.ansible/scripts/call_ansible.sh .ansible/playbooks/deploy_key_setup.yml
+    -e "{teleport_mode: standard, teleport_destination: controller, teleport_origin: {{cookiecutter.teleport_branch}}}"
 ```
 
 ## Load a production database from old prod (makinastates modes)

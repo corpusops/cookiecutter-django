@@ -157,5 +157,6 @@
     "sphinx_theme_path": "",
     "sphinx_copyright": "FIXME",
     "sphinx_author": "FIXME",
+    "teleport_branch": "prod",
     "no_tags_pipelines": "y"
 }
