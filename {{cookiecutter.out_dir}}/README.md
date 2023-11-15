@@ -231,13 +231,23 @@ Once you have build once your image, you have two options to reuse your image as
 
 - Tips and tricks to know:
     - the python interpreter (or wrapper in our case) the pycharm glue needs should be named `python.*`
-    - Paths mappings are needed, unless pycharm will execute in its own folder under `/opt` totally messing the setup
-    - you should have the latest (2021-01-19) code of the common glue (`local/django-deploy-common`) for this to work
+    - Paths mappings are needed for pycharm `<= 2022`, unless pycharm will execute in its own folder under `/opt` totally messing the setup
+    - you should have the latest (`2022-09-22`) code of the common glue (`local/django-deploy-common`) for this to work
 - Goto settings (CTRL-ALT-S)
-    - Create a `docker-compose` python interpreter:
-        - compose files: `docker-compose.yml`, `docker-compose-dev.yml`
-        - python interpreter: `/code/sys/python-pycharm`
-        - service: `django`
+    - `Pycharm >=2022`:
+        - Create a `docker-compose` python interpreter:
+            - compose files: `docker-compose.yml`, `docker-compose-dev.yml`, `docker-compose-build-dev.yml`, `docker-compose-build-dev.yml`
+            - service: `django`
+            - Set python interpreter: `/code/sys/python-pycharm`, **BE SURE TO RESELECT AFTER INPUTING THE DIALOG BOX**
+        - on project structure: make your project root is the **ContentRoot**, and add `src` and other TOP subfolders as sources folders
+        - On Build, exec, deploy / Console:
+            - Both **DJANGO** and **PYTHON** Path Mapping: Add with browsing your local:`/absolute/path/src` , remote: `/code/src` <br/>
+              (you should then see `</absolute/path/Project root>/src→/code/src`)
+    - `Pycharm <=2022`:
+        - Create a `docker-compose` python interpreter:
+            - compose files: `docker-compose.yml`, `docker-compose-dev.yml`
+            - Set python interpreter: `/code/sys/python-pycharm`
+            - service: `django`
         - On project python interpreter settings page, set:
             - Path Mapping: Add with browsing your local:`src` , remote: `/code/src` <br/>
               (you should then see `<Project root>/src→/code/src`)
@@ -248,6 +258,7 @@ Once you have build once your image, you have two options to reuse your image as
         - browse to your `dev.py` settings file
     - Add a debug configuration
         - host: `0.0.0.0`
+    - be sure that your firewall settings allow connection from the containers to your host ! See https://youtrack.jetbrains.com/issue/PY-21325
 
 ### fixes
 - If there are errors when running debug sessions eg:
