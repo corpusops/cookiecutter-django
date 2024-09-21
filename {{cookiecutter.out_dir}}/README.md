@@ -430,13 +430,14 @@ docker-compose -f docker-compose.yml -f docker-compose-dev.yml up django
 
 ## Pipelines workflows tied to deploy environments and built docker images
 ### TL;DR
-- We use deploy branches where some git **branches** are dedicated to deploy related **gitlab**, **configuration managment tool's environments**, and **docker images tags**.<br/>
+- We use deploy branches where some git **branches** (main branch, tags, and environment related branches) are dedicated to deploy related **gitlab**, **configuration managment tool's environments**, and **docker images tags**.<br/>
 - You can use them to deliver to a specific environment either by:
     1. Not using promotion workflow and only pushing to this branch and waiting for the whole pipeline to complete the image build, and then deploy on the targeted env.
     2. Using tags promotion: "Docker Image Promotion is the process of promoting Docker Images between registries to ensure that only approved and verified images are used in the right environments, such as production."<br/>
-        - You **run or has run a successful pipeline with the code you want to deploy**, (surely ``{{cookiecutter.main_branch}}``).
-        - You can then **``promote`` its tag** to either **one or all** env(s) with the ``promote_*`` jobs and reuse the previously produced tag.<br/>
+        - You **run or has run a successful pipeline with the code you want to deploy**, (surely ``{{cookiecutter.main_branch}}`` or a specific Tag).
+        - You can then **``promote`` its related docker tag** to either **one or all** env(s) with the ``promote_*`` jobs and reuse the previously produced tag.<br/>
         - After the succesful promotion, you can then manually **deploy on the targeted env(s)**.
+        - TIP: The Promote & Deploy steps can be done at once using the `promote_and_deploy_*` jobs.
 
 ### Using promotion in practice
 - As an example, we are taking <br/>
@@ -444,7 +445,7 @@ docker-compose -f docker-compose.yml -f docker-compose-dev.yml up django
   &nbsp;&nbsp;&nbsp;&nbsp;the {{refenv}} **inventory ansible group**<br/>
   &nbsp;&nbsp;&nbsp;&nbsp;and deliver the {{refenv}} **docker image**<br/>
   &nbsp;&nbsp;&nbsp;&nbsp;and associated resources on the **{{refenv}} environment**.
-- First, run an entire pipeline on the branch (eg:``{{cookiecutter.main_branch}}``)  and the commit you want to deploy.<br/>
+- First, run an entire pipeline on the branch (eg:``{{cookiecutter.main_branch}}``) and the commit you want to deploy.<br/>
   Please note that it can also be another branch like `stable` if `stable` branch was configured to produce the `stable` docker tags via the `TAGGUABLE_IMAGE_BRANCH` [`.gitlab-ci.yml`](./.gitlab-ci.yml) setting.
 - Push your commit to the desired related env branche(s) (remove the ones you won't deploy now) to track the commit you are deploying onto
 
@@ -459,15 +460,17 @@ docker-compose -f docker-compose.yml -f docker-compose-dev.yml up django
        Click on the ``canceled/running`` button link which links the pipeline details), <br/>
        It will lead to a jobs dashboard which is really appropriated to complete next steps.<br/>
        Either run:
-        - ``promote_all_envs``: promote all deploy branches with the selected ``FROM_PROMOTE`` tag (see just below).
-        - ``promote_single_env``: promote only this env with the selected ``FROM_PROMOTE`` tag (see just below).
-        - Indeed, **in both jobs**, you can override the default promoted tag which is ``latest`` with the help of that ``FROM_PROMOTE`` pipeline/environment variable.<br/>
-          This can help in those following cases:
-            - If you want `production` to be deployed with the `dev` image, you can then set `FROM_PROMOTE=dev`.
-            - If you want `dev` to be deployed with the `stable` image produced by the `stable` branch, you can then set `FROM_PROMOTE=stable`.
+        - one of the `promote_and_deploy_*` available on the main branch (``{{cookiecutter.main_branch}}``), Tags, Or the deploy branch related to the deployed environment.
+        - or
+            - ``promote_all_envs``: promote all deploy branches with the selected ``FROM_PROMOTE`` tag (see just below).
+            - ``promote_single_env``: promote only this env with the selected ``FROM_PROMOTE`` tag (see just below).
+            - Indeed, **in both jobs**, you can override the default promoted tag which is ``latest`` with the help of that ``FROM_PROMOTE`` pipeline/environment variable.<br/>
+              This can help in those following cases:
+                - If you want `production` to be deployed with the `dev` image, you can then set `FROM_PROMOTE=dev`.
+                - If you want `dev` to be deployed with the `stable` image produced by the `stable` branch, you can then set `FROM_PROMOTE=stable`.
     3. Upon successful promotion, run the ``manual_deploy_$env`` job. (eg: ``manual_deploy_dev``)
 
-{% if cookiecutter.with_celery %}
+{%- if cookiecutter.with_celery %}
 ## Celery
 
 Celery can be used in foreground for easy developement<br/>
@@ -482,10 +485,7 @@ In the other, launch one worker
 ```sh
 ./control.sh celery_worker_fg
 ```
-
-
-{% endif %}
-
+{%- endif %}
 
 # Teleport (load one env from one another)
 init your vault (see [`docs/README.md`](./docs/README.md#docs#generate-vault-password-file))
@@ -494,7 +494,6 @@ init your vault (see [`docs/README.md`](./docs/README.md#docs#generate-vault-pas
 CORPUSOPS_VAULT_PASSWORD="xxx" .ansible/scripts/setup_vaults.sh
 .ansible/scripts/call_ansible.sh .ansible/playbooks/deploy_key_setup.yml
 ```
-
 
 ## Load a production database from old prod (standard modes)
 ```sh
