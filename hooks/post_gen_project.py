@@ -85,7 +85,7 @@ if [ ! -e "{{cookiecutter.deploy_project_dir}}/.git" ];then
 """.format(**locals())
 EGITSCRIPT = """
 sed="sed";if (uname | grep -E -iq "darwin|bsd");then sed="gsed";fi
-if !($sed --version);then echo $sed not avalaible;exit 1;fi
+if !($sed --version >/dev/null 2>&1 );then echo $sed not avalaible;exit 1;fi
 {%raw%}vv() {{ echo "$@">&2;"$@"; }}{%endraw%}
 {% if cookiecutter.use_submodule_for_deploy_code %}
 dockerfile={{cookiecutter.deploy_project_dir}}/Dockerfile
@@ -93,7 +93,7 @@ dockerfile={{cookiecutter.deploy_project_dir}}/Dockerfile
 dockerfile=Dockerfile
 {% endif %}
 {% if cookiecutter.remove_cron %}
-if [ -e $dockerfile ] && [ ! -h $dockerfile ];then
+if [ -e $dockerfile ] && [ ! -L Dockerfile ];then
     rm -f crontab
     $sed -i -re "/ADD .*cron/d" $dockerfile
     $sed -i -re "/CMD .*cron/d" $dockerfile
@@ -179,7 +179,7 @@ def remove_path(i):
             os.unlink(i)
         elif os.path.isdir(i):
             remove_tree(i)
-        elif os.path.islink(i):
+        else:
             os.unlink(i)
 
 
