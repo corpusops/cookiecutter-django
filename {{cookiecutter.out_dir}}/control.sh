@@ -378,7 +378,7 @@ do_runserver() { do_fg "$@"; }
 do_run_server() { do_runserver $@; }
 
 #  tests [$tests]: run tests
-do_test() { stop_containers && do_dcompose run --rm --entrypoint /code/init/init.sh django tox -e ${@:-tests}; }
+do_test() { stop_containers && do_dcompose run --rm --entrypoint /code/init/init.sh django tox --direct-yolo -e ${@:-tests}; }
 
 do_tests() { do_test $@; }
 
