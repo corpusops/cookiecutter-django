@@ -29,8 +29,8 @@
 {%- endif %}
 {{'{{'}} $v := merge $v ( dict "base_dir"                    ( .Env.BASE_DIR | default ( print "/code" ))                                   ) }}
 {{'{{'}} $v := merge $v ( dict "doc_dir"                     ( .Env.BASE_DIR | default ( print $v.base_dir "/docs" ))                       ) }}
-{{'{{'}} $v := merge $v ( dict "media_dir"                   ( .Env.BASE_DIR | default ( print $v.base_dir "/public/media" ))                      ) }}
-{{'{{'}} $v := merge $v ( dict "static_dir"                  ( .Env.BASE_DIR | default ( print $v.base_dir "/public/static" ))                    ) }}
+{{'{{'}} $v := merge $v ( dict "media_dir"                   ( .Env.BASE_DIR | default ( print $v.base_dir "/public/media" ))               ) }}
+{{'{{'}} $v := merge $v ( dict "static_dir"                  ( .Env.BASE_DIR | default ( print $v.base_dir "/public/static" ))              ) }}
 {{'{{'}} $v := merge $v ( dict "private_dir"                 ( .Env.BASE_DIR | default ( print $v.base_dir "/private" ))                    ) }}
 
 
