@@ -490,6 +490,16 @@ def post_process_settings(globs=None):
             }})
         root = _LOGGING.setdefault('root', {})
         root['handlers'] = ['sentry']
+        # Ensure mail_admins is not in LOGGING
+        try:
+            LOGGING['root']['handlers'].remove('mail_admins')
+        except ValueError:
+            pass
+        for logger in LOGGING['loggers'].values():
+            try:
+                logger['handlers'].remove('mail_admins')
+            except ValueError:
+                pass
         if SENTRY_TAGS and isinstance(SENTRY_TAGS, six.string_types):
             _locals['SENTRY_TAGS'] = {}
             for tagentry in SENTRY_TAGS.split(','):
