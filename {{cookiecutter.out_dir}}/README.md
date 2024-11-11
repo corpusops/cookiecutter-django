@@ -1,7 +1,7 @@
 {%- set envs = ['dev', 'qa', 'staging', 'prod', 'preprod'] %}
 {%- set aenvs = [] %}{%- for i in envs %}{% if cookiecutter.get(i+'_host', '')%}{% set _ = aenvs.append(i) %}{%endif%}{%endfor%}
 {%- set refenv = aenvs|length > 1 and aenvs[-2] or aenvs[-1] %}
-# Initialise your development environment
+# Initialize your development environment
 - Only now launch pycharm and configure a project on this working directory
 
 All following commands must be run only once at project installation.
@@ -10,15 +10,16 @@ All following commands must be run only once at project installation.
 ## First clone
 
 ```sh
+# check the remote protocol you may want to choose between http and ssh
 git clone --recursive {{cookiecutter.git_project_url}}
 {%if cookiecutter.use_submodule_for_deploy_code-%}git submodule init # only the fist time
 git submodule update --recursive{%endif%}
 ```
 
 ## Before using any ansible command: a note on sudo
+
 If your user is ``sudoer`` but is asking for you to input a password before elavating privileges,
 You will need to add ``--ask-become-pass`` (or in earlier ansible versions: ``--ask-sudo-pass``) and maybe ``--become`` to any of the following ``ansible alike`` commands.
-
 
 ## Install corpusops
 If you want to use ansible, or ansible vault (see passwords) or install docker via automated script
@@ -175,6 +176,7 @@ services_ports=1 ./control.sh usershell
 **⚠️ Remember ⚠️** to use `./control.sh up` to start the stack before.
 
 ## File permissions
+
 If you get annoying file permissions problems on your host in development, you can use the following routine to (re)allow your host
 user to use files in your working directory
 
@@ -394,14 +396,14 @@ If you get troubles with the nginx docker env restarting all the time, try recre
 docker-compose -f docker-compose.yml -f docker-compose-dev.yml up -d --no-deps --force-recreate nginx backup
 ```
 
-If you get the same problem with the django docker env :
+If you get the same problem with the {{cookiecutter.app_type}} docker env :
 
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose-dev.yml stop django db
+docker-compose -f docker-compose.yml -f docker-compose-dev.yml stop {{cookiecutter.app_type}} db
 docker volume rm {{cookiecutter.lname}}-postgresql # check with docker volume ls
 docker-compose -f docker-compose.yml -f docker-compose-dev.yml up -d db
-# wait fot postgis to be installed
-docker-compose -f docker-compose.yml -f docker-compose-dev.yml up django
+# wait for database stuff to be installed
+docker-compose -f docker-compose.yml -f docker-compose-dev.yml up {{cookiecutter.app_type}}
 ```
 
 ## Django settings managment
@@ -464,11 +466,12 @@ docker-compose -f docker-compose.yml -f docker-compose-dev.yml up django
         - or
             - ``promote_all_envs``: promote all deploy branches with the selected ``FROM_PROMOTE`` tag (see just below).
             - ``promote_single_env``: promote only this env with the selected ``FROM_PROMOTE`` tag (see just below).
-            - Indeed, **in both jobs**, you can override the default promoted tag which is ``latest`` with the help of that ``FROM_PROMOTE`` pipeline/environment variable.<br/>
-              This can help in those following cases:
-                - If you want `production` to be deployed with the `dev` image, you can then set `FROM_PROMOTE=dev`.
-                - If you want `dev` to be deployed with the `stable` image produced by the `stable` branch, you can then set `FROM_PROMOTE=stable`.
+        - Note that **in both jobs**, you can override the default promoted tag which is ``latest`` with the help of that ``FROM_PROMOTE`` pipeline/environment variable.<br/>
+          This can help in those following cases:
+            - If you want `production` to be deployed with the `dev` image, you can then set `FROM_PROMOTE=dev`.
+            - If you want `dev` to be deployed with the `stable` image produced by the `stable` branch, you can then set `FROM_PROMOTE=stable`.
     3. Upon successful promotion, run the ``manual_deploy_$env`` job. (eg: ``manual_deploy_dev``)
+
 
 {%- if cookiecutter.with_celery %}
 ## Celery

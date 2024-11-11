@@ -1,6 +1,9 @@
-PATH=/code/venv/bin:/code/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
-LOGS=/logs/cron
+{{'{{'}}- $bd := .Env.BASE_DIR | default "/code" }}
+{{'{{'}}- $pp := .Env.PRIVATE_PATH | default ( print $bd "/data/flags" ) }}
+{{'{{'}}- $sc := .Env.SUSPEND_CRONS | default ( print $pp "/SUSPEND_CRONS" ) }}
+PATH={{'{{'}}$bd}}/venv/bin:{{'{{'}}$bd}}/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+LOGS={{'{{'}}$bd}}/data/logs/cron
 MAILTO=""
 
 {{'{{'}} (((.Env.crons_mysupercron | default "false" )| lower ) | eq  "true" ) | ternary "" "#" -}}
-{{'{{'}} .Env.crons_mysupercron_periodicity | default "0 7 5 * *" }} django /bin/bash -c "/code/venv/bin/python /code/src/manage.py mysupercron &> $LOGS/mysupercron.log"
+{{'{{'}} .Env.crons_mysupercron_periodicity | default "0 7 5 * *" }} django /bin/bash -c "date -Iseconds>$CRONLOG;if [ ! -e {{'{{'}}$sc}} ];then {{'{{'}}$bd}}/venv/bin/python {{'{{'}}$bd}}/src/manage.py mysupercron &>> $LOGS/mysupercron.log;fi;date -Iseconds>>$CRONLOG"

@@ -15,26 +15,16 @@ x-images:
        NO_STATICS: "${NO_STATICS-1}"
     volumes: &{{cookiecutter.app_type}}_volumes
     - ./local/localdir:/local
+    - ./sys:/code/sys
 {%- if cookiecutter.no_local_volumes %}
-    - ./sys/scripts:/code/sys/scripts
-{%- if not cookiecutter.remove_cron %}
-    - ./sys/etc/cron.d:/code/sys/etc/cron.d
-{%- endif %}
-    - ./sys/etc/logrotate.d:/code/sys/etc/logrotate.d
-    - ./src/{{cookiecutter.django_settings.replace('.', '/')}}/instances:/code/src/{{cookiecutter.django_settings.replace('.', '/')}}/instances
 {%- endif%}
 {%-  if cookiecutter.use_submodule_for_deploy_code %}
     - ./{{cookiecutter.deploy_project_dir}}/sys/sudoer:/etc/sudoers.d/${APP_TYPE:-{{cookiecutter.app_type}}}
-    - ./{{cookiecutter.deploy_project_dir}}/sys/init.sh:/code/sys/init.sh
     - ./{{cookiecutter.deploy_project_dir}}/sys/init.sh:/code/init/init.sh
-    - ./{{cookiecutter.deploy_project_dir}}/sys/etc/supervisor.d:/code/sys/etc/supervisor.d
     - ./{{cookiecutter.deploy_project_dir}}:/code/{{cookiecutter.deploy_project_dir}}
 {%- else %}
     - ./sys/sudoer:/etc/sudoers.d/$APP_TYPE
     - ./sys/init.sh:/code/init/init.sh
-    # retrocompat
-    - ./sys/init.sh:/code/sys/init.sh
-    - ./sys/etc/supervisor.d:/code/etc/supervisor.d
 {%- endif%}
 {%- if not cookiecutter.no_lib %}
     - ./lib:/code/lib
@@ -98,3 +88,4 @@ services:
     ports:
     - "${DJANGO__MAILCATCHER_LISTEN:-0.0.0.0}:${DJANGO__MAILCATCHER_PORT:-8025}:8025"
   backup: { <<: [ *bypass ] }
+  log: { <<: [ *bypass ] }

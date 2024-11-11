@@ -9,7 +9,7 @@ import os
 import subprocess
 
 
-DEPLOY_BR = os.environ.get('DEPLOY_BR', 'stable')
+DEPLOY_BR = os.environ.get('DEPLOY_BR', 'v2')
 use_submodule_for_deploy_code = bool(
     '{{cookiecutter.use_submodule_for_deploy_code}}'.strip())
 
@@ -22,8 +22,6 @@ SYMLINKS_DIRS = {
     "../../../{{cookiecutter.deploy_project_dir}}/.ansible/playbooks/roles/{{cookiecutter.app_type}}",  #noqa
 }
 SYMLINKS_FILES = {
-    "docs/.env": "../.env",  #noqa
-    "docs/docker.env": "../docker.env",  #noqa
     ".ansible/scripts/call_ansible.sh": "cops_wrapper.sh",  #noqa
     ".ansible/scripts/call_roles.sh": "cops_wrapper.sh",  #noqa
     ".ansible/scripts/edit_vault.sh": "cops_wrapper.sh",  #noqa
@@ -45,6 +43,8 @@ SYMLINKS_FILES = {
     "../../{{cookiecutter.deploy_project_dir}}/.ansible/playbooks/deploy_key_teardown.yml",  #noqa
     ".ansible/playbooks/site.yml":
     "../../{{cookiecutter.deploy_project_dir}}/.ansible/playbooks/site.yml",  #noqa
+    "docs/.env": "../.env",  #noqa
+    "docs/docker.env": "../docker.env",  #noqa
     "docs/apt.txt": "../{{cookiecutter.deploy_project_dir}}/docs/apt.txt",  #noqa
     "docs/entry.sh": "../{{cookiecutter.deploy_project_dir}}/docs/entry.sh",  #noqa
     "docs/requirements.txt": "../{{cookiecutter.deploy_project_dir}}/docs/requirements.txt",  #noqa

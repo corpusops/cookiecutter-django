@@ -1,37 +1,39 @@
-{{'{{'}} $dciphers := "EECDH+AESGCM:EDH+AESGCM:ECDHE-RSA-AES128-GCM-SHA256:AES256+EECDH:DHE-RSA-AES128-GCM-SHA256:AES256+EDH:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4" }}
-{{'{{'}} $v := dict "$" $ }}
-{{'{{'}} $v := merge $v ( dict "Env"                           .Env) }}
-{{'{{'}} $v := merge $v ( dict "certspath"                   ( .Env.SSL_CERTS_PATH | default "/certs" )                                     ) }}
-{{'{{'}} $v := merge $v ( dict "cert"                        ( .Env.SSL_CERT_PATH | default ( print $v.certspath  "/cert.crt" ))            ) }}
-{{'{{'}} $v := merge $v ( dict "key"                         ( .Env.SSL_KEY_PATH  | default ( print $v.certspath  "/cert.key" ))            ) }}
-{{'{{'}} $v := merge $v ( dict "diffie"                      ( .Env.NGINX_DH_FILE | default ( print $v.certspath  "/dhparams.pem" ))        ) }}
-{{'{{'}} $v := merge $v ( dict "nossl"                       ( .Env.NO_SSL | default "1" )                                                  ) }}
-{{'{{'}} if not ( .Env.NO_FORCE_SSL | empty ) }}
-{{'{{'}} $v := merge $v ( dict "noforcessl" .Env.NO_FORCE_SSL                                                                               ) }}
-{{'{{'}} else }}
-{{'{{'}} $v := merge $v ( dict "noforcessl" ((eq $v.nossl "1") | ternary "0" "1" )                                                           )}}
-{{'{{'}} end }}
-{{'{{'}} $v := merge $v ( dict "nostatics"                   ( .Env.NO_STATICS | default "" )                                               ) }}
-{{'{{'}} $v := merge $v ( dict "server_name"                 ( .Env.NGINX_SERVERNAME     | default "localhost") ) }}
-{{'{{'}} $v := merge $v ( dict "server_name_in_redirect"     ( .Env.NGINX_SERVERNAME_IN_REDIRECT | default "on" )                           ) }}
-{{'{{'}} $v := merge $v ( dict "server_aliases"              ( .Env.NGINX_SERVER_ALIASES | default ""         )                             ) }}
-{{'{{'}} $v := merge $v ( dict "redirect_server_aliases"     ( .Env.NGINX_REDIRECT_SERVER_ALIASES | default "off" )                         ) }}
-{{'{{'}} $v := merge $v ( dict "server_name_in_redirect_ssl" ( .Env.NGINX_SERVERNAME_IN_REDIRECT_SSL | default $v.server_name_in_redirect ) ) }}
-{{'{{'}} $v := merge $v ( dict "real_ip_from_recursive"      ( .Env.NGINX_REAL_IP_FROM_RECURSIVE | default "on" )                           ) }}
-{{'{{'}} $v := merge $v ( dict "real_ip_from"                ( .Env.NGINX_REAL_IP_FROM | default "10.0.0.0/8 172.16.0.0/12 192.168.0.0/16" )) }}
-{{'{{'}} $v := merge $v ( dict "real_ip_header"              ( .Env.NGINX_REAL_IP_HEADER | default "x-forwarded-for" )                      ) }}
-{{'{{'}} $v := merge $v ( dict "ssl_ciphers"                 ( .Env.NGINX_SSL_CIPHERS | default $dciphers )                                 ) }}
-{{'{{'}} $v := merge $v ( dict "ssl_protocols"               ( .Env.NGINX_SSL_PROTOCOLS | default "TLSv1 TLSv1.1 TLSv1.2" )                 ) }}
-{{'{{'}} $v := merge $v ( dict "log_level"                   ( .Env.NGINX_LOGLEVEL | default "crit" )                                       ) }}
-{{'{{'}} $v := merge $v ( dict "xscriptname"                 ( .Env.DJANGO__FORCE_SCRIPT_NAME | default "" )                                ) }}
+{{'{{-'}} $dciphers := "EECDH+AESGCM:EDH+AESGCM:ECDHE-RSA-AES128-GCM-SHA256:AES256+EECDH:DHE-RSA-AES128-GCM-SHA256:AES256+EDH:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-SHA256:AES128-SHA256:AES256-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4" }}
+{{'{{-'}} $v := dict "$" $ }}
+{{'{{-'}} $v := merge $v ( dict "Env"                           .Env) }}
+{{'{{-'}} $v := merge $v ( dict "certspath"                   ( .Env.SSL_CERTS_PATH | default "/certs" )                                     ) }}
+{{'{{-'}} $v := merge $v ( dict "cert"                        ( .Env.SSL_CERT_PATH | default ( print $v.certspath  "/cert.crt" ))            ) }}
+{{'{{-'}} $v := merge $v ( dict "key"                         ( .Env.SSL_KEY_PATH  | default ( print $v.certspath  "/cert.key" ))            ) }}
+{{'{{-'}} $v := merge $v ( dict "diffie"                      ( .Env.NGINX_DH_FILE | default ( print $v.certspath  "/dhparams.pem" ))        ) }}
+{{'{{-'}} $v := merge $v ( dict "nossl"                       ( .Env.NO_SSL | default "1" )                                                  ) }}
+{{'{{-'}} if not ( .Env.NO_FORCE_SSL | empty ) }}
+{{'{{-'}} $v := merge $v ( dict "noforcessl" .Env.NO_FORCE_SSL                                                                               ) }}
+{{'{{-'}} else }}
+{{'{{-'}} $v := merge $v ( dict "noforcessl" ((eq $v.nossl "1") | ternary "0" "1" )                                                           )}}
+{{'{{-'}} end }}
+{{'{{-'}} $v := merge $v ( dict "nostatics"                   ( .Env.NO_STATICS | default "" )                                               ) }}
+{{'{{-'}} $v := merge $v ( dict "server_name"                 ( .Env.NGINX_SERVERNAME     | default "localhost") ) }}
+{{'{{-'}} $v := merge $v ( dict "server_name_in_redirect"     ( .Env.NGINX_SERVERNAME_IN_REDIRECT | default "on" )                           ) }}
+{{'{{-'}} $v := merge $v ( dict "server_aliases"              ( .Env.NGINX_SERVER_ALIASES | default ""         )                             ) }}
+{{'{{-'}} $v := merge $v ( dict "redirect_server_aliases"     ( .Env.NGINX_REDIRECT_SERVER_ALIASES | default "off" )                         ) }}
+{{'{{-'}} $v := merge $v ( dict "server_name_in_redirect_ssl" ( .Env.NGINX_SERVERNAME_IN_REDIRECT_SSL | default $v.server_name_in_redirect ) ) }}
+{{'{{-'}} $v := merge $v ( dict "real_ip_from_recursive"      ( .Env.NGINX_REAL_IP_FROM_RECURSIVE | default "on" )                           ) }}
+{{'{{-'}} $v := merge $v ( dict "real_ip_from"                ( .Env.NGINX_REAL_IP_FROM | default "10.0.0.0/8 172.16.0.0/12 192.168.0.0/16" )) }}
+{{'{{-'}} $v := merge $v ( dict "real_ip_header"              ( .Env.NGINX_REAL_IP_HEADER | default "x-forwarded-for" )                      ) }}
+{{'{{-'}} $v := merge $v ( dict "ssl_ciphers"                 ( .Env.NGINX_SSL_CIPHERS | default $dciphers )                                 ) }}
+{{'{{-'}} $v := merge $v ( dict "ssl_protocols"               ( .Env.NGINX_SSL_PROTOCOLS | default "TLSv1 TLSv1.1 TLSv1.2" )                 ) }}
+{{'{{-'}} $v := merge $v ( dict "log_level"                   ( .Env.NGINX_LOGLEVEL | default "crit" )                                       ) }}
+{{'{{-'}} $v := merge $v ( dict "xscriptname"                 ( .Env.DJANGO__FORCE_SCRIPT_NAME | default "" )                                ) }}
 {%- if cookiecutter.with_bundled_docs %}
-{{'{{'}} $v := merge $v ( dict "has_doc"                     ( .Env.DJANGO__HAS_DOC | default "1" )                                         ) }}
+{{'{{-'}} $v := merge $v ( dict "has_doc"                     ( .Env.DJANGO__HAS_DOC | default "1" )                                         ) }}
 {%- endif %}
-{{'{{'}} $v := merge $v ( dict "base_dir"                    ( .Env.BASE_DIR | default ( print "/code" ))                                   ) }}
-{{'{{'}} $v := merge $v ( dict "doc_dir"                     ( .Env.BASE_DIR | default ( print $v.base_dir "/docs" ))                       ) }}
-{{'{{'}} $v := merge $v ( dict "media_dir"                   ( .Env.BASE_DIR | default ( print $v.base_dir "/public/media" ))               ) }}
-{{'{{'}} $v := merge $v ( dict "static_dir"                  ( .Env.BASE_DIR | default ( print $v.base_dir "/public/static" ))              ) }}
-{{'{{'}} $v := merge $v ( dict "private_dir"                 ( .Env.BASE_DIR | default ( print $v.base_dir "/private" ))                    ) }}
+{{'{{-'}} $v := merge $v ( dict "base_dir"                    ( .Env.BASE_DIR | default ( print "/code" ))                                   ) }}
+{{'{{-'}} $v := merge $v ( dict "doc_dir"                     ( .Env.BASE_DIR | default ( print $v.base_dir "/docs" ))                       ) }}
+{{'{{-'}} $v := merge $v ( dict "media_dir"                   ( .Env.BASE_DIR | default ( print $v.base_dir "/public/media" ))               ) }}
+{{'{{-'}} $v := merge $v ( dict "static_dir"                  ( .Env.BASE_DIR | default ( print $v.base_dir "/public/static" ))              ) }}
+{{'{{-'}} $v := merge $v ( dict "private_dir"                 ( .Env.BASE_DIR | default ( print $v.base_dir "/private" ))                    ) }}
+{{'{{-'}} $v := merge $v ( dict "data_dir"                 ( .Env.BASE_DIR | default ( print $v.base_dir "/data" ))                    ) }}
+{{'{{-'}} $v := merge $v ( dict "maintenance_flag"            ( .Env.NGINX_DJANGO_MAINT_FLAG | default ( print $v.data_dir "/flags/MAINTENANCE" ) ) ) }}
 
 
 # optimize internal nginx buffers
@@ -175,6 +177,10 @@ server {
     {{'{{'}} if eq .noforcessl "1"}}# {{'{{'}} end }}if ($forwarded_ssl_scheme != "https"){ rewrite ^(.*)$ https://$host$1 permanent; }
     {{'{{'}} if ne .xscriptname "" }}rewrite ^{{'{{'}}.xscriptname}}/?(.*)$ /$1 break;{{'{{'}} end }}
 
+    # check maintenance marker on shared directory
+    if (-f {{'{{'}}.maintenance_flag}}) {
+        return 503;
+    }
 
 {%- if cookiecutter.with_bundled_docs %}
 {{'{{'}} if eq .has_doc "1" }}

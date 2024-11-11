@@ -1,6 +1,6 @@
 image: {name: "${COMPOSE_IMAGE}", entrypoint: [""]}
 {%- set gitlabci_envs = [] %}{% for i in ['dev', 'qa', 'staging', 'prod', 'preprod']%}{% if cookiecutter[i+'_host'] %}{% set _ = gitlabci_envs.append(i)%}{%endif%}{%endfor%}
-{%- set gitlabci_branches = [] %}{% for i in gitlabci_envs %}{% set _ = gitlabci_branches.append(cookiecutter[i+'_branch']) %}{%endfor %}
+{%- set gitlabci_branches = [] %}{% for i in gitlabci_envs %}{% set _ = gitlabci_branches.append(cookiecutter.get(i+'_branch', i)) %}{%endfor %}
 {%- set devhostdeploycomment = (not cookiecutter.dev_host) and '#  ' or '' %}
 {%- set qahostdeploycomment = (not cookiecutter.qa_host) and '#  ' or '' %}
 {%- set staginghostdeploycomment = (not cookiecutter.staging_host) and '#  ' or '' %}
@@ -70,10 +70,8 @@ variables: &variables
   DOCKER_REGISTRY: "{{cookiecutter.docker_registry}}"
   # services launched during tests
   DOCKER_SERVICES: "db{% if cookiecutter.cache_system%} {{cookiecutter.cache_system}}{%endif%} mailcatcher"
-  # Those services underlying images will be built
-  DOCKER_BUILT_SERVICES: "{{cookiecutter.app_type}}"
   # cache registry setup
-  REGISTRIES_cache_DIR: /cache/cachedockerregistrysimple/proxy
+  REGISTRIES_CACHE_DIR: /cache/cachedockerregistrysimple/proxy
   # Build pipeline images flavors: build/tags/{{cookiecutter.main_branch}}
   # Released images flavors: build/forcedrelease/tags/{{cookiecutter.main_branch}}
   LATEST_CI_DOCKER_IMAGE: "${DOCKER_REGISTRY}/${DOCKER_IMAGE}:ci-latest"
@@ -94,7 +92,6 @@ variables: &variables
   DOCKER_VOLUMES: "data:/code/data mediafiles:/code/public/media statics:/code/public/statics privatefiles:/code/private docs:/code/outdocs data:$CI_PROJECT_DIR/data mediafiles:$CI_PROJECT_DIR/public/media statics:$CI_PROJECT_DIR/public/statics privatefiles:$CI_PROJECT_DIR/private docs:$CI_PROJECT_DIR/outdocs"
   DEPLOY_PLAYBOOK: "{{cookiecutter.deploy_playbook}}"
   DOCKER_BUILDER:     corpusops
-  REGISTRIES_CACHE_DIR: /cache/cachedockerregistrysimple
   DOCKER_CACHE:         /cache/$CI_PROJECT_PATH_SLUG/dockercache
   WORKSPACE:            /cache/$CI_PROJECT_PATH_SLUG/w/${CI_PIPELINE_IID}
   # $COMMON_HOSTS_FILE is a workaround for https://gitlab.com/gitlab-org/gitlab-runner/-/issues/1042
@@ -103,8 +100,6 @@ variables: &variables
   #
   NONINTERACTIVE: "1"
   TZ: Europe/Paris
-  # set to 1 to force reinstall
-  DJANGO_FORCE_INSTALL: ""
   # debug
   NO_SILENT: ""
   NO_SQUASH: ""
@@ -114,8 +109,10 @@ variables: &variables
 {%-if cookiecutter.use_submodule_for_deploy_code%}
   # auto upgrade common glue code to reference stable branch (see pullsubmodules)
   PROJECT_COMMON_DEPLOY_DIR: {{cookiecutter.deploy_project_dir}}
-  DJANGO_DEPLOY_VERSION: origin/v2
+  {{cookiecutter.app_type.upper()}}_DEPLOY_VERSION: origin/v2
 {%- endif %}
+  # set to 1 to force reinstall
+  # {{cookiecutter.app_type.upper()}}_FORCE_INSTALL: ""
 
 # Forward correctly UI defined env vars to compagnion services as documented on:
 # https://gitlab.com/gitlab-org/gitlab-foss/-/merge_requests/30863
@@ -136,10 +133,10 @@ variables: &variables
   - &skip_not_a_push_trigger {if: "$CI_PIPELINE_SOURCE !~ /push/", when: never}
   - &skip_not_main_trigger                      {if: "$CI_COMMIT_REF_NAME != $MAIN_BRANCH", when: never}
   - &skip_on_release_branches_main_tags_trigger {if: "$CI_COMMIT_REF_NAME =~ /^({{gitlabci_branches|join('|')}})$/ || $CI_COMMIT_REF_NAME != $MAIN_BRANCH || $CI_COMMIT_TAG == null", when: never}
-  - &skip_on_release_branches_tags_trigger      {if: "$CI_COMMIT_REF_NAME =~ /^({{gitlabci_branches|join('|')}})$/ || $CI_COMMIT_TAG != null", when: never}
-  - &on_release_branches_main_tags_trigger      {if: "$CI_COMMIT_REF_NAME =~ /^({{gitlabci_branches|join('|')}})$/ || $CI_COMMIT_REF_NAME == $MAIN_BRANCH || $CI_COMMIT_TAG != null", when: on_success}
-  - &mon_release_branches_main_tags_trigger     {if: "$CI_COMMIT_REF_NAME =~ /^({{gitlabci_branches|join('|')}})$/ || $CI_COMMIT_REF_NAME == $MAIN_BRANCH || $CI_COMMIT_TAG != null", when: manual}
-  - &on_release_branches_tags_trigger           {if: "$CI_COMMIT_REF_NAME =~ /^({{gitlabci_branches|join('|')}})$/ || $CI_COMMIT_TAG != null", when: on_success}
+  - &skip_on_release_branches_tags_trigger      {if: "$CI_COMMIT_REF_NAME =~ /^({{gitlabci_branches|join('|')}})$/{% if not cookiecutter.no_tags_pipelines%} || $CI_COMMIT_TAG != null{%endif%}", when: never}
+  - &on_release_branches_main_tags_trigger      {if: "$CI_COMMIT_REF_NAME =~ /^({{gitlabci_branches|join('|')}})$/ || $CI_COMMIT_REF_NAME == $MAIN_BRANCH{% if not cookiecutter.no_tags_pipelines%} || $CI_COMMIT_TAG != null{%endifµ%}", when: on_success}
+  - &mon_release_branches_main_tags_trigger     {if: "$CI_COMMIT_REF_NAME =~ /^({{gitlabci_branches|join('|')}})$/ || $CI_COMMIT_REF_NAME == $MAIN_BRANCH{% if not cookiecutter.no_tags_pipelines%} || $CI_COMMIT_TAG != null{%endif%}", when: manual}
+  - &on_release_branches_tags_trigger           {if: "$CI_COMMIT_REF_NAME =~ /^({{gitlabci_branches|join('|')}})$/{% if not cookiecutter.no_tags_pipelines%} || $CI_COMMIT_TAG != null{%endif%}", when: on_success}
   - &on_main_and_tags_trigger                   {if: "$CI_COMMIT_REF_NAME == $MAIN_BRANCH || $CI_COMMIT_TAG == null", when: on_success}
 .manual_releasable: &manual_releasable {rules: [ *skip_mr_trigger, *mon_release_branches_main_tags_trigger, {when: never} ]}
 
@@ -197,7 +194,7 @@ before_script: &top_before_script
    # see https://gitlab.com/gitlab-org/gitlab-runner/-/issues/28121: workaround to have shared-alike-volumes between services & local script
    setup_docker_volumes() {
      set -e;w="$(eval echo ${WORKSPACE})";for i in $(eval echo ${DOCKER_VOLUMES});do
-       d="${i//*:}";o="$w/$CI_JOB_NAME/${i//:*}";create_dirs "$o" "$d";if [ -e "$d" ];then rm -rf $d;fi;ln -sfv "$o" "$d"
+       d="${i//*:}";o="$w/$CI_JOB_NAME/${i//:*}";create_dirs "$o" "$d";if [ -e "$d" ];then if [ "x$(ls $d)" != "x" ];then mv $d/* $o;fi;rm -rf $d;fi;ln -sfv "$o" "$d"
      done
    }
    # see https://github.com/moby/buildkit/issues/1896: swap cache folder upon new image creation to avoid eternaly growing cache
@@ -217,7 +214,7 @@ before_script: &top_before_script
      if ( apk --version );then apk update;apk add git;
      elif ( apt-get --version );then apt-get update;apt-get install -y git;fi;
     fi;
-    cd ${PROJECT_COMMON_DEPLOY_DIR};( git fetch --unshallow >/dev/null 2>&1 || true );git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*";git fetch origin;git reset --hard $DJANGO_DEPLOY_VERSION --;cd - >/dev/null 2>&1;
+    cd ${PROJECT_COMMON_DEPLOY_DIR};( git fetch --unshallow >/dev/null 2>&1 || true );git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*";git fetch origin;git reset --hard ${{cookiecutter.app_type.upper()}}_DEPLOY_VERSION --;cd - >/dev/null 2>&1;
     fi
 - &install_bash if !( bash --version >/dev/null 2>&1 ) && [ "x${INSTALL_BASH-1}" = "x1" ];then if (apk --version >/dev/null 2>&1 );then apk update && apk add -q bash;elif ( apt-get --version >/dev/null 2>&1 );then apt-get update -qq && apt-get install -yqq bash;fi;fi
 - &settz ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo ${TZ} > /etc/timezone
@@ -358,10 +355,8 @@ cleanup_all: &cleanup_all
       && dcexport="$(dcompose_bx_ --print $service|jq -r .target.$service)" && cimg="$(echo "$dcexport"|jq -r .tags[0])" \
       && log "Using buildkit to build $cimg :-: $dcexport" \
       && vv bx_dc ${service} $@; ); }
-    for service in $DOCKER_BUILT_SERVICES;do
-      vv dcompose_bx_build $service dev  ${COMPOSE_PROD_CONFIGS}
-      vv dcompose_bx_build $service prod ${COMPOSE_DEV_CONFIGS}
-    done
+    vv dcompose_bx_build {{cookiecutter.app_type}} dev  ${COMPOSE_DEV_CONFIGS}
+    vv dcompose_bx_build {{cookiecutter.app_type}} prod ${COMPOSE_PROD_CONFIGS}
     # tag & record images for next step push
     dev_tags="";prod_tags="";
     if ( echo ${CI_COMMIT_REF_NAME} | grep -E -q "$TAGGUABLE_IMAGE_BRANCH" );then
@@ -372,11 +367,9 @@ cleanup_all: &cleanup_all
       dev_tags="$dev_tags   $(echo ${BUILT_LATEST_DOCKER_IMAGE}-dev)"
       prod_tags="$prod_tags $(echo ${BUILT_LATEST_DOCKER_IMAGE})"
     fi
-    for service in $DOCKER_BUILT_SERVICES;do
-      if [ "x${dev_tags}" != "x" ];then  vv retry_cmd dcompose_bx_build $service dev  ${COMPOSE_DEV_CONFIGS}  $(bx_bake_tags $dev_tags);fi
-      if [ "x${prod_tags}" != "x" ];then vv retry_cmd dcompose_bx_build $service prod ${COMPOSE_PROD_CONFIGS} $(bx_bake_tags $prod_tags);fi
-    done
-    for s in $DOCKER_BUILT_SERVICES;do for c in dev prod;do swap_cache_folder ${DOCKER_CACHE}/$c/$s;done;done
+    if [ "x${dev_tags}" != "x" ];then  vv retry_cmd dcompose_bx_build {{cookiecutter.app_type}} dev  ${COMPOSE_DEV_CONFIGS}  $(bx_bake_tags $dev_tags);fi
+    if [ "x${prod_tags}" != "x" ];then vv retry_cmd dcompose_bx_build {{cookiecutter.app_type}} prod ${COMPOSE_PROD_CONFIGS} $(bx_bake_tags $prod_tags);fi
+    for s in {{cookiecutter.app_type}};do for c in dev prod;do swap_cache_folder ${DOCKER_CACHE}/$c/$s;done;done
 
 {{docscomment and frontcomment}}.build_artifacts: &build_artifacts
 {{docscomment and frontcomment}}  <<: [ *ci_runner ]
@@ -418,7 +411,7 @@ build_ci_images: &build_ci_images
   stage: build_ci
   variables: &build_ci_images_vars
     <<: [ *compose_build_vars ]
-    MULTISTAGE_TARGET: final
+    MULTISTAGE_TARGET: ""
     BUILT_DOCKER_IMAGE: $CUR_CI_DOCKER_IMAGE
     BUILT_LATEST_DOCKER_IMAGE: $LATEST_CI_DOCKER_IMAGE
     BUILT_REF_DOCKER_IMAGE: $REF_CI_DOCKER_IMAGE
@@ -516,6 +509,8 @@ force_build_ci_images: &force_build_ci_images
 {%- endif%}
 {%- endif%}
       DB_MODE: "{{cookiecutter.db_mode}}"
+      NGINX_SERVERNAME: "{{cookiecutter.name}}.local"
+      NGINX_SERVER_ALIASES: "www.{{cookiecutter.name}}.local www2.{{cookiecutter.name}}.local"
 {%- if 'post' in cookiecutter.db_mode %}
       POSTGRES_HAS_POSTGIS: "{% if cookiecutter.with_postgist_test and 'gis' in cookiecutter.db_mode%}1{%endif%}"
       POSTGRES_HOST: "db"
@@ -560,7 +555,7 @@ force_build_ci_images: &force_build_ci_images
       MAILCATCHER_USER: "mailcatcher"
       MAILCATCHER_PASSWORD: "mailcatcher"
 {%- if cookiecutter.with_celery %}
-      CELERY_SCHEDULER: "django_celery_beat.schedulers:DatabaseScheduler"
+      CELERY_SCHEDULER: "{{cookiecutter.app_type}}_celery_beat.schedulers:DatabaseScheduler"
 {%- endif %}
       # sync from compose:{{cookiecutter.app_type}}
       EXTRA_USER_DIRS: "{% if cookiecutter.with_ftp%}/ftp{%endif%}"
@@ -587,7 +582,7 @@ force_build_ci_images: &force_build_ci_images
 {%- endif %}
   - alias: nginx
     name: "{{cookiecutter.nginx_image}}"
-    variables: {<<: [ *test_services_vars ]}
+    variables: {<<: [ *test_services_vars ], REFRESH_HOSTS_FROM_CI: "1", REFRESH_VHOST_FROM_CI: "1"}
 {%- if cookiecutter.with_ftp %}
   # useless as for now mountpoints can't be shared amongst gitlab services and stage jobs...
   #- alias: ftp &ftp
@@ -604,6 +599,15 @@ force_build_ci_images: &force_build_ci_images
   - *settz
   - *gendotenv
   - *setup_docker_volumes
+  - &waitfortestsservices |-
+    set -e
+    # configure /etc/hosts of both current job and it's associated services
+    # code is on the services entrypoints to upstream the hosts block to their relative /etc/hosts
+    if ( grep -q "\snginx" /etc/hosts );then echo "$(grep "\snginx" /etc/hosts|awk '{print $1}') $NGINX_SERVERNAME" >>/etc/hosts;fi
+    grep -E "^[^#].*\s($NGINX_SERVERNAME|db|mysql|cache|redis|varnish|nginx|celery|memcach|cron|mailcatcher)" /etc/hosts >> "${COMMON_HOSTS_FILE}.tmp"
+    export {{cookiecutter.app_type.upper()}}_IP="${FORCED_{{cookiecutter.app_type.upper()}}_IP:-$(ip -4 r get 8.8.8.8|grep src|awk '{print $7}')}"
+    echo "${{cookiecutter.app_type.upper()}}_IP cron {{cookiecutter.app_type}}" >> "${COMMON_HOSTS_FILE}.tmp"
+    mv "${COMMON_HOSTS_FILE}.tmp" "${COMMON_HOSTS_FILE}"
   - &setup_tests |-
     if [ -e /code/venv/bin/activate ];then . /code/venv/bin/activate;fi
     sh -c 'python${PY_VER} -m pip install -e .'
@@ -613,10 +617,10 @@ force_build_ci_images: &force_build_ci_images
 {{testsc}}tests: &tests
 {{testsc}}  <<: [ *dottests ]
 {{testsc}}  script: &test_script
-{{testsc}}  - &startup_django_services |-
+{{testsc}}  - &startup_{{cookiecutter.app_type}}_services |-
 {{testsc}}    set -e
-{{testsc}}{%- if cookiecutter.with_celery or not cookiecutter.remove_cron %}
 {{testsc}}{%-   set cfgs=['rsyslog']%}
+{{testsc}}{%- if cookiecutter.with_celery or not cookiecutter.remove_cron %}
 {{testsc}}{%-   if cookiecutter.with_celery %}
 {{testsc}}{%-     set _ = cfgs.extend(['celery_beat celery_worker']) %}
 {{testsc}}    echo "127.0.0.1 celery celery-worker celery-beat" >> /etc/hosts
@@ -625,11 +629,10 @@ force_build_ci_images: &force_build_ci_images
 {{testsc}}{%-     set _ = cfgs.extend(['cron']) %}
 {{testsc}}{%-   endif %}
 {{testsc}}{%- endif %}
-{{testsc}}    set -e
 {{testsc}}    /code/init/init.sh ./manage.py migrate
 {{testsc}}    /code/init/init.sh ./manage.py compilemessages
 {{testsc}}    /code/init/init.sh ./manage.py collectstatic --no-input
-{{testsc}}    (  export SUPERVISORD_CONFIGS='rsyslog cron';vv /code/init/init.sh supervisord.sh)&
+{{testsc}}    ( export SUPERVISORD_CONFIGS='{{cfgs|join(' ')}}';vv /code/init/init.sh supervisord.sh)&
 {{testsc}}  - &do_tests |-
 {{testsc}}    set -e && /code/init/init.sh tox --direct-yolo -e {{ cookiecutter.test_coverage and 'coverage' or 'tests' }}
 {{testsc}}  {{testscov}}coverage: /TOTAL.+ ([0-9.]+%)/
@@ -644,16 +647,16 @@ force_build_ci_images: &force_build_ci_images
 
 build_and_release: &build_and_release
   stage: release
-  dependencies: []
   rules: [ *skip_mr_trigger, *on_release_branches_main_tags_trigger, {when: never} ]
   <<: [ *compose_build, *ci_runner ]
   variables: &release_images_vars
     <<: [ *compose_build_vars ]
     DOCKER_BASE_IMAGE: $LATEST_CI_DOCKER_IMAGE
 
-force_build_and_release: &force_build_and_release
-  <<: [ *manual_job, *build_and_release]
-  rules: [ *skip_mr_trigger, *mon_release_branches_main_tags_trigger, {when: never} ]
+# can't be used as assets are generated thorought the pipeline and artifacts won't be available in this job
+# force_build_and_release: &force_build_and_release
+#   <<: [ *manual_job, *build_and_release]
+#   rules: [ *skip_mr_trigger, *mon_release_branches_main_tags_trigger, {when: never} ]
 
 # the job will catch any failure on build stage and create a file upon success or failure
 # the real goal is for teardown jobs in the next stage to run, in any cases
@@ -704,12 +707,16 @@ manual_teardown_workspace:
     # DEPLOY_PLAYBOOK: ".ansible/playbooks/delivery.yml"
     DEPLOY_PLAYBOOK: .ansible/playbooks/app.yml
     A_ENV_NAME: "${CI_COMMIT_REF_NAME}"
+    DEPLOYED_BRANCH: "${CI_COMMIT_REF_NAME}"
+    DEPLOYED_TAG: "${CI_COMMIT_REF_NAME}"
   before_script:
   - &deploy_setup_vars |-
       set -e
-      if [ "x${CI_COMMIT_REF_NAME}" = "x${MAIN_BRANCH}" ] && ( echo  "${CI_JOB_NAME}" | grep -q "deploy_dev$" );then export A_ENV_NAME="dev";fi
+      if [ "x${CI_COMMIT_REF_NAME}" = "x${MAIN_BRANCH}" ] && ( echo "${CI_JOB_NAME}" | grep -q "deploy_dev$" );then export A_ENV_NAME="dev";fi
       export A_ENV_NAME=$(eval echo ${A_ENV_NAME})
       if [ "x${A_ENV_NAME}" = x ];then echo "\$A_ENV_NAME is not set, bailing out" >&2 ;exit 1;fi
+      export DEPLOYED_BRANCH=$(eval echo ${DEPLOYED_BRANCH})
+      export DEPLOYED_TAG=$(eval echo ${DEPLOYED_TAG})
   - *pullsubmodules
   - &deploy_setup set -e;vv(){ echo "$@">&2;"$@"; };
     vv .ansible/scripts/download_corpusops.sh;
@@ -720,10 +727,10 @@ manual_teardown_workspace:
   - &deploy_cmd |-
       # do not remove yaml inline (older gitlab parse problem)
       set -e
-      .ansible/scripts/call_ansible.sh -vv -l $A_ENV_NAME "${DEPLOY_PLAYBOOK}" -e "{cops_django_gitref: $CI_COMMIT_REF_NAME, cops_django_force_reinstall: $DJANGO_FORCE_INSTALL}"
+      .ansible/scripts/call_ansible.sh -vv -l $A_ENV_NAME "${DEPLOY_PLAYBOOK}" -e "{cops_{{cookiecutter.app_type}}_gitref: '$DEPLOYED_BRANCH', cops_{{cookiecutter.app_type}}_docker_tag: '$DEPLOYED_TAG', cops_{{cookiecutter.app_type}}_force_reinstall: $DJANGO_FORCE_INSTALL}"
 {% for i in gitlabci_envs %}
 
-.deploy_{{i}}_rules: &deploy_{{i}}_rules {only: {variables: ['$CI_COMMIT_TAG != null || $CI_COMMIT_REF_NAME == $MAIN_BRANCH || $CI_COMMIT_REF_NAME == "{{cookiecutter[i+'_branch']}}"']}}
+.deploy_{{i}}_rules: &deploy_{{i}}_rules {only: {variables: ['{% if not cookiecutter.no_tags_pipelines%}$CI_COMMIT_TAG != null || {%endif%}$CI_COMMIT_REF_NAME == $MAIN_BRANCH || $CI_COMMIT_REF_NAME == "{{cookiecutter[i+'_branch']}}"']}}
 .deploy_{{i}}: &deploy_{{i}}
   <<: [ *deploy_{{i}}_rules, *deploy ]
   variables: &deploy_{{i}}_vars
@@ -739,19 +746,20 @@ manual_teardown_workspace:
     name: {{i}}
     url: https://{{cookiecutter[i+'_domain']}}
 {% endfor %}
-# {#- XXX: NOT IMPLEMENTED YET
-# # reset jobs
-# {%- for i in gitlabci_envs %}
-# {%- set resetcomment = (i in ['staging', 'prod', 'preprod']) and '#  ' or '' %}
-# {{resetcomment}}
-# {{resetcomment}}deploy_{{i}}_reset: &deploy_{{i}}_reset
-# {{resetcomment}}  <<: [ *deploy_{{i}} ]
-# {{resetcomment}}  when: manual
-# {{resetcomment}}  variables:
-# {{resetcomment}}    <<: [ *deploy_{{i}}_vars ]
-# {{resetcomment}}    DJANGO_FORCE_INSTALL: 1
-# {%- endfor %} #}
-#
+{#- XXX: NOT IMPLEMENTED YET
+# reset jobs
+{%- for i in gitlabci_envs %}
+{%- set resetcomment = (i in ['staging', 'prod', 'preprod']) and '#  ' or '' %}
+
+{{resetcomment}}deploy_{{i}}_reset: &deploy_{{i}}_reset
+{{resetcomment}}  <<: [ *deploy_{{i}} ]
+{{resetcomment}}  when: manual
+{{resetcomment}}  variables:
+{{resetcomment}}    <<: [ *deploy_{{i}}_vars ]
+{{resetcomment}}    {{cookiecutter.app_type.upper()}}_FORCE_INSTALL: 1
+{%- endfor %}
+#}
+
 # Allow to immediatly trigger a deploy without waiting for the full pipeline to complete
 # eg: redeploying after only issuing a deploy code or configuration change which does not impact artifacts.
 {% for i in gitlabci_envs %}
@@ -812,6 +820,9 @@ promote_single_env: &promote_single_env
   variables: &promote_and_deploy_vars
     <<: [ *promote_single_env_vars ]
     FROM_PROMOTE: "$CI_COMMIT_REF_NAME"
+    A_ENV_NAME: "${TO_PROMOTE}"
+    DEPLOYED_BRANCH: "${TO_PROMOTE}"
+    DEPLOYED_TAG: "${TO_PROMOTE}"
 {% for i in gitlabci_envs %}
 
 manual_promote_and_deploy_{{i}}: &promote_and_deploy_{{i}}
@@ -819,7 +830,6 @@ manual_promote_and_deploy_{{i}}: &promote_and_deploy_{{i}}
   variables: &promote_and_deploy_{{i}}_vars
     <<: [ *promote_and_deploy_vars, *deploy_{{i}}_vars ]
     TO_PROMOTE: "{{i}}"
-    A_ENV_NAME: "{{cookiecutter[i+'_branch']}}"
 promote_and_deploy_{{i}}: { <<: [ *promote_and_deploy_{{i}} ], stage: post_release }
 {% endfor %}
 
@@ -830,6 +840,7 @@ promote_and_deploy_{{i}}: { <<: [ *promote_and_deploy_{{i}} ], stage: post_relea
 {{teleportcomment}}  when: manual
 {{teleportcomment}}  dependencies: []
 {{teleportcomment}}  allow_failure: true
+{{teleportcomment}}  only: [{%if not cookiecutter.no_tags_pipelines%}tags, {%endif%}{{cookiecutter.main_branch}}, deploy]
 {{teleportcomment}}  stage: manual_jobs
 {{teleportcomment}}  variables: &teleport_env_vars
 {{teleportcomment}}    <<: [ *deploy_vars ]

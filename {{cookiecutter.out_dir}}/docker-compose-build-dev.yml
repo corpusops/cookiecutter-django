@@ -7,4 +7,4 @@ services:
 {%- if not cookiecutter.remove_cron %}
   cron:
     <<: [ *{{cookiecutter.app_type}} ]
-{% endif %}
+{%- endif %}
