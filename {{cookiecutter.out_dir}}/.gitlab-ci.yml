@@ -685,36 +685,37 @@ build_images: &build_images
     export f=${CI_PROJECT_DIR}/releasedimgs
     set -e
     cache_tags="$(eval echo '"(${CACHEABLE_BUILD_BRANCH:-${TAGGUABLE_IMAGE_BRANCH}}|${EXTRA_DOCKER_TAGS})(${IMAGE_FLAVORS})?"')$"
-    if ( echo ${CI_COMMIT_REF_NAME} | grep -E -q "$TAGGUABLE_IMAGE_BRANCH$" ) || ( echo ${CI_COMMIT_REF_NAME} | grep -E -q "${cache_tags}" );then cat>>${f}<<EOF
+    if ( echo ${CI_COMMIT_REF_NAME} | grep -E -q "$TAGGUABLE_IMAGE_BRANCH$" ) || ( echo ${CI_COMMIT_REF_NAME} | grep -E -q "${cache_tags}" );then cat>>"${f}"<<EOF
     ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-dev         ${BUILDCACHE_REF_DOCKER_IMAGE}-dev
     ${BUILDCACHE_CURRENT_DOCKER_IMAGE}             ${BUILDCACHE_REF_DOCKER_IMAGE}
     EOF
     fi
     #
-    if [ "x${CI_COMMIT_REF_NAME}" = "x${MAIN_BRANCH}" ];then cat>>${f}<<EOF
+    if [ "x${CI_COMMIT_REF_NAME}" = "x${MAIN_BRANCH}" ];then cat>>"${f}"<<EOF
     ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-dev         ${BUILDCACHE_LATEST_DOCKER_IMAGE}-dev
     ${BUILDCACHE_CURRENT_DOCKER_IMAGE}             ${BUILDCACHE_LATEST_DOCKER_IMAGE}
     EOF
     fi
     #
-    if ( echo ${CI_COMMIT_REF_NAME} | grep -E -q "$TAGGUABLE_IMAGE_BRANCH$" );then cat>>${f}<<EOF
+    if ( echo ${CI_COMMIT_REF_NAME} | grep -E -q "$TAGGUABLE_IMAGE_BRANCH$" );then cat>>"${f}"<<EOF
     ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-dev         ${REF_DOCKER_IMAGE}-dev
     ${BUILDCACHE_CURRENT_DOCKER_IMAGE}             ${REF_DOCKER_IMAGE}
     EOF
     fi
     #
-    if [ "x${CI_COMMIT_REF_NAME}" = "x${MAIN_BRANCH}" ];then cat>>${f}<<EOF
+    if [ "x${CI_COMMIT_REF_NAME}" = "x${MAIN_BRANCH}" ];then cat>>"${f}"<<EOF
     ${BUILDCACHE_CURRENT_DOCKER_IMAGE}-dev         ${LATEST_DOCKER_IMAGE}-dev
     ${BUILDCACHE_CURRENT_DOCKER_IMAGE}             ${LATEST_DOCKER_IMAGE}
     EOF
     fi
-    while read i;do vv docker tag $(eval echo ${i});done < ${f}
+    if [ -e "${f}" ];then while read i;do vv docker tag $(eval echo ${i});done < "${f}";fi
   # release in batch built docker images in parrallel to both cached and release registries
   - &release_push |-
     sh -c '. ${WORKSPACE}/funcs
     export f=${CI_PROJECT_DIR}/releasedimgs
+    if [ -e "${f}" ];then
     log "Pushing release file:"
-    cat ${f} >&2
+    cat "${f}" >&2
     ret=$(mktemp)
     for i in "$(awk '"'"'{print $2}'"'"' ${f}|grep -E    -- ${BUILDCACHE_REGISTRY})" \
              "$(awk '"'"'{print $2}'"'"' ${f}|grep -E -v -- ${BUILDCACHE_REGISTRY})";do
@@ -723,7 +724,8 @@ build_images: &build_images
     wait
     log "END push:"
     cat ${ret}
-    if [ "$(grep -E -v ^0 $ret|wc -l)" != "0" ];then exit 1;fi'
+    if [ "$(grep -E -v ^0 $ret|wc -l)" != "0" ];then exit 1;fi
+    fi'
   - *writeokstatus
   - *waitafterjobs
   variables: &release_vars
