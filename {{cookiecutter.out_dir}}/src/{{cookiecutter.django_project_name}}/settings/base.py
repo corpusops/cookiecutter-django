@@ -70,12 +70,16 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    {% if cookiecutter.with_celery -%}'django_celery_beat',
+{%- if cookiecutter.with_celery %}
+    'django_celery_beat',
     'django_celery_results',
-{%- endif %}#{% if cookiecutter.with_apptest %}
-    'apptest',
-{% endif %}{% if cookiecutter.with_bundled_front %}'manifest_loader',
-{% endif %}
+{%- endif %}
+{%- if cookiecutter.with_bundled_front %}
+    'manifest_loader',
+{%- endif %}
+{%- if cookiecutter.with_apptest %}
+    #'apptest',
+{%- endif %}
 )
 
 MIDDLEWARE = (
