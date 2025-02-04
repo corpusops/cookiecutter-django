@@ -36,7 +36,7 @@ MIDDLEWARE += tuple([
 DEBUG_TOOLBAR_CONFIG = {
     'SHOW_TOOLBAR_CALLBACK': lambda x: True,
 }
-{% if cookiecutter.cache_only_in_prod %}
+{%- if cookiecutter.cache_only_in_prod %}
 # deactivate cache except if we have set either:
 # - ENABLE_CACHE_IN_DEV
 # - DJANGO__ENABLE_CACHE_IN_DEV=true (envvar)
@@ -48,8 +48,10 @@ except NameError:
             'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
         }
     }
-{% endif %}
+{%- endif %}
+{%- if cookiecutter['with_djextensions'] %}
 USE_DJANGO_EXTENSIONS = True
+{%- endif %}
 
 locs_, globs_, env = post_process_settings(locals())
 globals().update(globs_)

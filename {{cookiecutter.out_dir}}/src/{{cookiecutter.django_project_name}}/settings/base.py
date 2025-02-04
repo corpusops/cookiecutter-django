@@ -520,11 +520,13 @@ def post_process_settings(globs=None):
         rhandlers = LOGGING.setdefault('root', {}).setdefault('handlers', [])
         if 'console' not in rhandlers:
             rhandlers.append('console')
+{%- if cookiecutter['with_djextensions'] %}
     if (
         _locals['USE_DJANGO_EXTENSIONS'] and
         ('django_extensions' not in _locals['INSTALLED_APPS'])
     ):
         _locals['INSTALLED_APPS'] += ('django_extensions', )
+{%- endif %}
     if env != 'prod':
         _locals['INSTANCE_HEADER'] = env.upper()
 
@@ -560,6 +562,7 @@ def set_prod_settings(globs):
     if CORS_ORIGIN_ALLOW_ALL:
         CORS_ORIGIN_WHITELIST = _locals['CORS_ORIGIN_WHITELIST'] = tuple()
         CORS_ALLOWED_ORIGIN_REGEXES = _locals['COPS_ALL_HOSTNAMES'] = tuple()
+        ALLOWED_HOSTS = _locals['ALLOWED_HOSTS'] = ['*']
     elif COPS_ALL_HOSTNAMES:
         CORS_ORIGIN_WHITELIST = _locals['CORS_ORIGIN_WHITELIST'] = tuple()
         CORS_ALLOWED_ORIGIN_REGEXES = tuple()

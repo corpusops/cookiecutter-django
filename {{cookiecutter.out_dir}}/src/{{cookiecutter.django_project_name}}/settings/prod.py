@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from .base import *  # noqa
 
-
 # SECURITY #
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
