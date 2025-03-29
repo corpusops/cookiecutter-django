@@ -605,12 +605,13 @@ force_build_ci_images: &force_build_ci_images
     # code is on the services entrypoints to upstream the hosts block to their relative /etc/hosts
     if ( grep -q "\snginx" /etc/hosts );then echo "$(grep "\snginx" /etc/hosts|awk '{print $1}') $NGINX_SERVERNAME" >>/etc/hosts;fi
     grep -E "^[^#].*\s($NGINX_SERVERNAME|db|mysql|cache|redis|varnish|nginx|celery|memcach|cron|mailcatcher)" /etc/hosts >> "${COMMON_HOSTS_FILE}.tmp"
+    if ! ( ip a &>/dev/null );then if (apt-get --version >/dev/null 2>&1);then apt update -yqq && apt-get install -y iproute2;fi;fi
     export {{cookiecutter.app_type.upper()}}_IP="${FORCED_{{cookiecutter.app_type.upper()}}_IP:-$(ip -4 r get 8.8.8.8|grep src|awk '{print $7}')}"
     echo "${{cookiecutter.app_type.upper()}}_IP cron {{cookiecutter.app_type}}" >> "${COMMON_HOSTS_FILE}.tmp"
     mv "${COMMON_HOSTS_FILE}.tmp" "${COMMON_HOSTS_FILE}"
   - &setup_tests |-
     if [ -e /code/venv/bin/activate ];then . /code/venv/bin/activate;fi
-    sh -c 'python${PY_VER} -m pip install -e .'
+    sh -xc 'set -e;REQS_DIFF=$(eval "echo \"\s+(${REQUIREMENTS_TEST})\"");if ( git diff --stat origin/${MAIN_BRANCH}..$CI_COMMIT_SHA|grep -E "${REQS_DIFF}" ) || ( git diff --stat $CI_COMMIT_BEFORE_SHA..$CI_COMMIT_SHA|grep -E "${REQS_DIFF}" ) || ( git show --stat $CI_COMMIT_SHA|grep -E "${REQS_DIFF}" );then echo "Refreshing requirements">&2;python${PY_VER} -m pip install -r ${REQUIREMENTS};fi;set +e;python${PY_VER} -m pip install -e .; '
     export SRC_DIR="$(pwd)/src" SHELL_USER="$(whoami)"
 {%- set testsc = (not cookiecutter.test_tests) and '#' or '' %}
 {%- set testscov = (not cookiecutter.test_coverage) and '# ' or '' %}

@@ -3,6 +3,7 @@ openssh-client
 rsync
 make
 # runtime dependencies
+iproute2
 rsyslog
 cron
 {%- set uver = cookiecutter.ubuntu_image.split(':')[1].split('.')[0] | int %}
